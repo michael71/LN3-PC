@@ -1,0 +1,15 @@
+# NetBeans specific #
+nbproject/private/
+nbproject/project.properties
+build/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# Class Files #
+*.class
+
+# Package Files #
+*.war
+*.ear
+/dist/
