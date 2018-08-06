@@ -6,6 +6,7 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.MainUI.*;
+import static de.blankedv.ln3pc.Variables.lanbahnData;
 import java.awt.Color;
 import java.awt.Container;
 import java.util.ArrayList;

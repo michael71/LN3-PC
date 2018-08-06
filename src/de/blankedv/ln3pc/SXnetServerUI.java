@@ -66,7 +66,7 @@ public class SXnetServerUI extends javax.swing.JFrame {
     }
 
     public void stop() {
-        t.interrupt();
+        if (t != null) t.interrupt();
     }
     /**
      * This method is called from within the constructor to initialize the form.

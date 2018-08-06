@@ -2,6 +2,8 @@ package de.blankedv.ln3pc;
 
 //import java.io.InputStream;
 import de.blankedv.ln3pc.ConfigWebserver;
+import static de.blankedv.ln3pc.Variables.INVALID_INT;
+import static de.blankedv.ln3pc.Variables.N_LANBAHN;
 import java.awt.Cursor;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -43,41 +45,7 @@ public class MainUI extends javax.swing.JFrame {
     public static final String VERSION = "1.0 - Aug 2018; protocol3";
   public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 04 Aug 2018";
 
- 
-    /**
-     * {@value #N_LANBAHN} number of entries in lanbahn array (i.e. maximum
-     * number of usable lanbahn addresses)
-     */
-    public static final int N_LANBAHN = 500;
-    /**
-     * {@value #LBMIN} minimum lanbahn channel number
-     */
-    public static final int LBMIN = 1; // 
-    /**
-     */
-    public static final int LBMIN_LB = 1278;
-    /**
-     * {@value #LBMAX} =maximum lanbahn channel number
-     */
-    public static final int LBMAX = 9999;
-    /**
-     * {@value #DCCMAX} =maximum DCC address used
-     */
-    public static final int DCCMAX = 1200;
-    /**
-     * {@value #LBDATAMIN} =minimum lanbahn data value
-     */
-    public static final int LBDATAMIN = 0;
-    /**
-     * {@value #LBDATAMAX} =maximum lanbahn data value (== 4 bits in SX world)
-     */
-    public static final int LBDATAMAX = 15;  // 
-    /**
-     * {@value #INVALID_INT} = denotes a value as invalid (not usable)
-     */
-    public static final int INVALID_INT = -1;
-    public static final int STATUS_CONNECTED = 1;
-    public static final int STATUS_NOT_CONNECTED = 0;
+
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
     public static volatile boolean running = true;   // used for stopping threads
@@ -101,8 +69,7 @@ public class MainUI extends javax.swing.JFrame {
      *
      * @see LBMIN_LB}
      */
-    public static final ConcurrentHashMap<Integer, Integer> lanbahnData = new ConcurrentHashMap<Integer, Integer>(N_LANBAHN);
-      public static final ArrayList<DCCSignalMapping> allSignalMappings = new ArrayList<DCCSignalMapping>();
+
 
 
     public static LanbahnMonitorUI lbmon = null;
@@ -273,8 +240,9 @@ public class MainUI extends javax.swing.JFrame {
         btnThrottle = new javax.swing.JButton();
         btnTurnout = new javax.swing.JButton();
         btnSensor = new javax.swing.JButton();
-        btnSxMonitor = new javax.swing.JButton();
+        btnMonitor = new javax.swing.JButton();
         btnReset = new javax.swing.JButton();
+        btnReadSensors = new javax.swing.JButton();
         panelInterface = new javax.swing.JPanel();
         btnConnectDisconnect = new javax.swing.JButton();
         btnPowerOnOff = new javax.swing.JButton();
@@ -326,10 +294,10 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        btnSxMonitor.setText("Monitor");
-        btnSxMonitor.addActionListener(new java.awt.event.ActionListener() {
+        btnMonitor.setText("Monitor");
+        btnMonitor.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSxMonitorActionPerformed(evt);
+                btnMonitorActionPerformed(evt);
             }
         });
 
@@ -340,13 +308,23 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
+        btnReadSensors.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
+        btnReadSensors.setText("Read Sensors");
+        btnReadSensors.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReadSensorsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelWindowsLayout = new javax.swing.GroupLayout(panelWindows);
         panelWindows.setLayout(panelWindowsLayout);
         panelWindowsLayout.setHorizontalGroup(
             panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelWindowsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(btnThrottle, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnThrottle, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnReadSensors, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(35, 35, 35)
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panelWindowsLayout.createSequentialGroup()
@@ -355,7 +333,7 @@ public class MainUI extends javax.swing.JFrame {
                         .addComponent(btnSensor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(panelWindowsLayout.createSequentialGroup()
-                        .addComponent(btnSxMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnReset, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -371,7 +349,8 @@ public class MainUI extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnReset)
-                    .addComponent(btnSxMonitor))
+                    .addComponent(btnMonitor)
+                    .addComponent(btnReadSensors))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -563,9 +542,12 @@ public class MainUI extends javax.swing.JFrame {
         loco1 = new ThrottleUI();
     }//GEN-LAST:event_btnThrottleActionPerformed
 
-    private void btnSxMonitorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSxMonitorActionPerformed
-    
-    }//GEN-LAST:event_btnSxMonitorActionPerformed
+    private void btnMonitorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMonitorActionPerformed
+        if (lbmon == null) {
+            lbmon = new LanbahnMonitorUI();
+            lbmon.setVisible(true);
+        }    
+    }//GEN-LAST:event_btnMonitorActionPerformed
 
     private void btnSensorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSensorActionPerformed
 
@@ -612,6 +594,15 @@ public class MainUI extends javax.swing.JFrame {
     private void btnVtestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVtestActionPerformed
   
     }//GEN-LAST:event_btnVtestActionPerformed
+
+    private void btnReadSensorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadSensorsActionPerformed
+        if (serialIF.isConnected()) {
+          // see manual for 63320 Rückmeldemodul/Uhlenbrock           
+          byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
+          serialIF.send(buf);
+          //LNUtil.test();
+        }
+    }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void toggleConnectStatus() {
         if (serialIF.isConnected()) {
@@ -835,10 +826,11 @@ public class MainUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnectDisconnect;
+    private javax.swing.JButton btnMonitor;
     private javax.swing.JButton btnPowerOnOff;
+    private javax.swing.JButton btnReadSensors;
     private javax.swing.JButton btnReset;
     private javax.swing.JButton btnSensor;
-    private javax.swing.JButton btnSxMonitor;
     private javax.swing.JButton btnThrottle;
     private javax.swing.JButton btnTurnout;
     private javax.swing.JLabel jLabel2;

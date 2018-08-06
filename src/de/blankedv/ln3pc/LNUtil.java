@@ -59,7 +59,6 @@ public class LNUtil {
 ,ON=1 for Output ON, =0 FOR output OFF */
                 adr = getSwitchAddress(buf);
                 dir = getDirection(buf);
-                adr = adr + 1; // ???
                 state = 0;
                 if ((buf[2] & 0x10) != 0) {  //ON/OFF
                     state = 1;
@@ -67,8 +66,10 @@ public class LNUtil {
                 disp.append("-> switch adr=").append(adr);
                 if (dir == 0) {
                     disp.append(" thrown/red");
+                    lanbahnData.put(adr, 1);  // LOGIC REVERSED !!!
                 } else {
                     disp.append(" closed/green");
+                    lanbahnData.put(adr, 0);  // LOGIC REVERSED !!!
                 }
                 if (state == 0) {
                     disp.append(" OFF");
@@ -92,8 +93,10 @@ Report/status bits and 4 MS adr bits.
                 disp.append("-> sensor adr=").append(adr);
                 if (state == 0) {
                     disp.append(" free");
+                    lanbahnData.put(adr, 0);
                 } else {
                     disp.append(" occupied");
+                    lanbahnData.put(adr, 1);
                 }
 
                 break;
@@ -106,10 +109,12 @@ Report/status bits and 4 MS adr bits.
 ;<ACK1> is appropriate response code for the OPCode*/
                 if (buf[1] == awaitingLack) {
                     adr = lastAddress;
-                    //state = getOnOffState(msg);
+                    dir = getDirection(buf);
                     //if (state == 0) {
                     disp.append("-> lack, adr=").append(adr);
-                    disp.append(" state=").append(buf[2]);
+                    String s = String.format("%02X", buf[2]); 
+                    disp.append(" ACK1=").append(s).append(" dir=").append(dir);
+                    lanbahnData.put(adr, 1-dir);
                 } else {
                     // reset LACK 
                     awaitingLack = 0;
@@ -119,7 +124,7 @@ Report/status bits and 4 MS adr bits.
             case (byte) 0xBC:
                 /* 0xBC ;REQ state of SWITCH
 ;<0xBC>,<SW1>,<SW2>,<CHK> REQ state of SWITCH */
-                lastAddress = getSwitchAddress(buf);
+                lastAddress = getSwitchAddress(buf);  
                 awaitingLack = 0xBC & 0x7f;
                 disp.append("-> req switch state, adr=").append(lastAddress);
                 break;
@@ -194,7 +199,7 @@ Report/status bits and 4 MS adr bits.
     }
 
     static private int getSwitchAddress(byte[] buf) {
-        return (int) (buf[1] & 0x7f) + (int) (buf[2] & 0x0f) * 128;
+        return (int) (buf[1] & 0x7f) + (int) (buf[2] & 0x0f) * 128 + 1;
     }
 
     static private int getSensorAddress(byte[] buf) {
@@ -230,7 +235,7 @@ Report/status bits and 4 MS adr bits.
      * @param buf
      * @return
      */
-    static private int getLength(byte[] buf) {
+    static public int getLength(byte[] buf) {
         byte opcode = buf[0];
         int b = opcode & 0x60;   // in java 0x60 is an int !!
         switch (b) {
@@ -245,5 +250,42 @@ Report/status bits and 4 MS adr bits.
             default:
                 return 0;
         }
+    }
+    
+    static public String bufToString(byte[] buf) {
+        int count = getLength(buf);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            sb.append(String.format("%02X ", buf[i]));
+        }
+        return sb.toString();
+    }
+    
+    static public byte[] test() {
+        //A0 01 00 5e
+         byte[] buf = new byte[4];
+        buf[0] = (byte) 0xa0;
+        buf[1] = (byte) 0x01;
+        buf[2] = (byte) 0x00;
+        buf[3] =  (byte)((byte)0xff ^ buf[0] ^ buf[1] ^ buf[2]);
+        if (buf[3] != (byte) 0x5e) {
+            System.out.println(String.format("ERROR, chk=%02X",buf[3]));
+        }
+        return buf;
+    }
+    static public byte[] makeOPC_SW_REQ(int address, int dir, int onoff) {
+ 
+        byte[] buf = new byte[4];
+        buf[0] = (byte) 0xb0;
+        buf[1] = (byte) (address & 0x7f);
+        buf[2] = (byte) 0x00;
+        if (dir == 1) { 
+            buf[2] |= (byte) 0x20;
+        }
+        if (onoff == 1) { buf[2] |= (byte) 0x10; }
+        buf[2] |= (byte)((address >> 7) & 0x0F);
+        buf[3] =  (byte)((byte)0xff ^ buf[0] ^ buf[1] ^ buf[2]);
+        
+        return buf;
     }
 }

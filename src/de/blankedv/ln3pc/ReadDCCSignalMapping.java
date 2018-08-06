@@ -11,9 +11,9 @@ package de.blankedv.ln3pc;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import static de.blankedv.ln3pc.MainUI.INVALID_INT;
-import static de.blankedv.ln3pc.MainUI.DCCMAX;
-import static de.blankedv.ln3pc.MainUI.allSignalMappings;
+import static de.blankedv.ln3pc.Variables.*;
+import static de.blankedv.ln3pc.Variables.DCCMAX;
+
 import java.io.File;
 import java.io.IOException;
 import javax.xml.parsers.DocumentBuilder;
@@ -100,7 +100,7 @@ public class ReadDCCSignalMapping {
             System.out.println("config: " + items.getLength() + " signals");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            DCCSignalMapping tmp = parseDCCMapping(items.item(i));
+            DCCMultiAspectSignalMapping tmp = parseDCCMapping(items.item(i));
             if ((tmp != null) && (tmp.lbAddr != INVALID_INT)) {
                 System.out.println("signal mapping: " + tmp.toString());
                 allSignalMappings.add(tmp);
@@ -110,9 +110,9 @@ public class ReadDCCSignalMapping {
     }
     // code template from lanbahnPanel
 
-    private static DCCSignalMapping parseDCCMapping(Node item) {
+    private static DCCMultiAspectSignalMapping parseDCCMapping(Node item) {
 
-        DCCSignalMapping dccmap = new DCCSignalMapping();
+        DCCMultiAspectSignalMapping dccmap = new DCCMultiAspectSignalMapping();
 
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {

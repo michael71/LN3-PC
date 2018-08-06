@@ -13,7 +13,6 @@ import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
 import purejavacomm.*;
 import static jtermios.JTermios.*;
 
-
 /**
  *
  * @author mblank
@@ -44,7 +43,7 @@ public class SerialInterface {
     Boolean regFeedback = false;
     int regFeedbackAdr = 0;
     boolean connected = false;
-    
+
     private final int NBUF = 40;
     private byte[] buf = new byte[NBUF];
     private int count = 0;
@@ -116,57 +115,50 @@ public class SerialInterface {
     }
 
     public synchronized void close() {
- 
+
         if ((serialPort != null) && (connected == true)) {
             serialPort.removeEventListener();
             try {
                 inputStream.close();
                 outputStream.close();
             } catch (IOException ex) {
-                System.out.println("ERROR "+ ex.getMessage());
+                System.out.println("ERROR " + ex.getMessage());
             }
             serialPort.close();
             System.out.println("Serialport closed.");
-            
+
         } else {
             System.out.println("Serialport bereits geschlossen");
         }
         connected = false;
     }
 
-    public synchronized void send(Byte[] data, int busnumber) {
+    /**
+     * send some bytes to loconet add checksum
+     */
+    public synchronized void send(byte[] buf) {
+
+        int count = LNUtil.getLength(buf);
         // darf nicht unterbrochen werden
-        // TODO check if switch from SX0 to Sx1 is necessary or vice versa
-        // ************************************** using 0 only
-        return; //
-/*    if (connected != true) {
+
+        if (connected != true) {
             System.out.println("Fehler beim Senden, serial port nicht geöffnet und simul. nicht gesetzt");
             return;
         }
 
-        // falls im Trix Mode und schreib befehl, dann daten in sxData speichern
-        // TODO ??? if ((value & (1L << x)) != 0)
-        if ((!noPollingFlag) && ((data[0] & 0x80) != 0)) {
-            sxData[data[0] & 0x7f][busnumber] = data[1];
-        }
-        if ((data[0] & 0x80) != 0) {
-            System.out.println("wr-Cmd: adr " + (toUnsignedInt(data[0]) & 0x7f) + " / data " + toUnsignedInt(data[1]));
-        } else {
-            System.out.println("rd-Cmd: adr " + (toUnsignedInt(data[0]) & 0x7f));
-        }
-
         try {
-            //if (fccMode) {
-            //    outputStream.write((byte)busnumber);
-            //}
-            outputStream.write(data[0]);
-            outputStream.write(data[1]);
+            for (int i = 0; i < count; i++) {
+                outputStream.write(buf[i]);
+            }
+
             outputStream.flush();
+            if (DEBUG) {
+                System.out.println("serial sent: " + LNUtil.bufToString(buf));
+            }
             // done via polling of mainui data in LanbahnUI / this.doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
         }
-         */
     }
 
     public synchronized void switchPowerOff() {
@@ -198,7 +190,7 @@ public class SerialInterface {
 
     public void readPower() {
         Byte[] b = {(byte) 127, (byte) 0x00};   // read power state
-        send(b, 0);
+        //send(b, 0); TODO - there is no readPower in Loconet, only set/unset
     }
 
     public boolean isConnected() {
@@ -235,14 +227,14 @@ public class SerialInterface {
 
         try {
             int ch;
-            while ((ch = inputStream.read()) != -1) {             
-                
-                if (((ch & 0x80) != 0) || (count >= NBUF)) {                    
+            while ((ch = inputStream.read()) != -1) {
+
+                if (((ch & 0x80) != 0) || (count >= NBUF)) {
                     count = 0;
-                    buf[count]= (byte)ch;
+                    buf[count] = (byte) ch;
                     count++;
                 } else {
-                    buf[count]= (byte)ch;
+                    buf[count] = (byte) ch;
                     count++;
                 }
                 LNUtil.interpret(buf, count);
@@ -253,7 +245,6 @@ public class SerialInterface {
         }
 
     }
-
 
     public static int toUnsignedInt(byte value) {
         return (value & 0x7F) + (value < 0 ? 128 : 0);

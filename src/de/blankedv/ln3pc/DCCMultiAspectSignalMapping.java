@@ -1,8 +1,6 @@
 package de.blankedv.ln3pc;
 
-import static de.blankedv.ln3pc.MainUI.INVALID_INT;
-import static de.blankedv.ln3pc.MainUI.DCCMAX;
-import static de.blankedv.ln3pc.MainUI.allSignalMappings;
+import static de.blankedv.ln3pc.Variables.*;
 
 /**
  * how to map lanbahn multi-aspect signal values to DCC address channels (which
@@ -10,18 +8,18 @@ import static de.blankedv.ln3pc.MainUI.allSignalMappings;
  *
  * @author mblank
  */
-public class DCCSignalMapping {
+public class DCCMultiAspectSignalMapping {
     int lbAddr;
     int dccAddr;
     int nBit;
     
-    DCCSignalMapping() {
+    DCCMultiAspectSignalMapping() {
         lbAddr = INVALID_INT;
         dccAddr = INVALID_INT;
         nBit = INVALID_INT;
     }
     
-    DCCSignalMapping(int lba, int nBits) {
+    DCCMultiAspectSignalMapping(int lba, int nBits) {
         this.lbAddr = lba;
         this.dccAddr = lba;
         if ((dccAddr < 1) || (dccAddr > DCCMAX)) {
@@ -31,11 +29,27 @@ public class DCCSignalMapping {
         }
     }
     
-   
-    
-    static boolean exists(int lba) {
-       for (DCCSignalMapping sm : allSignalMappings) {
+    static boolean isLanbahnMultiAspect(int lba) {    
+            
+       for (DCCMultiAspectSignalMapping sm : allSignalMappings) {
            if (sm.lbAddr == lba) return true;
+       }
+       return false;
+    }
+    
+    static boolean isDCCMultiAspect(int dccAddr) {    
+            
+       for (DCCMultiAspectSignalMapping sm : allSignalMappings) {
+           switch (sm.nBit) {
+               case 1:
+                    if (sm.dccAddr == dccAddr) return true;
+                    break;
+               case 2:
+                    if ((sm.dccAddr +1) == dccAddr) return true;
+                    break;
+               default:
+                   throw new java.lang.RuntimeException("nbit other than 1 or 2 not yet implemented");
+           }
        }
        return false;
     }

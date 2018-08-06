@@ -5,7 +5,7 @@
  */
 package de.blankedv.ln3pc;
 
-import static de.blankedv.ln3pc.MainUI.INVALID_INT;
+import static de.blankedv.ln3pc.Variables.INVALID_INT;
 
 /**
  * Pair of SX-Address (0 ..111, 127) and a bit (1...8)
