@@ -20,7 +20,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
+import static de.blankedv.ln3pc.MainUI.*; 
 
 /**
  *
@@ -34,6 +34,7 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
     private boolean horn = false;
     private int lok_adr = 1;
     static List<ThrottleUI> tl = new ArrayList<ThrottleUI>();  //Liste, damit alle Fenster die Updates bekommen
+    private int[] locoData = new int[100];    // TODO DUMMY 
     private int myInstance;
     Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     static int ThrottleUIInstance = 0;
@@ -234,7 +235,7 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         savePrefs();
-        sx.removeFromPlist(lok_adr);
+        mainui.removeFromPlist(lok_adr);
         ThrottleUIInstance--;
         tl.remove(this);
     }//GEN-LAST:event_formWindowClosing
@@ -243,11 +244,11 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
         int new_adr = Integer.parseInt(comboSelAddress.getSelectedItem().toString());
         if (new_adr != lok_adr) {
             // only if changed
-            sx.removeFromPlist(lok_adr);
+            mainui.removeFromPlist(lok_adr);
         }
         lok_adr = new_adr;
         System.out.println("lok adr=" + lok_adr);
-        sx.addToPlist(lok_adr);
+        mainui.addToPlist(lok_adr);
         update();  // re-init nach neuer Adresse
     }//GEN-LAST:event_comboSelAddressActionPerformed
 
@@ -314,7 +315,7 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
 
     private void update() {
         // initial werte lesen aus sxData
-        int ld = sxData[lok_adr][0];
+        int ld = locoData[lok_adr];
         speed = (ld & 0x1F);
         horn = ((ld & 0x80) == 0x80);
         licht = ((ld & 0x40) == 0x40);
@@ -350,7 +351,7 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
     }
     private void speedUp() {
         // initial werte lesen aus sxData
-        int ld = sxData[lok_adr][0];
+        int ld = locoData[lok_adr];
         speed = (ld & 0x1F);
         if (speed < 31) speed = speed+1;
         jSliderSpeed.setValue(speed);
@@ -358,7 +359,7 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
     
     private void speedDown() {
         // initial werte lesen aus sxData
-        int ld = sxData[lok_adr][0];
+        int ld = locoData[lok_adr];
         speed = (ld & 0x1F);
         if (speed > 0) speed = speed-1;
         jSliderSpeed.setValue(speed);
@@ -367,7 +368,6 @@ public class ThrottleUI extends javax.swing.JFrame implements MouseWheelListener
      private void savePrefs() {
         // fuer LN3 Programm, zB Belegtmelder: Instanz-Nummer (Klassenvariable) mit im
         // String, um mehrere Fensterpositionen zu speichern
-        // auch SX-adresse jeweils speichern.
         String myInst = "TH"+myInstance;
         prefs.putInt(myInst+"windowX", getX());
         prefs.putInt(myInst+"windowY", getY());

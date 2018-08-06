@@ -11,15 +11,11 @@
 package de.blankedv.ln3pc;
 
 import javax.swing.JOptionPane;
-import gnu.io.CommPortIdentifier;
+
 import java.util.Enumeration;
 import java.util.prefs.Preferences;
 import static de.blankedv.ln3pc.MainUI.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import purejavacomm.*;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 

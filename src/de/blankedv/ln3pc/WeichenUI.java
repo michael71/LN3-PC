@@ -258,11 +258,11 @@ public class WeichenUI extends javax.swing.JFrame {
         int new_adr = Integer.parseInt(jComboBox1.getSelectedItem().toString());
         if (new_adr != w_adr) {
             // only if changed
-            sx.removeFromPlist(w_adr);
+            mainui.removeFromPlist(w_adr);
         }
         w_adr = new_adr;
         if (DEBUG) System.out.println("w adr="+w_adr);
-        sx.addToPlist(w_adr);  //only needed for 1 SX channel !
+        mainui.addToPlist(w_adr);  //only needed for 1 SX channel !
         update();
 }//GEN-LAST:event_jComboBox1ActionPerformed
 
@@ -342,7 +342,7 @@ public class WeichenUI extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         savePrefs();
         WeichenUIInstance--;
-        sx.removeFromPlist(w_adr);
+        mainui.removeFromPlist(w_adr);
         wl.remove(this);
     }//GEN-LAST:event_formWindowClosing
 

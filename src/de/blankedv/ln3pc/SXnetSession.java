@@ -28,7 +28,7 @@ public class SXnetSession implements Runnable {
     private PrintWriter out;
 
     // list of channels which are of interest for this device
-    private final int[][] sxDataCopy;
+
     private final HashMap<Integer, Integer> lanbahnDataCopy = new HashMap<>(N_LANBAHN);
     private final int ERROR = INVALID_INT;  // ERROR kept for readability
 
@@ -39,7 +39,6 @@ public class SXnetSession implements Runnable {
      */
     public SXnetSession(Socket sock) {
         incoming = sock;
-        sxDataCopy = new int[128][2];
         sn = session_counter++;
     }
 
@@ -55,7 +54,7 @@ public class SXnetSession implements Runnable {
 
             sendMessage("SXnet-Server 3.0 - " + sn);  // welcome string
 
-            while (in.hasNextLine()) {
+            while (in.hasNextLine() && running) {
                 String msg = in.nextLine().trim().toUpperCase();
                 if (msg.length() > 0) {
                     if (DEBUG) {
@@ -75,6 +74,7 @@ public class SXnetSession implements Runnable {
                 mySleep(100);
 
             }
+             
             SXnetServerUI.taClients.append("client" + sn + " disconnected " + incoming.getRemoteSocketAddress().toString() + "\n");
         } catch (IOException e) {
             System.out.println("SXnetServerHandler" + sn + " Error: " + e);
@@ -94,30 +94,17 @@ public class SXnetSession implements Runnable {
     class Task extends TimerTask {
 
         public void run() {
-            checkForChangedSXDataAndSendUpdates();
-            checkForLanbahnChangesAndSendUpdates();
+            while (running) {
+             checkForLanbahnAndDCCChangesAndSendUpdates();
             mySleep(300);  // send update only every 300msecs
+            }
         }
     }
 
     /**
      * SX Net Protocol (all msg terminated with '\n')
      *
-     * client sends | SXnetServer Response
-     * ---------------------------------------|------------------- R cc = Read
-     * channel cc (0..127) | "X" cc dd B cc b = SetBit Ch. cc Bit b (1..8) |
-     * "OK" (and later, when changed in CS: X cc dd ) C cc b = Clear Ch cc Bit b
-     * (1..8) | "OK" (and later, when changed in CS: X cc dd ) S cc dd = set
-     * channel cc Data dd (<256)| "OK" (and later, when changed in CS: X cc dd )
-     * DSDF 89sf (i.e. garbage) | "ERROR" *********** NO LONGER BIT MESSAGES
-     * ************ July 2018 ********** *********** protocol 3
-     * **************************************
-     *
-     * channel 127 bit 8 == Track Power
-     *
-     * for a list of channels (which the client has set or read in the past) all
-     * changes are transmitted back to the client
-     *
+     * TODO
      * ,
      */
     private String handleCommand(String m) {
@@ -131,18 +118,14 @@ public class SXnetSession implements Runnable {
         }
 
         switch (param[0]) {
-            case "R":
-                return createSXFeedbackMessage(param);
             case "READ":
                 return createLanbahnFeedbackMessage(param);
-            case "S":
-            case "SX":
-                return setSXMessage(param);
             case "SET":
             case "SL":
                 return setLanbahnMessage(param);
             case "LOCO":
-                return setSXMessage(param);
+                return setLocoMessage(param);
+                // TODO READLOCO
             default:
                 return "";
 
@@ -150,43 +133,21 @@ public class SXnetSession implements Runnable {
 
     }
 
-    private String createSXFeedbackMessage(String[] par) {
-        if (DEBUG) {
-            System.out.println("createSXFeedbackMessage");
-        }
-        int adr = getSXAddrFromString(par[1]);
-        if (adr == INVALID_INT) return "ERROR";
-        if (DEBUG) {
-            System.out.println(" adr="+adr);
-        }
-        if (adr <= 127) {  // SX0
-            return "X " + adr + " " + sxData[adr][0];
-        } else  { //SX1
-            return "X " + adr + " " + sxData[adr - 128][1];
-        } 
-    }
+   
 
-    private String setSXMessage(String[] par) {
+    private String setLocoMessage(String[] par) {
         if (par.length < 3) {
             return "ERROR";
         }
         if (DEBUG) {
             System.out.println("setSXMessage");
         }
-        int adr = getSXAddrFromString(par[1]);
+        int adr = getDCCAddrFromString(par[1]);
         int data = getByteFromString(par[2]);
 
         if ((adr == INVALID_INT) || (data == INVALID_INT)) return "ERROR";
         
-        if (adr <= 127) {  // SX0  (bus=0)
-            sxData[adr][0] = data;
-            //sxi.send2SXBusses(adr, data);
-            return "X " + adr + " " + sxData[adr][0];
-        } else { //SX1 (bus=1)
-            sxData[adr - 128][1] = data;
-            //sxi.send2SXBusses(adr, data);
-            return "X " + adr + " " + sxData[adr - 128][1];
-        } 
+        return "";
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
@@ -239,7 +200,7 @@ public class SXnetSession implements Runnable {
            // System.out.println("setLanbahnMessage");
         }
 
-        // convert the lanbahn "SET" message to an SX-S Message if in SX address range
+        // convert the lanbahn "SET" message to a DCC Message if in DCC address range
         if (par.length <= 2) {
             return "ERROR";
         }
@@ -249,39 +210,30 @@ public class SXnetSession implements Runnable {
             return "ERROR";
         }
 
-        // check whether we are in an SX or lanbahn address range
+        // check whether we are in an DCC or pure lanbahn (simulation) address range
         if (isPureLanbahnAddressRange(lbadr)) {
             lanbahnData.put(lbadr, lbdata);  // update (or create) data    
             // send lanbahnData
             return "XL " + lbadr + " " + lanbahnData.get(lbadr);
         } else {
-            // we are using SX
-            int sxaddr = lbadr / 10;
-            if (!isValidSXAddress(sxaddr)) {
-                return "ERROR"; // for SX addresses like "120"    
+            // we are using DCC
+            int dccaddr = lbadr;
+            if (!isValidDCCAddress(dccaddr)) {
+                return "ERROR"; // for  
             }            // depending on nBits() function, only data 0 ... 15 is allowed
 
             // lanbahn address to SX address mapping: divide by 10, modulo is sxbit
             // for example 987 => SX-98, bit 7 (!! bit from 1 .. 8)
             // must fit into SX channel range, maximum 1278 is allowed !!
-            int sxadr = lbadr / 10;
+            int dccadr = lbadr;
             
+            //TODO DCC
             int bit = lbadr % 10;
             if ((bit < 1) || (bit > 8)) {
                 return "ERROR";
             }
 
             return "TODO";
-            /* TODO    check mapping for the following bit also
-                    switch (sx.nbit) {
-....
-                        case 3:
-                            dOut = (d >> (sx.bit - 1)) & 0x07;  // three consecutive bits
-                            break;
-                        case 4:
-                            dOut = (d >> (sx.bit - 1)) & 0x0f;  // four consecutive bits
-                            break;
- . */
         }
     }
 
@@ -292,35 +244,10 @@ public class SXnetSession implements Runnable {
         return 1;
     }
 
-    /** calculate the lanbahn value from state of SX system (only controlbus)
-     * at a given sxaddr = lbaddr / 10 and sxbit = lbaddr % 10
-     * 
-     * @param lbAddress
-     * @return lbValue (or INVALID_INT)
-     * 
-     * (TODO implement for range of sxaddr 128 ..255 */
-    
    
-    
-
-
-    private int getBitFromString(String s) {
-        // converts String to an integer between 1 and 8 (=SX Bit)
-        Integer bit = ERROR;
-        try {
-            bit = Integer.parseInt(s);
-            if ((bit < 1) || (bit > 8)) {
-                bit = ERROR;
-            }
-        } catch (Exception e) {
-            bit = ERROR;
-        }
-        return bit;
-    }
-
     private int getByteFromString(String s) {
         // converts String to integer between 0 and 255 
-        //    (= range of SX Data and of Lanbahn data values)
+        //    (= range of DCC Data and of Lanbahn data values)
         Integer data;
         try {
             data = Integer.parseInt(s);
@@ -353,16 +280,12 @@ public class SXnetSession implements Runnable {
      * @param s
      * @return addr (or INVALID_INT)
      */
-    int getSXAddrFromString(String s) {
+    int getDCCAddrFromString(String s) {
         if (DEBUG) System.out.println("get SXAddr from " + s);
         Integer channel = ERROR;
         try {
             channel = Integer.parseInt(s);
-            if (isValidSXAddress(channel)) {
-                // SX channel polling einschalten, wenn nicht schon passiert
-                if (!sx.getpList().contains(channel)) {
-                    sx.addToPlist(channel);
-                }
+            if (isValidDCCAddress(channel)) {
                 return channel;
             } else {
                 return ERROR;
@@ -374,19 +297,19 @@ public class SXnetSession implements Runnable {
         }
     }
     
-    /** is the address a valid SX0 or SX1 address ?
+    /** is the address a valid  DCC address ?
      * 
      * @param address 
      * @return true or false
      */
-    private boolean isValidSXAddress(int a) {
+    private boolean isValidDCCAddress(int a) {
 
-        if (((a >= SXMIN) && (a <= SXMAX)) || (a == SXPOWER)) {
-            //if (DEBUG) System.out.println("isValidSXAddress? "+a + " true (SX0");
-            return true;  // 0..111 or 127
+        if (((a >= 0) && (a <= DCCMAX)) ) {
+            
+            return true; 
         }
         
-        //if (DEBUG) System.out.println("isValidSXAddress? "+a + " false");
+       
         return false;
     }
     
@@ -432,13 +355,13 @@ public class SXnetSession implements Runnable {
     /**  if channel data changed, send update to clients
      * 
      * @param bus (0 or 1)
-     * @param sxaddr (valid sxaddr)
+     * @param dccAddr (valid dccAddr)
      */
-    private void sendSXUpdates(int bus, int sxaddr) {
+    private void sendDCCUpdates(int bus, int dccAddr) {
   
-        sxDataCopy[sxaddr][bus] = sxData[sxaddr][bus];
-        int chan = sxaddr + (bus * 128);
-        String msg = "X " + chan + " " + sxDataCopy[sxaddr][bus];  // SX Feedback Message
+ /* TODO  sxDataCopy[dccAddr][bus] = sxData[dccAddr][bus];
+        int chan = dccAddr + (bus * 128);
+        String msg = "X " + chan + " " + sxDataCopy[dccAddr][bus];  // SX Feedback Message
         if (DEBUG) {
             System.out.println("sent: " + msg + " (bus=" + bus +")");
         }
@@ -446,8 +369,8 @@ public class SXnetSession implements Runnable {
         if (bus == 0) {  // only for control bus, BUS=0, i.e. sxadr <= 127
             for (int i = 1; i <= 8; i++) {
                 // convert SX data to lanbahn
-                int lbaddr = sxaddr * 10 + i;
-                int sxvalue = sxDataCopy[sxaddr][0];
+                int lbaddr = dccAddr * 10 + i;
+                int sxvalue = sxDataCopy[dccAddr][0];
                 int lbvalue = 0;
                 switch (nBits(lbaddr)) {
                     case 1:
@@ -472,35 +395,16 @@ public class SXnetSession implements Runnable {
             System.out.println("TL:" + msg);
         }
         sendMessage(msg);  // send all messages, separated with ";"
-
+*/
     }
 
-    /**
-     * check for changed sxData and send update in case of change
-     */
-    private void checkForChangedSXDataAndSendUpdates() {
-
-        // power channel
-        if (sxData[127][0] != sxDataCopy[127][0]) {
-            sendSXUpdates(0, 127);
-        }
-        // other channels
-        for (int bus = 0; bus < 2; bus++) {
-            for (int ch = 0; ch < 112; ch++) {
-                if (sxData[ch][bus] != sxDataCopy[ch][bus]) {
-                    // channel data changed, send update to mobile device
-                    sendSXUpdates(bus, ch);
-                }
-            }
-        }
-    }
-
+    
     /**
      * check for changed (exclusiv) lanbahn data and send update in case of
      * change
      *
      */
-    private void checkForLanbahnChangesAndSendUpdates() {
+    private void checkForLanbahnAndDCCChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
         boolean first = true;
         for (Map.Entry<Integer, Integer> e : lanbahnData.entrySet()) {

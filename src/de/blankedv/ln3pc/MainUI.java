@@ -43,29 +43,7 @@ public class MainUI extends javax.swing.JFrame {
     public static final String VERSION = "1.0 - Aug 2018; protocol3";
   public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 04 Aug 2018";
 
-    /**
-     * {@value #SX_MIN} = minimale SX adresse angezeigt im Monitor
-     */
-    public static final int SXMIN = 0;
-    /**
-     * maximale SX adresse (SX0), maximale adr angezeigt im Monitor
-     */
-    public static final int SXMAX = 111;
-    /**
-     * {@value #SX_MAX_USED} = maximale Adresse für normale Benutzung (Loco,
-     * Weiche, Signal) higher addresses reserved for command stations/loco
-     * programming
-     */
-    public static final int SXMAX_USED = 104;
-    /**
-     * {@value #SX_POWER} = virtual addr to transmit power state
-     */
-    public static final int SXPOWER = 127;   // 
-    /**
-     * {@value #N_SX} maximum index for data arrays
-     */
-    public static final int N_SX = 128; // maximal möglich (pro SX Kanal)
-
+ 
     /**
      * {@value #N_LANBAHN} number of entries in lanbahn array (i.e. maximum
      * number of usable lanbahn addresses)
@@ -76,14 +54,16 @@ public class MainUI extends javax.swing.JFrame {
      */
     public static final int LBMIN = 1; // 
     /**
-     * {@value #LBMIN_LB} all address lower or equal this address have a fixed
-     * mapping to SX-addresses, lbaddr / 10 => sxaddr, sbit = lbaddr % 10
      */
     public static final int LBMIN_LB = 1278;
     /**
      * {@value #LBMAX} =maximum lanbahn channel number
      */
     public static final int LBMAX = 9999;
+    /**
+     * {@value #DCCMAX} =maximum DCC address used
+     */
+    public static final int DCCMAX = 1200;
     /**
      * {@value #LBDATAMIN} =minimum lanbahn data value
      */
@@ -108,40 +88,27 @@ public class MainUI extends javax.swing.JFrame {
      * url = "http://hostname:{@value #CONFIG_PORT}/config"
      */
     public static final int CONFIG_PORT = 8000;
-    public static MainUI sx;
+    public static MainUI mainui;
 
     public static SettingsUI settingsWindow;
+    public static int globalPower = INVALID_INT;
 
-    /**
-     * // 0 => SX0, 1 => SX1 (if it exists)
-     */
-    public static final int NBUSSES = 2;
-    /**
-     * contains the complete state (all SX0/SX1 data) of command station - all
-     * data olocos: always SX0 control(turnouts, signals, buttons, routes) =>
-     * SX0 sxdata[][0] OR SX1 sxdata[][1]
-     */
-    public static final int[][] sxData = new int[N_SX][NBUSSES];
+
 
     /**
      * hashmap for storing numerical (key,value) pairs of lanbahnData lanbahn
-     * loco data (strings) are always converted to SX0 values lanbahn values are
-     * only stored, if they cannot be mapped to SX values, i.e. SET/READ of
-     * channel >1278 {
+     * 
      *
      * @see LBMIN_LB}
      */
     public static final ConcurrentHashMap<Integer, Integer> lanbahnData = new ConcurrentHashMap<Integer, Integer>(N_LANBAHN);
-      public static final ArrayList<SignalMapping> allSignalMappings = new ArrayList<SignalMapping>();
+      public static final ArrayList<DCCSignalMapping> allSignalMappings = new ArrayList<DCCSignalMapping>();
 
 
     public static LanbahnMonitorUI lbmon = null;
     public static SXnetServerUI sxnetserver;
     public static List<InetAddress> myip;
-    public static SerialInterface sxi;
-
-    public static boolean pollingIsRunning = false;
-    public static LocoProgUI locoprog = null;
+    public static SerialInterface serialIF;
 
     public static int timeoutCounter = 0;
     public static final int TIMEOUT_SECONDS = 10;  // check for connection every 30secs
@@ -200,7 +167,7 @@ public class MainUI extends javax.swing.JFrame {
 
         loadOtherPrefs();
 
-        sxi = new SerialInterface(portName, baudrate);
+        serialIF = new SerialInterface(portName, baudrate);
 
 
         // init status icon
@@ -209,7 +176,7 @@ public class MainUI extends javax.swing.JFrame {
         statusIcon.setIcon(red);
 
 
-            labelStatus.setText("SX-Interface " + ifType + " - Port " + portName);
+            labelStatus.setText("LN Interface at Port " + portName);
             btnPowerOnOff.setEnabled(false);  // works only after connection
             statusIcon.setEnabled(false);  // works only after connection
  
@@ -237,7 +204,7 @@ public class MainUI extends javax.swing.JFrame {
                 configWebserver = new ConfigWebserver(configFile, locoConfigFile, CONFIG_PORT);
                 lblMainConfigFilename.setText(configFile);
                 lblMainLocoConfigFilename.setText(locoConfigFile);
-                ReadSignalMapping.init(configFile);
+                ReadDCCSignalMapping.init(configFile);
 
             } else {
                 lblMainConfigFilename.setText("bisher nicht ausgewählt");
@@ -258,8 +225,11 @@ public class MainUI extends javax.swing.JFrame {
 
     private void closeAll() {
         System.out.println("close all.");
+        timer.stop();
         running = false;  // flag for stopping services
+        if (sxnetserver != null) {
         sxnetserver.stop(); // interrupt server thread
+        }
 
         if (configWebserver != null) {
             // stop webserver
@@ -275,13 +245,13 @@ public class MainUI extends javax.swing.JFrame {
         }
         savePrefs();
         saveAllPrefs();
-        sxi.close();
+        serialIF.close();
         System.out.println("system exit");
         System.exit(0);
     }
 
     private boolean powerIsOn() {
-        if (sxData[127][0] != 0) {
+        if (globalPower == 1) {
             return true;
         } else {
             return false;
@@ -578,14 +548,14 @@ public class MainUI extends javax.swing.JFrame {
 
     private void btnPowerOnOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPowerOnOffActionPerformed
 
-        if (!sxi.isConnected()) {
+        if (!serialIF.isConnected()) {
             JOptionPane.showMessageDialog(this, "Please Conncect First");
             return;
         }
         if (powerIsOn()) {
-            sxi.switchPowerOff();
+            serialIF.switchPowerOff();
         } else {
-            sxi.switchPowerOn();
+            serialIF.switchPowerOn();
         }
     }//GEN-LAST:event_btnPowerOnOffActionPerformed
 
@@ -628,17 +598,14 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
-        if (sxi.isConnected()) {
+        if (serialIF.isConnected()) {
             Cursor c = this.getCursor();
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             
             this.setCursor(c);
         }
         if (simulation) {
-            for (int i = 0; i < SXMAX_USED; i++) {  // nur bis 103, die oberen (=system) Channels werden nicht auf 0 gesetzt
-                sxData[i][0] = 0;
-                sxData[i][1] = 0;
-            }
+            // TODO implement for lanbahn
         }
     }//GEN-LAST:event_btnResetActionPerformed
 
@@ -647,10 +614,10 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVtestActionPerformed
 
     private void toggleConnectStatus() {
-        if (sxi.isConnected()) {
+        if (serialIF.isConnected()) {
             closeConnection();
         } else {
-            if (sxi.open()) {
+            if (serialIF.open()) {
 
                 statusIcon.setEnabled(true);
                 btnConnectDisconnect.setText("Disconnect");
@@ -681,11 +648,11 @@ public class MainUI extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    sx = new MainUI();
+                    mainui = new MainUI();
                 } catch (Exception ex) {
                     Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                sx.setVisible(true);
+                mainui.setVisible(true);
             }
         });
     }
@@ -730,7 +697,7 @@ public class MainUI extends javax.swing.JFrame {
         // other sources can switch power off and on, therefor
         // regular update needed 
 
-        if (sxData[127][0] == 0x00) {
+        if (globalPower == 1) {
             btnPowerOnOff.setText("Track Power On");
             statusIcon.setIcon(red);
         } else {
@@ -741,7 +708,7 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     public void doUpdate() {
-        String result = sxi.doUpdate();
+        String result = serialIF.doUpdate();
         if (!result.isEmpty()) {
             JOptionPane.showMessageDialog(this, result);
             toggleConnectStatus();
@@ -800,8 +767,8 @@ public class MainUI extends javax.swing.JFrame {
     }
 
     private void closeConnection() {
-        if (sxi.isConnected()) {
-            sxi.close();
+        if (serialIF.isConnected()) {
+            serialIF.close();
             // TODO Funktioniert nicht ?????
 
         }

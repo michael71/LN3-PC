@@ -12,7 +12,7 @@ package de.blankedv.ln3pc;
  * and open the template in the editor.
  */
 import static de.blankedv.ln3pc.MainUI.INVALID_INT;
-import static de.blankedv.ln3pc.MainUI.SXMAX;
+import static de.blankedv.ln3pc.MainUI.DCCMAX;
 import static de.blankedv.ln3pc.MainUI.allSignalMappings;
 import java.io.File;
 import java.io.IOException;
@@ -27,23 +27,21 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * utility function for the mapping of lanbahn addresses to SX addresses (and
+ * utility function for the mapping of lanbahn addresses to DCC addresses (and
  * bits) and vice versa
  *
  * @author mblank
  */
-public class ReadSignalMapping {
+public class ReadDCCSignalMapping {
 
-    // TODO second sxbit
+
     private static final boolean CFG_DEBUG = true;
 
     public static void init(String configfilename) {
 
         readXMLConfigFile(configfilename);
 
-        // example UtilityMapping      
-        // allLanbahnSXPairs.add(new LanbahnSXPair(722, 72, 2));
-        // allLanbahnSXPairs.add(new LanbahnSXPair(721, 74, 1));
+
     }
 
     // code template taken from lanbahnPanel
@@ -102,7 +100,7 @@ public class ReadSignalMapping {
             System.out.println("config: " + items.getLength() + " signals");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            SignalMapping tmp = parseSXMapping(items.item(i));
+            DCCSignalMapping tmp = parseDCCMapping(items.item(i));
             if ((tmp != null) && (tmp.lbAddr != INVALID_INT)) {
                 System.out.println("signal mapping: " + tmp.toString());
                 allSignalMappings.add(tmp);
@@ -112,9 +110,9 @@ public class ReadSignalMapping {
     }
     // code template from lanbahnPanel
 
-    private static SignalMapping parseSXMapping(Node item) {
+    private static DCCSignalMapping parseDCCMapping(Node item) {
 
-        SignalMapping sxmap = new SignalMapping();
+        DCCSignalMapping dccmap = new DCCSignalMapping();
 
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -122,37 +120,26 @@ public class ReadSignalMapping {
             // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
             if (theAttribute.getNodeName().equals("adr")) {
-                sxmap.lbAddr = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sxadr")) {
-                sxmap.sxAddr = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("sxbit")) {
-                sxmap.sxBit = getPositionNode(theAttribute);
+                dccmap.lbAddr = getPositionNode(theAttribute);
+            } else if (theAttribute.getNodeName().equals("dccadr")) {
+                dccmap.dccAddr = getPositionNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("nbit")) {
-                sxmap.nBit = getPositionNode(theAttribute);
+                dccmap.nBit = getPositionNode(theAttribute);
             }
         }
 
-        if (sxmap.nBit == 2) {
+        if (dccmap.nBit == 2) {
             // currently implemented only for 4 aspect signals
-            // either the sxadr/sxbit are defined or the (lanbahn-)adr
-            if (sxmap.lbAddr != INVALID_INT) {
-                // lanbahn address is defined, calculate sx
-                sxmap.sxAddr = sxmap.lbAddr / 10;
-                sxmap.sxBit = sxmap.lbAddr % 10;
-                if ((sxmap.sxBit < 1) || (sxmap.sxBit > 7)) {
-                    // doesnt work
-                    System.out.println("invalid config data, sxBit=" + sxmap.sxBit + " for lanbahn-adr=" + sxmap.lbAddr);
-                    return null;
-                }
-                return sxmap;
-            } else if ((sxmap.sxAddr != INVALID_INT) && (sxmap.sxAddr <= SXMAX)
-                    && (sxmap.sxBit != INVALID_INT)
-                    && (sxmap.sxBit >= 1) && (sxmap.sxBit <= 7)) {
-                // we have a valid sx address
-                sxmap.lbAddr = sxmap.sxAddr * 10 + sxmap.sxBit;
-                return sxmap;
+            if (dccmap.lbAddr != INVALID_INT) {
+                // lanbahn address is defined, calculate mainui
+                dccmap.dccAddr = dccmap.lbAddr;
+                return dccmap;
+            } else if ((dccmap.dccAddr != INVALID_INT) && (dccmap.dccAddr <= DCCMAX) ) {
+                // we have a valid mainui address
+                dccmap.lbAddr = dccmap.dccAddr;
+                return dccmap;
             } else {
-                System.out.println("invalid config data, sxAddr=" + sxmap.sxAddr + " sxBit=" + sxmap.sxBit + " nBit=" + sxmap.nBit);
+                System.out.println("invalid config data, dccAddr=" + dccmap.dccAddr +  " nBit=" + dccmap.nBit);
             }
         }
         return null;
@@ -184,17 +171,4 @@ public class ReadSignalMapping {
         return "";
     }
 
-    private static String parseMode(Node item) {
-        NamedNodeMap attributes = item.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node theAttribute = attributes.item(i);
-
-            if (theAttribute.getNodeName().equals("sx")) {
-                String name = theAttribute.getNodeValue();
-                return name;
-
-            }
-        }
-        return "";
-    }
 }

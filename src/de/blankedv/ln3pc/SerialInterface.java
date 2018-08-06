@@ -4,22 +4,15 @@
  */
 package de.blankedv.ln3pc;
 
-import java.util.LinkedList;
 import java.util.List;
-import javax.swing.SwingWorker;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
-import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
+import purejavacomm.*;
+import static jtermios.JTermios.*;
+
 
 /**
  *
@@ -51,6 +44,10 @@ public class SerialInterface {
     Boolean regFeedback = false;
     int regFeedbackAdr = 0;
     boolean connected = false;
+    
+    private final int NBUF = 40;
+    private byte[] buf = new byte[NBUF];
+    private int count = 0;
 
     public SerialInterface(String portName, int baud) {
 
@@ -118,15 +115,23 @@ public class SerialInterface {
         return true;
     }
 
-    public void close() {
-
-        if (connected == true) {
-            System.out.println("Schließe Serialport");
+    public synchronized void close() {
+ 
+        if ((serialPort != null) && (connected == true)) {
+            serialPort.removeEventListener();
+            try {
+                inputStream.close();
+                outputStream.close();
+            } catch (IOException ex) {
+                System.out.println("ERROR "+ ex.getMessage());
+            }
             serialPort.close();
+            System.out.println("Serialport closed.");
+            
         } else {
             System.out.println("Serialport bereits geschlossen");
         }
-        //connected = false;
+        connected = false;
     }
 
     public synchronized void send(Byte[] data, int busnumber) {
@@ -157,7 +162,7 @@ public class SerialInterface {
             outputStream.write(data[0]);
             outputStream.write(data[1]);
             outputStream.flush();
-            // done via polling of sx data in LanbahnUI / this.doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
+            // done via polling of mainui data in LanbahnUI / this.doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
         }
@@ -202,13 +207,12 @@ public class SerialInterface {
 
     class serialPortEventListener implements SerialPortEventListener {
 
+        @Override
         public void serialEvent(SerialPortEvent event) {
             switch (event.getEventType()) {
                 case SerialPortEvent.DATA_AVAILABLE:
                     connectionOK = true;
-
                     readSerialPort();
-
                     break;
                 case SerialPortEvent.BI:
                 case SerialPortEvent.CD:
@@ -230,18 +234,18 @@ public class SerialInterface {
     void readSerialPort() {
 
         try {
-            int adr, data;
-
             int ch;
-            String s = "";
-            while ((ch = inputStream.read()) != -1) {
-                s = String.format("%02X ", ch);
-                if ((ch & 0x80) != 0) {
-                    // = Opcode, start new line
-                    System.out.println();
+            while ((ch = inputStream.read()) != -1) {             
+                
+                if (((ch & 0x80) != 0) || (count >= NBUF)) {                    
+                    count = 0;
+                    buf[count]= (byte)ch;
+                    count++;
+                } else {
+                    buf[count]= (byte)ch;
+                    count++;
                 }
-                System.out.print(s);
-
+                LNUtil.interpret(buf, count);
             }
 
         } catch (IOException e) {
@@ -250,25 +254,6 @@ public class SerialInterface {
 
     }
 
-    // address range 0 ..127 / 128 ... 255 
-    private synchronized void setSX(int adr, int data) {
-        if (adr >= 0 && adr < N_SX) {
-            // data for SX0 bus
-            sxData[adr][0] = data;
-            if (DEBUG) {
-                //System.out.println("set: SX0[" + adr + "]=" + data + " ");
-            }
-        } else if (adr >= N_SX && adr < (2 * N_SX)) {
-            // data for SX1 bus
-            sxData[adr - 128][1] = data;
-
-            if (DEBUG) {
-                //System.out.println("set: SX1[" + (adr - SXMAX2) + "]=" + data + " ");
-            }
-        } else {
-            System.out.println("set: ERROR adr=" + adr + " to high");
-        }
-    }
 
     public static int toUnsignedInt(byte value) {
         return (value & 0x7F) + (value < 0 ? 128 : 0);
