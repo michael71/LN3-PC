@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
-import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
+import static de.blankedv.ln3pc.Variables.*;  
+import static de.blankedv.ln3pc.MainUI.*;  
 import purejavacomm.*;
-import static jtermios.JTermios.*;
 
 /**
  *
@@ -23,9 +23,9 @@ public class SerialInterface {
     private String portName;
 
     private int baudrate;
-    private int dataBits = SerialPort.DATABITS_8;
-    private int stopBits = SerialPort.STOPBITS_1;
-    private int parity = SerialPort.PARITY_NONE;
+    private final int dataBits = SerialPort.DATABITS_8;
+    private final int stopBits = SerialPort.STOPBITS_1;
+    private final int parity = SerialPort.PARITY_NONE;
     CommPortIdentifier serialPortId;
     Enumeration enumComm;
     SerialPort serialPort;
@@ -34,11 +34,6 @@ public class SerialInterface {
 
     private List<Integer> pListCopy;
 
-    private boolean sx1Flag = false;
-    private int lastBusnumber = 0;
-
-    private static int leftover;
-    private static boolean leftoverFlag = false;
     private static long lastReceived = 0;
     Boolean regFeedback = false;
     int regFeedbackAdr = 0;
@@ -91,7 +86,6 @@ public class SerialInterface {
         }
 
         try {
-            leftoverFlag = false;
             inputStream = serialPort.getInputStream();
         } catch (IOException e) {
             System.out.println("Keinen Zugriff auf InputStream");
@@ -162,13 +156,14 @@ public class SerialInterface {
     }
 
     public synchronized void switchPowerOff() {
-        // 127 (ZE ein/aus) +128(schreiben) = 0xFF
+        // loconet global power off
 
-        Byte[] b = {(byte) 0xFF, (byte) 0x00};
+        Byte[] b = {(byte) 0x82, (byte) 0x7D};
         try {
             outputStream.write(b[0]);
             outputStream.write(b[1]);
             outputStream.flush();
+            globalPower = POWER_OFF;
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
         }
@@ -176,21 +171,21 @@ public class SerialInterface {
     }
 
     public synchronized void switchPowerOn() {
-        // 127 (ZE ein/aus) +128(schreiben) = 0xFF   
+        // loconet global power on   
 
-        Byte[] b = {(byte) 0xFF, (byte) 0x80};
+        Byte[] b = {(byte) 0x83, (byte) 0x7C};
         try {
             outputStream.write(b[0]);
             outputStream.write(b[1]);
             outputStream.flush();
+            globalPower = POWER_ON;
         } catch (IOException e) {
             System.out.println("Fehler beim Senden");
         }
     }
 
-    public void readPower() {
-        Byte[] b = {(byte) 127, (byte) 0x00};   // read power state
-        //send(b, 0); TODO - there is no readPower in Loconet, only set/unset
+    public int readPower() {
+       return globalPower;
     }
 
     public boolean isConnected() {
@@ -237,6 +232,7 @@ public class SerialInterface {
                     buf[count] = (byte) ch;
                     count++;
                 }
+                
                 LNUtil.interpret(buf, count);
             }
 
@@ -244,10 +240,6 @@ public class SerialInterface {
             System.out.println("Fehler beim Lesen empfangener Daten");
         }
 
-    }
-
-    public static int toUnsignedInt(byte value) {
-        return (value & 0x7F) + (value < 0 ? 128 : 0);
     }
 
 }

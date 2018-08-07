@@ -1,9 +1,7 @@
 package de.blankedv.ln3pc;
 
 //import java.io.InputStream;
-import de.blankedv.ln3pc.ConfigWebserver;
-import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.N_LANBAHN;
+import static de.blankedv.ln3pc.Variables.*;
 import java.awt.Cursor;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -13,10 +11,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -42,18 +38,16 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "1.0 - Aug 2018; protocol3";
-  public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 04 Aug 2018";
-
+    public static final String VERSION = "1.1 - 06 Aug 2018; protocol3";
+    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 04 Aug 2018";
 
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
     public static volatile boolean running = true;   // used for stopping threads
     public static boolean simulation;
     /**
-     * {@value #CONFIG_PORT} = use this port to request config.xml 
-     * from webserver 
-     * url = "http://hostname:{@value #CONFIG_PORT}/config"
+     * {@value #CONFIG_PORT} = use this port to request config.xml from
+     * webserver url = "http://hostname:{@value #CONFIG_PORT}/config"
      */
     public static final int CONFIG_PORT = 8000;
     public static MainUI mainui;
@@ -61,17 +55,12 @@ public class MainUI extends javax.swing.JFrame {
     public static SettingsUI settingsWindow;
     public static int globalPower = INVALID_INT;
 
-
-
     /**
      * hashmap for storing numerical (key,value) pairs of lanbahnData lanbahn
-     * 
+     *
      *
      * @see LBMIN_LB}
      */
-
-
-
     public static LanbahnMonitorUI lbmon = null;
     public static SXnetServerUI sxnetserver;
     public static List<InetAddress> myip;
@@ -92,13 +81,14 @@ public class MainUI extends javax.swing.JFrame {
     Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     private String portName;
     private int baudrate;
-   
 
     private String ifType;
 
     private ConfigWebserver configWebserver;
+    private String configFile;
+    private String locoConfigFile;
 
-    private final ImageIcon green, red;
+    private final ImageIcon green, red, grey;
     private List<Integer> pList = new LinkedList<>();
     Timer timer;  // user for updating UI every second
     private String downloadFrom;
@@ -108,73 +98,70 @@ public class MainUI extends javax.swing.JFrame {
      */
     public MainUI() throws Exception {
 
-        // get network info
-        myip = NIC.getmyip();   // only the first one will be used
-        System.out.println("Number of usable Network Interfaces=" + myip.size());
-        if (myip.size() == 0) {
-            System.out.println("ERROR: not network !!! cannot do anything");
-            downloadFrom = "download von http://hostname:8000/config  .../loco";
-        } else {
-            downloadFrom = "download from http:/" + myip.get(0).toString() + ":8000/config   .../loco";
-        }
-
         loadWindowPrefs();
-
         initComponents();
-
-        URL url;
-        try {
-            url = ClassLoader.getSystemResource("de/blankedv/ln3pc/icons/ln3_ico.png");
-            Toolkit kit = Toolkit.getDefaultToolkit();
-            Image img = kit.createImage(url);
-            setIconImage(img);
-        } catch (Exception ex) {
-            Logger.getLogger(MainUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        loadOtherPrefs();
+        setAppIcon();
+        
+        loadOtherPrefs();  //portName, baudrate, simulation
 
         serialIF = new SerialInterface(portName, baudrate);
-
 
         // init status icon
         green = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/greendot.png"));
         red = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/reddot.png"));
-        statusIcon.setIcon(red);
+        grey = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/greydot.png"));
+        statusIcon.setIcon(grey);
+        
+        labelStatus.setText("LN Interface at Port " + portName);
+        btnPowerOnOff.setEnabled(false);  // works only after connection
+        statusIcon.setEnabled(false);  // works only after connection
 
-
-            labelStatus.setText("LN Interface at Port " + portName);
-            btnPowerOnOff.setEnabled(false);  // works only after connection
-            statusIcon.setEnabled(false);  // works only after connection
- 
-
-        addToPlist((Integer) 127);  // Power Status wird immer abgefragt.
         setVisible(true);
 
-        // get network info
-        myip = NIC.getmyip();   // only the first one will be used
-        System.out.println("Number of usable Network Interfaces=" + myip.size());
-
-        String configFile = prefs.get("configfilename", "-keiner-");
-        String locoConfigFile = prefs.get("lococonfigfilename", "-keiner-");
-
-
+        initNetwork();
+        
         initTimer();
 
-        this.setTitle("LN3-PC");
+        setTitle("LN3-PC");
+       
+        
+        openSerialConnection();
+
+        
+
+    }
+
+    private void initNetwork() {
+         // get network info
+        myip = NIC.getmyip();   // only the first one will be used
+        System.out.println("Number of usable Network Interfaces=" + myip.size());
+        if (myip.isEmpty()) {
+            System.out.println("ERROR: no network !!! cannot do much");
+            downloadFrom = "download von http://hostname:8000/config  .../loco";
+        } else {
+            downloadFrom = "download from http:/" + myip.get(0).toString() + ":8000/config   .../loco";
+        }
+ 
+        
+        configFile = prefs.get("configfilename", "-keiner-");
+        locoConfigFile = prefs.get("lococonfigfilename", "-keiner-");
         
         if (myip.size() >= 1) {  // makes only sense when we have network connectivity
             sxnetserver = new SXnetServerUI();
             sxnetserver.setVisible(true);
 
             if (!configFile.equalsIgnoreCase("-keiner-")) {
-                configWebserver = new ConfigWebserver(configFile, locoConfigFile, CONFIG_PORT);
+                try {
+                    configWebserver = new ConfigWebserver(configFile, locoConfigFile, CONFIG_PORT);
+                } catch (Exception ex) {
+                    System.out.println("ERROR: "+ ex.getMessage());
+                }
                 lblMainConfigFilename.setText(configFile);
                 lblMainLocoConfigFilename.setText(locoConfigFile);
-                ReadDCCSignalMapping.init(configFile);
+                ReadDCCConfig.init(configFile);
 
             } else {
-                lblMainConfigFilename.setText("bisher nicht ausgewählt");
+                lblMainConfigFilename.setText("Bitte Config File auswählen! (f. Signale und Sensoren)");
                 lblMainLocoConfigFilename.setText(locoConfigFile);
             }
 
@@ -184,18 +171,27 @@ public class MainUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "ERROR no network, cannot start SXnet");
 
         }
-
-
-        
+    }
+    
+    private void setAppIcon() {
+        URL url;
+        try {
+            url = ClassLoader.getSystemResource("de/blankedv/ln3pc/icons/ln3_ico.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            setIconImage(img);
+        } catch (Exception ex) {
+            System.out.println("ERROR " +ex.getMessage());
+        }
 
     }
-
+    
     private void closeAll() {
         System.out.println("close all.");
         timer.stop();
         running = false;  // flag for stopping services
         if (sxnetserver != null) {
-        sxnetserver.stop(); // interrupt server thread
+            sxnetserver.stop(); // interrupt server thread
         }
 
         if (configWebserver != null) {
@@ -203,7 +199,6 @@ public class MainUI extends javax.swing.JFrame {
             configWebserver.stop();
             System.out.println("config webserver stopped.");
         }
-
 
         try {  // close jmdns etc.
             Thread.sleep(500);
@@ -215,14 +210,6 @@ public class MainUI extends javax.swing.JFrame {
         serialIF.close();
         System.out.println("system exit");
         System.exit(0);
-    }
-
-    private boolean powerIsOn() {
-        if (globalPower == 1) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -363,7 +350,8 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        btnPowerOnOff.setText("Track Power ON");
+        btnPowerOnOff.setFont(new java.awt.Font("Ubuntu", 0, 12)); // NOI18N
+        btnPowerOnOff.setText("-");
         btnPowerOnOff.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPowerOnOffActionPerformed(evt);
@@ -528,10 +516,10 @@ public class MainUI extends javax.swing.JFrame {
     private void btnPowerOnOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPowerOnOffActionPerformed
 
         if (!serialIF.isConnected()) {
-            JOptionPane.showMessageDialog(this, "Please Conncect First");
+            JOptionPane.showMessageDialog(this, "Please Connect First");
             return;
         }
-        if (powerIsOn()) {
+        if (globalPower == POWER_ON) {
             serialIF.switchPowerOff();
         } else {
             serialIF.switchPowerOn();
@@ -546,16 +534,16 @@ public class MainUI extends javax.swing.JFrame {
         if (lbmon == null) {
             lbmon = new LanbahnMonitorUI();
             lbmon.setVisible(true);
-        }    
+        }
     }//GEN-LAST:event_btnMonitorActionPerformed
 
     private void btnSensorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSensorActionPerformed
 
-       
+
     }//GEN-LAST:event_btnSensorActionPerformed
 
     private void btnTurnoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTurnoutActionPerformed
-      
+
     }//GEN-LAST:event_btnTurnoutActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
@@ -583,7 +571,7 @@ public class MainUI extends javax.swing.JFrame {
         if (serialIF.isConnected()) {
             Cursor c = this.getCursor();
             this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            
+
             this.setCursor(c);
         }
         if (simulation) {
@@ -592,15 +580,15 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnResetActionPerformed
 
     private void btnVtestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVtestActionPerformed
-  
+
     }//GEN-LAST:event_btnVtestActionPerformed
 
     private void btnReadSensorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadSensorsActionPerformed
         if (serialIF.isConnected()) {
-          // see manual for 63320 Rückmeldemodul/Uhlenbrock           
-          byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
-          serialIF.send(buf);
-          //LNUtil.test();
+            // see manual for 63320 Rückmeldemodul/Uhlenbrock           
+            byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
+            serialIF.send(buf);
+            //LNUtil.test();
         }
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
@@ -608,17 +596,21 @@ public class MainUI extends javax.swing.JFrame {
         if (serialIF.isConnected()) {
             closeConnection();
         } else {
-            if (serialIF.open()) {
+           openSerialConnection();
+        }
+    }
+    
+    private void openSerialConnection() {
+        if (serialIF.open()) {
 
-                statusIcon.setEnabled(true);
-                btnConnectDisconnect.setText("Disconnect");
-                btnPowerOnOff.setEnabled(true);
-                btnReset.setEnabled(true);
-                connectionOK = true;
-                timeoutCounter = 0;
-            } else {
-                JOptionPane.showMessageDialog(this, "Check Serial Port Settings");
-            }
+            statusIcon.setEnabled(true);
+            btnConnectDisconnect.setText("Disconnect");
+            btnPowerOnOff.setEnabled(true);
+            btnReset.setEnabled(true);
+            connectionOK = true;
+            timeoutCounter = 0;
+        } else {
+            JOptionPane.showMessageDialog(this, "Check Serial Port Settings");
         }
     }
 
@@ -688,12 +680,20 @@ public class MainUI extends javax.swing.JFrame {
         // other sources can switch power off and on, therefor
         // regular update needed 
 
-        if (globalPower == 1) {
-            btnPowerOnOff.setText("Track Power On");
-            statusIcon.setIcon(red);
-        } else {
-            btnPowerOnOff.setText("Track Power Off");
-            statusIcon.setIcon(green);
+        switch (globalPower) {
+            case POWER_ON:
+                btnPowerOnOff.setText("switch off track power");
+                statusIcon.setIcon(green);
+                break;
+            case POWER_OFF:
+                btnPowerOnOff.setText("switch on track power");
+                statusIcon.setIcon(red);
+                break;
+            case POWER_UNKNOWN:
+                btnPowerOnOff.setText("switch on track power");
+                statusIcon.setIcon(grey);
+                break;
+
         }
 
     }
@@ -715,11 +715,10 @@ public class MainUI extends javax.swing.JFrame {
         // do GUI update only every second
         //System.out.println("do update called.");
         updatePowerBtnAndIcon();
-       
+
         if (lbmon != null) {
             lbmon.update();
         }
-
 
         ThrottleUI.updateAll();
         FunkreglerUI.updateAll();
@@ -733,7 +732,7 @@ public class MainUI extends javax.swing.JFrame {
      */
     private void checkConnection() {
         return;
-      /* TODO   if (simulation) {
+        /* TODO   if (simulation) {
             return;
         }
 
@@ -754,7 +753,7 @@ public class MainUI extends javax.swing.JFrame {
             }
             timeoutCounter = 0; // reset counter
         }
-*/
+         */
     }
 
     private void closeConnection() {
@@ -773,7 +772,6 @@ public class MainUI extends javax.swing.JFrame {
     public void saveAllPrefs() {
         //System.out.println("save all preferences.");
 
-      
         ThrottleUI.saveAllPrefs();
         FunkreglerUI.saveAllPrefs();
 
@@ -802,25 +800,13 @@ public class MainUI extends javax.swing.JFrame {
         System.out.println("simulation=" + simulation);
 
         ifType = prefs.get("type", "");
-        
-        
+
         String baudStr = prefs.get("baudrate", "57600");
         baudrate = Integer.parseInt(baudStr);
         if (DEBUG) {
             System.out.println("IF=" + ifType + " serial port=" + portName + " at " + baudrate + " baud");
         }
-
-        // all sensors need polling (for srcp and/or Standard interface)
-        String sel = prefs.get("SensorList", "");
-        if (DEBUG) {
-            System.out.println("reading sensors:" + sel);
-        }
-        String[] slist = sel.split(";");
-        if (slist.length > 0 && !slist[0].isEmpty()) {
-            for (int i = 0; i < slist.length; i++) {
-                addToPlist(Integer.parseInt(slist[i]));
-            }
-        }
+ 
     }
 
 

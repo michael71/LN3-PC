@@ -77,6 +77,7 @@ public class Variables {
     
     public static final ConcurrentHashMap<Integer, Integer> lanbahnData = new ConcurrentHashMap<Integer, Integer>(N_LANBAHN);
     public static final ArrayList<DCCMultiAspectSignalMapping> allSignalMappings = new ArrayList<DCCMultiAspectSignalMapping>();
+    public static final ArrayList<Integer> allSensors = new ArrayList<Integer>();   // contains addresses which are sensors - needed to distinguish sensors from accessories for DCC commands
 
     static int progState = STOP;
 
@@ -90,4 +91,8 @@ public class Variables {
     static State requestSlotState;
 
     static final int SELECTED_LISSY = 1;
+    
+    static final int POWER_ON = 1;
+    static final int POWER_OFF = 0;
+    static final int POWER_UNKNOWN = -1;
 }

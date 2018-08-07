@@ -35,9 +35,8 @@ public class SettingsUI extends javax.swing.JFrame {
 
         refreshSerialPortList();
 
-        String ifType = prefs.get("type", "SLX 825");
-        String baudStr = prefs.get("baudrate", "9600");
-        String busmode = prefs.get("busmode", "SX");
+        String ifType = prefs.get("type", "LocoBuffer USB");
+        String baudStr = prefs.get("baudrate", "57600");
 
         for (int i = 0; i < comboSelectType.getItemCount(); i++) {
             //if (DEBUG) { System.out.println("geladen Type-String="+ 
@@ -54,18 +53,12 @@ public class SettingsUI extends javax.swing.JFrame {
                 break;
             }
         }
-        for (int i = 0; i < comboBusmode.getItemCount(); i++) {
-            if (comboBusmode.getItemAt(i).toString().equalsIgnoreCase(busmode)) {
-                comboBusmode.setSelectedIndex(i);
-                break;
-            }
-        }
+       
 
         cbSimulation.setSelected(prefs.getBoolean("simulation", false));
 
         cbDebug.setSelected(prefs.getBoolean("enableDebug", false));
 
-        comboSXBusControl.setSelectedIndex(prefs.getInt("sxbusControl", 0));
         String fname = prefs.get("configfilename","-keiner-");
         if (fname.length() > 60) {
             String fname1 = fname.substring(0,59);
@@ -90,8 +83,6 @@ public class SettingsUI extends javax.swing.JFrame {
             lblLocoConfigFilenameHelp.setText("download von http:/" + myip.get(0).toString() + ":8000/locos");
         }
 
-        // if (DEBUG) { System.out.println("type="+comboSelectType.getSelectedItem().toString()); }
-        checkBusMode();
 
         loadPrefs();
 
@@ -118,14 +109,8 @@ public class SettingsUI extends javax.swing.JFrame {
         comboSelectType = new javax.swing.JComboBox();
         cbSimulation = new javax.swing.JCheckBox();
         jLabel1 = new javax.swing.JLabel();
-        comboBusmode = new javax.swing.JComboBox();
-        comboSXBusControl = new javax.swing.JComboBox();
-        lblLoco = new javax.swing.JLabel();
-        lblControl = new javax.swing.JLabel();
-        lblLocoSX0 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         cbDebug = new javax.swing.JCheckBox();
-        btnSensorList = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         txtConfigFilename = new javax.swing.JTextArea();
         lblConfigFilenameHelp = new javax.swing.JLabel();
@@ -186,7 +171,7 @@ public class SettingsUI extends javax.swing.JFrame {
         jLabel2.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
         jLabel2.setText("Type");
 
-        comboSelectType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SLX 825", "OpenSX", "FCC", "Trix 66824", "ZS1", "SLX 852" }));
+        comboSelectType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "LocoBuffer USB" }));
         comboSelectType.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboSelectTypeActionPerformed(evt);
@@ -194,6 +179,7 @@ public class SettingsUI extends javax.swing.JFrame {
         });
 
         cbSimulation.setText("Simulation");
+        cbSimulation.setEnabled(false);
         cbSimulation.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cbSimulationActionPerformed(evt);
@@ -202,58 +188,25 @@ public class SettingsUI extends javax.swing.JFrame {
 
         jLabel1.setText("baud");
 
-        comboBusmode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SX", "SX0/SX1" }));
-        comboBusmode.setEnabled(false);
-        comboBusmode.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                comboBusmodeActionPerformed(evt);
-            }
-        });
-
-        comboSXBusControl.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SX0", "SX1" }));
-        comboSXBusControl.setEnabled(false);
-
-        lblLoco.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
-        lblLoco.setText("Fahren");
-        lblLoco.setEnabled(false);
-
-        lblControl.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
-        lblControl.setText("Schalten/Melden");
-        lblControl.setEnabled(false);
-
-        lblLocoSX0.setText("SX0");
-        lblLocoSX0.setEnabled(false);
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(cbBaudrate, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel1)
-                        .addGap(44, 44, 44)
-                        .addComponent(comboBusmode, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblSerial, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(comboSelectSerialPort, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(55, 55, 55)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2)
-                            .addComponent(comboSelectType, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(lblSerial, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(comboSelectSerialPort, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(55, 55, 55)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2)
+                    .addComponent(comboSelectType, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(44, 44, 44)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblLocoSX0)
+                    .addComponent(cbSimulation)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(lblLoco)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblControl)
-                            .addComponent(comboSXBusControl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(cbSimulation))
+                        .addComponent(cbBaudrate, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel1)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -265,7 +218,7 @@ public class SettingsUI extends javax.swing.JFrame {
                         .addComponent(cbSimulation)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addContainerGap(32, Short.MAX_VALUE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
                             .addComponent(lblSerial))
@@ -273,30 +226,14 @@ public class SettingsUI extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(comboSelectSerialPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboSelectType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblLoco)
-                    .addComponent(lblControl))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cbBaudrate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel1)
-                        .addComponent(comboBusmode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lblLocoSX0)
-                        .addComponent(comboSXBusControl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                    .addComponent(jLabel1))
+                .addGap(74, 74, 74))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
         cbDebug.setText("Debug Mode");
-
-        btnSensorList.setText("Belegtm.Liste");
-        btnSensorList.setEnabled(false);
-        btnSensorList.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSensorListActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -305,18 +242,14 @@ public class SettingsUI extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(cbDebug)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnSensorList, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(69, 69, 69))
+                .addContainerGap(483, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cbDebug)
-                    .addComponent(btnSensorList))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(cbDebug)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Anlagen-XML-ConfigFile", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 14))); // NOI18N
@@ -358,7 +291,8 @@ public class SettingsUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(lblConfigFilenameHelp)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnChangeConfigFile))
+                .addComponent(btnChangeConfigFile)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Lok-XML-ConfigFile", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 14))); // NOI18N
@@ -387,6 +321,25 @@ public class SettingsUI extends javax.swing.JFrame {
                     .addComponent(txtLocoConfigFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnChangeLocoConfigFile, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel4Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(lblLocoConfigFilenameHelp, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(txtLocoConfigFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(36, 36, 36)
+                .addComponent(btnChangeLocoConfigFile)
+                .addContainerGap())
+            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel4Layout.createSequentialGroup()
+                    .addGap(51, 51, 51)
+                    .addComponent(lblLocoConfigFilenameHelp)
+                    .addContainerGap(52, Short.MAX_VALUE)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -402,23 +355,27 @@ public class SettingsUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(8, 8, 8))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnCancel)
                     .addComponent(btnSave))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(21, 21, 21))
         );
 
         pack();
@@ -427,12 +384,9 @@ public class SettingsUI extends javax.swing.JFrame {
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
 
         prefs.put("type", comboSelectType.getSelectedItem().toString());
-        prefs.put("busmode", comboBusmode.getSelectedItem().toString());
         prefs.put("baudrate", cbBaudrate.getSelectedItem().toString());
         prefs.putBoolean("simulation", cbSimulation.isSelected());
         prefs.putBoolean("enableDebug", cbDebug.isSelected());
-
-        prefs.putInt("sxbusControl", comboSXBusControl.getSelectedIndex());
 
         if (comboSelectSerialPort.getItemCount() >= 1) {
             prefs.put("commPort", comboSelectSerialPort.getSelectedItem().toString());
@@ -447,8 +401,6 @@ public class SettingsUI extends javax.swing.JFrame {
             }
             System.out.println("saving Baudrate=" + cbBaudrate.getSelectedItem().toString());
             System.out.println("saving Type=" + comboSelectType.getSelectedItem().toString());
-            System.out.println("saving Busmode=" + comboBusmode.getSelectedItem().toString());
-            System.out.println("saving sxbusControl=" + comboSXBusControl.getSelectedIndex());
             System.out.println("saving Simulation=" + cbSimulation.isSelected());
             System.out.println("saving enableDebug=" + cbDebug.isSelected());
             System.out.println("configfilename=" + prefs.get("configfilename", "-keiner-"));
@@ -474,25 +426,12 @@ public class SettingsUI extends javax.swing.JFrame {
     private void cbSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbSimulationActionPerformed
     }//GEN-LAST:event_cbSimulationActionPerformed
 
-    private void btnSensorListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSensorListActionPerformed
-        new EditSensorListUI(this, true);
-    }//GEN-LAST:event_btnSensorListActionPerformed
-
     private void cbBaudrateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbBaudrateActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cbBaudrateActionPerformed
 
-    private void comboBusmodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboBusmodeActionPerformed
-        //  if (DEBUG) System.out.println("comboBusmodeAction");
-        //if (DEBUG) { System.out.println("setting bus control from combuBusmodeActionPerformed ==SX"); }
-        checkBusMode();
-    }//GEN-LAST:event_comboBusmodeActionPerformed
-
     private void comboSelectTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboSelectTypeActionPerformed
-        // set enable busmode selection accordingly.
-        //System.out.println("combo type action - selected="+comboSelectType.getSelectedItem().toString());
-        // if (DEBUG) { System.out.println("calling buscontrol from comboSelectTypeAction"); }
-        checkBusMode();
+
     }//GEN-LAST:event_comboSelectTypeActionPerformed
 
     private void btnChangeConfigFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangeConfigFileActionPerformed
@@ -526,56 +465,6 @@ public class SettingsUI extends javax.swing.JFrame {
 
         }
     }//GEN-LAST:event_btnChangeLocoConfigFileActionPerformed
-
-    private void checkBusMode() {
-        //if (DEBUG) { System.out.println("check bus control");}
-        if ((comboSelectType.getSelectedItem().toString().equalsIgnoreCase("ZS1"))
-                || (comboSelectType.getSelectedItem().toString().equalsIgnoreCase("ZS2"))
-                || (comboSelectType.getSelectedItem().toString().equalsIgnoreCase("FCC"))
-                || (comboSelectType.getSelectedItem().toString().equalsIgnoreCase("SLX 852"))) {
-            // enable selection of bus mode for these interfaces
-            comboBusmode.setEnabled(true);
-        } else {
-            comboBusmode.setSelectedIndex(0);  //  always == "SX" for other interfaces
-            comboBusmode.setEnabled(false);
-        }
-        if (comboBusmode.getSelectedItem().toString().equalsIgnoreCase("SX")) {
-            comboSXBusControl.setEnabled(false);
-            comboSXBusControl.setSelectedIndex(0);
-            lblLoco.setEnabled(false);
-            lblLocoSX0.setEnabled(false);
-            lblControl.setEnabled(false);
-
-        } else {
-            comboSXBusControl.setEnabled(true);
-            lblLoco.setEnabled(true);
-            lblLocoSX0.setEnabled(true);
-            lblControl.setEnabled(true);
-        }
-        // check if sensor list must be enabled 
-        if (comboSelectType.getSelectedItem().toString().contains("66824")) {
-            // the sensor list is necessary only for polling
-            btnSensorList.setEnabled(true);
-        } else {
-            btnSensorList.setEnabled(false);
-        }
-        // check baudrate for FCC, must be 230400 
-        if (comboSelectType.getSelectedItem().toString().contains("FCC")) {
-            // force 230400 
-            for (int i = 0; i < cbBaudrate.getItemCount(); i++) {
-                if (cbBaudrate.getItemAt(i).toString().equalsIgnoreCase("230400")) {
-                    cbBaudrate.setSelectedIndex(i);
-                }
-            }
-        } else if (comboSelectType.getSelectedItem().toString().toLowerCase().contains("opensx")) {
-            // force 230400 
-            for (int i = 0; i < cbBaudrate.getItemCount(); i++) {
-                if (cbBaudrate.getItemAt(i).toString().equalsIgnoreCase("115200")) {
-                    cbBaudrate.setSelectedIndex(i);
-                }
-            }
-        }
-    }
 
     private void i18n() {
         this.setTitle("Settings");
@@ -625,7 +514,7 @@ public class SettingsUI extends javax.swing.JFrame {
 
         String commPortPref = prefs.get("commPort", "");
         for (int i = 0; i < comboSelectSerialPort.getItemCount(); i++) {
-            if (comboSelectSerialPort.getItemAt(i).toString().equalsIgnoreCase(commPortPref)) {
+            if (comboSelectSerialPort.getItemAt(i).equalsIgnoreCase(commPortPref)) {
                 comboSelectSerialPort.setSelectedIndex(i);
                 break;
             }
@@ -639,12 +528,9 @@ public class SettingsUI extends javax.swing.JFrame {
     private javax.swing.JButton btnChangeConfigFile;
     private javax.swing.JButton btnChangeLocoConfigFile;
     private javax.swing.JButton btnSave;
-    private javax.swing.JButton btnSensorList;
     private javax.swing.JComboBox cbBaudrate;
     private javax.swing.JCheckBox cbDebug;
     private javax.swing.JCheckBox cbSimulation;
-    private javax.swing.JComboBox comboBusmode;
-    private javax.swing.JComboBox comboSXBusControl;
     private javax.swing.JComboBox<String> comboSelectSerialPort;
     private javax.swing.JComboBox comboSelectType;
     private javax.swing.JFrame jFrame1;
@@ -655,10 +541,7 @@ public class SettingsUI extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JLabel lblConfigFilenameHelp;
-    private javax.swing.JLabel lblControl;
-    private javax.swing.JLabel lblLoco;
     private javax.swing.JLabel lblLocoConfigFilenameHelp;
-    private javax.swing.JLabel lblLocoSX0;
     private javax.swing.JLabel lblSerial;
     private javax.swing.JTextArea txtConfigFilename;
     private javax.swing.JTextArea txtLocoConfigFilename;

@@ -38,7 +38,7 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
     public LanbahnMonitorUI() {
         initComponents();
 
-        this.setTitle("Virtual Channels Monitor");
+        this.setTitle("Lanbahn Channels Monitor");
         Color c1 = new Color(140, 140, 255);
         Container con1 = this.getContentPane();
         con1.setBackground(c1);

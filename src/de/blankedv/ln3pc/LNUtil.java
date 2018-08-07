@@ -17,6 +17,7 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.Variables.*;
+import static de.blankedv.ln3pc.MainUI.*;
 
 /**
  *
@@ -51,6 +52,12 @@ public class LNUtil {
         System.out.println();
 
         switch (buf[0]) {
+            case (byte) 0x83:
+                globalPower = POWER_ON;
+                break;
+            case (byte) 0x82:
+                globalPower = POWER_OFF;
+                break;
             case (byte) 0xB0:
                 /* <0xB0>,<SW1>,<SW2>,<CHK> REQ SWITCH function
 <SW1> =<0,A6,A5,A4- A3,A2,A1,A0>, 7 ls adr bits. A1,A0 select 1 of 4 input pairs in a DS54
@@ -112,9 +119,9 @@ Report/status bits and 4 MS adr bits.
                     dir = getDirection(buf);
                     //if (state == 0) {
                     disp.append("-> lack, adr=").append(adr);
-                    String s = String.format("%02X", buf[2]); 
+                    String s = String.format("%02X", buf[2]);
                     disp.append(" ACK1=").append(s).append(" dir=").append(dir);
-                    lanbahnData.put(adr, 1-dir);
+                    lanbahnData.put(adr, 1 - dir);
                 } else {
                     // reset LACK 
                     awaitingLack = 0;
@@ -124,7 +131,7 @@ Report/status bits and 4 MS adr bits.
             case (byte) 0xBC:
                 /* 0xBC ;REQ state of SWITCH
 ;<0xBC>,<SW1>,<SW2>,<CHK> REQ state of SWITCH */
-                lastAddress = getSwitchAddress(buf);  
+                lastAddress = getSwitchAddress(buf);
                 awaitingLack = 0xBC & 0x7f;
                 disp.append("-> req switch state, adr=").append(lastAddress);
                 break;
@@ -251,7 +258,7 @@ Report/status bits and 4 MS adr bits.
                 return 0;
         }
     }
-    
+
     static public String bufToString(byte[] buf) {
         int count = getLength(buf);
         StringBuilder sb = new StringBuilder();
@@ -260,32 +267,35 @@ Report/status bits and 4 MS adr bits.
         }
         return sb.toString();
     }
-    
+
     static public byte[] test() {
         //A0 01 00 5e
-         byte[] buf = new byte[4];
+        byte[] buf = new byte[4];
         buf[0] = (byte) 0xa0;
         buf[1] = (byte) 0x01;
         buf[2] = (byte) 0x00;
-        buf[3] =  (byte)((byte)0xff ^ buf[0] ^ buf[1] ^ buf[2]);
+        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
         if (buf[3] != (byte) 0x5e) {
-            System.out.println(String.format("ERROR, chk=%02X",buf[3]));
+            System.out.println(String.format("ERROR, chk=%02X", buf[3]));
         }
         return buf;
     }
+
     static public byte[] makeOPC_SW_REQ(int address, int dir, int onoff) {
- 
+
         byte[] buf = new byte[4];
         buf[0] = (byte) 0xb0;
         buf[1] = (byte) (address & 0x7f);
         buf[2] = (byte) 0x00;
-        if (dir == 1) { 
+        if (dir == 1) {
             buf[2] |= (byte) 0x20;
         }
-        if (onoff == 1) { buf[2] |= (byte) 0x10; }
-        buf[2] |= (byte)((address >> 7) & 0x0F);
-        buf[3] =  (byte)((byte)0xff ^ buf[0] ^ buf[1] ^ buf[2]);
-        
+        if (onoff == 1) {
+            buf[2] |= (byte) 0x10;
+        }
+        buf[2] |= (byte) ((address >> 7) & 0x0F);
+        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
+
         return buf;
     }
 }
