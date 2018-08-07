@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -63,7 +64,7 @@ public class SXnetSession implements Runnable {
                     }
                     String[] cmds = msg.split(";");
                     for (String cmd : cmds) {
-                        sendMessage(handleCommand(cmd.trim()));  // handleCommand returns "OK" or error msg
+                        sendMessage(handleCommand(cmd.trim()));  // handleCommand returns "OK" or error msg or nothing (empty String)
                     }
 
                 } else {
@@ -96,7 +97,7 @@ public class SXnetSession implements Runnable {
 
         public void run() {
             while (running) {
-                checkForLanbahnAndDCCChangesAndSendUpdates();
+                checkForChangesAndSendUpdates();
                 mySleep(300);  // send update only every 300msecs
             }
         }
@@ -112,12 +113,23 @@ public class SXnetSession implements Runnable {
         if (param == null) {
             return "ERROR";
         }
+        if (param.length < 1) {
+            System.out.println("not enough params in msg: " + m);
+            return "ERROR";
+        }
+        // commands without parameters
+        switch (param[0]) {
+            case "READPOWER":
+                return createPowerFeedbackMessage();
+        }
+
         if (param.length < 2) {
             System.out.println("not enough params in msg: " + m);
             return "ERROR";
         }
 
         switch (param[0]) {
+
             case "READ":
                 return createLanbahnFeedbackMessage(param);
             case "SET":
@@ -148,6 +160,15 @@ public class SXnetSession implements Runnable {
         }
 
         return "";
+    }
+
+    private String createPowerFeedbackMessage() {
+        StringBuilder msg = new StringBuilder();
+
+        msg.append("XPOWER ");
+        msg.append(globalPower);
+
+        return msg.toString();
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
@@ -197,43 +218,50 @@ public class SXnetSession implements Runnable {
 
     private String setLanbahnMessage(String[] par) {
         if (DEBUG) {
-            // System.out.println("setLanbahnMessage");
+            System.out.println("setLanbahnMessage");
         }
-
-        // convert the lanbahn "SET" message to a DCC Message if in DCC address range
         if (par.length <= 2) {
             return "ERROR";
         }
-        int lbadr = getLanbahnAddrFromString(par[1]);
+
+        // convert the lanbahn "SET" message to a DCC Message if in DCC address range
+        int lbAddr = getLanbahnAddrFromString(par[1]);
         int lbdata = getLanbahnDataFromString(par[2]);
-        if ((lbadr == INVALID_INT) || (lbdata == INVALID_INT)) {
+        if ((lbAddr == INVALID_INT) || (lbdata == INVALID_INT)) {
             return "ERROR";
         }
 
         // check whether we are in an DCC or pure lanbahn (simulation) address range
-        if (isPureLanbahnAddressRange(lbadr)) {
-            lanbahnData.put(lbadr, lbdata);  // update (or create) data    
+        if (lbAddr > DCCMAX) {
+            lanbahnData.put(lbAddr, lbdata);  // update (or create) data    
             // send lanbahnData
-            return "XL " + lbadr + " " + lanbahnData.get(lbadr);
+            return "XL " + lbAddr + " " + lanbahnData.get(lbAddr);
         } else {
-            // we are using DCC
-            int dccaddr = lbadr;
-            if (!isValidDCCAddress(dccaddr)) {
-                return "ERROR"; // for  
-            }            // depending on nBits() function, only data 0 ... 15 is allowed
-
-            // lanbahn address to SX address mapping: divide by 10, modulo is sxbit
-            // for example 987 => SX-98, bit 7 (!! bit from 1 .. 8)
-            // must fit into SX channel range, maximum 1278 is allowed !!
-            int dccadr = lbadr;
-
-            //TODO DCC
-            int bit = lbadr % 10;
-            if ((bit < 1) || (bit > 8)) {
-                return "ERROR";
+            // we are in DCC address range, check if it is no sensor
+            if (allSensors.contains(lbAddr)) {
+                return ""; // not allowed to set sensors
             }
-
-            return "TODO";
+            lanbahnData.put(lbAddr, lbdata);  // update local data
+            if (DCCMultiAspectSignalMapping.isLanbahnMultiAspect(lbAddr)) {
+                // TODO - must be handled separately
+            }
+            byte[] buf;
+            switch (lbdata) {
+                case 0:
+                case 2: // for the time being, see above
+                    // invert logic !!
+                    buf = LNUtil.makeOPC_SW_REQ(lbAddr - 1, 1, 1);
+                    break;
+                case 1:
+                case 3: // for the time being, see above
+                    buf = LNUtil.makeOPC_SW_REQ(lbAddr - 1, 0, 1);
+                    break;
+                default:
+                    System.out.println("INVALID DCC DATA=" + lbdata);
+                    return "ERROR";
+            }
+            serialIF.send(buf);
+            return "XL " + lbAddr + " " + lanbahnData.get(lbAddr);  // success
         }
     }
 
@@ -408,9 +436,9 @@ public class SXnetSession implements Runnable {
      * change
      *
      */
-    private void checkForLanbahnAndDCCChangesAndSendUpdates() {
+    private void checkForChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
-        boolean first = true;
+        boolean first = true;  // all but the first messages will start with a semicolon
 
         if ((globalPowerCopy != globalPower) && (globalPower != INVALID_INT)) {
             // power state has changed
@@ -424,23 +452,20 @@ public class SXnetSession implements Runnable {
         for (Map.Entry<Integer, Integer> e : lanbahnData.entrySet()) {
             Integer key = e.getKey();
             Integer value = e.getValue();
-            if (lanbahnDataCopy.containsKey(key)) {
-                if (lanbahnDataCopy.get(key) != lanbahnData.get(key)) {
-                    // value has changed
-                    lanbahnDataCopy.put(key, value);
-                    if (!first) {
-                        msg.append(";");
-                    }
-                    msg.append("XL " + key + " " + value);
-                    first = false;
-                    if (msg.length() > 60) {
-                        sendMessage(msg.toString());
-                        msg.setLength(0);  // =delete content
-                        first = true;
-                    }
-                }
-            } else {
+            if (!lanbahnDataCopy.containsKey(key) || (!Objects.equals(lanbahnDataCopy.get(key), lanbahnData.get(key)))) {  // null-safe '=='
+                // value is new or has changed
                 lanbahnDataCopy.put(key, value);
+                if (!first) {
+                    msg.append(";");
+                }
+                msg.append("XL ").append(key).append(" ").append(value);
+                first = false;
+                if (msg.length() > 60) {
+                    sendMessage(msg.toString());
+                    msg.setLength(0);  // =delete content
+                    first = true;
+                }
+
             }
         }
         if (msg.length() > 0) {

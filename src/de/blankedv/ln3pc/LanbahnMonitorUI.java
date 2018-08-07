@@ -156,7 +156,18 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     Integer key = (Integer) it.next();
                     //System.out.println("LBMon: "+key + " "+lbCopy.get(key));
                     // it.remove(); // avoids a ConcurrentModificationException
-                    jTable1.setValueAt(key, j, i);
+                    // mark sensors yellow and multi-aspect signals grey
+                    StringBuffer sb;
+                    if (Variables.allSensors.contains(key)) {
+                        sb = new StringBuffer("<html><p bgcolor='#FFFF00'>S-" + key + "</p></html>");
+                    } else {
+                        if (DCCMultiAspectSignalMapping.isLanbahnMultiAspect(key)) {
+                           sb = new StringBuffer("<html><p bgcolor='#888888'>Sig-" + key + "</p></html>");
+                        } else {
+                            sb = new StringBuffer("<html><p>" + key + "</p></html>");
+                        }
+                    }
+                    jTable1.setValueAt(sb.toString(), j, i);
                     StringBuffer s;
                     int value = lbCopy.get(key);
                     

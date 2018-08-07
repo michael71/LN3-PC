@@ -94,5 +94,5 @@ public class Variables {
     
     static final int POWER_ON = 1;
     static final int POWER_OFF = 0;
-    static final int POWER_UNKNOWN = -1;
+    static final int POWER_UNKNOWN = INVALID_INT;
 }

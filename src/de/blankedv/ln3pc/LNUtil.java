@@ -52,13 +52,16 @@ public class LNUtil {
         System.out.println();
 
         switch (buf[0]) {
+            case (byte) 0xA0:
+            case (byte) 0xA1:
+                return;  // ==> for the time being, ignore loco messages  TODO
             case (byte) 0x83:
                 globalPower = POWER_ON;
                 break;
             case (byte) 0x82:
                 globalPower = POWER_OFF;
                 break;
-            case (byte) 0xB0:
+            case (byte) 0xB0:  // switch
                 /* <0xB0>,<SW1>,<SW2>,<CHK> REQ SWITCH function
 <SW1> =<0,A6,A5,A4- A3,A2,A1,A0>, 7 ls adr bits. A1,A0 select 1 of 4 input pairs in a DS54
 <SW2> =<0,0,DIR,ON- A10,A9,A8,A7> Control bits and 4 MS adr bits.
@@ -86,7 +89,7 @@ public class LNUtil {
 
                 break;
 
-            case (byte) 0xB2:
+            case (byte) 0xB2:   // Sensor
                 /* sensor message 0xB2 ; General SENSOR Input codes; <0xB2>, <IN1>, <IN2>, <CHK>
 <IN1> =<0,A6,A5,A4- A3,A2,A1,A0>, 7 ls adr bits. A1,A0 select 1 of 4 inputs pairs in a DS54
 <IN2> =<0,X,I,L- A10,A9,A8,A7>
@@ -96,6 +99,10 @@ Report/status bits and 4 MS adr bits.
 "L"=0 for input SENSOR now 0V (LO) , 1 for Input sensor >=+6V (HI)
 "X"=1, control bit , 0 is RESERVED for future! */
                 adr = getSensorAddress(buf);
+                // add an unknown Sensor to the sensors list
+                if (!allSensors.contains(adr)) {
+                    allSensors.add(adr);
+                }
                 state = getOnOffState(buf);
                 disp.append("-> sensor adr=").append(adr);
                 if (state == 0) {
