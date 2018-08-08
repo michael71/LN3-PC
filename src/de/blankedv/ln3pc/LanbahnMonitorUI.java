@@ -142,7 +142,7 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
 
     public void update() {
 
-        lbCopy = new HashMap<>(lanbahnData);  // make a copy of the current data
+        lbCopy = new HashMap<>(lanbahnData);  // make a snapshot copy of the current data
         // the lanbahnData hashmap only can grow, no values will be deleted
         // initTable() => not necessary
 
@@ -186,17 +186,21 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     
                     // display in different color (Red) when value has changed
                     // after the last call of update()
-                    if (!Objects.equals(lbCopy.get(key), oldLbCopy.get(key))) {
+                    int valueOld = INVALID_INT;
+                    if (oldLbCopy.containsKey(key)) {
+                        valueOld = oldLbCopy.get(key).data;
+                    }
+                    if (value != valueOld ) {  // type is NOT compared !
                         s = new StringBuffer("<html><p bgcolor='#FF8800'>" + value + "</p></html>");
                     } else {
-                        s = new StringBuffer("<html><p bgcolor='#FFFF00'>" + value + "</p></html>");
+                        s = new StringBuffer("<html><p>" + value + "</p></html>");
                     }
                     jTable1.setValueAt(s.toString(), j, i + 1);
                 }
             }
         }
 
-        oldLbCopy = lbCopy;  // save the data for later "hasChanged" detection
+        oldLbCopy = new HashMap<>(lbCopy);  // save the data for later "hasChanged" detection
     }
 
     private void initTable1() {
