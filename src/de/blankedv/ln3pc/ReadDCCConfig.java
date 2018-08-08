@@ -94,15 +94,28 @@ public class ReadDCCConfig {
         // NamedNodeMap attributes = item.getAttributes();
         // Node theAttribute = attributes.items.item(i);
         // look for TrackElements - this is the lowest layer
+        items = root.getElementsByTagName("turnout");
+        if (CFG_DEBUG) {
+            System.out.println("config: " + items.getLength() + " turnouts");
+        }
+        for (int i = 0; i < items.getLength(); i++) {
+            int aTurnout = parseAddress(items.item(i));
+            if ( aTurnout != INVALID_INT) {
+                System.out.println("turnout a=" +  aTurnout );
+                lanbahnData.put( aTurnout, new LbData(0, TYPE_ACCESSORY));
+            }
+        }
+        
         items = root.getElementsByTagName("signal");
         if (CFG_DEBUG) {
             System.out.println("config: " + items.getLength() + " signals");
         }
+        
         for (int i = 0; i < items.getLength(); i++) {
-            DCCMultiAspectSignalMapping tmp = parseDCCMapping(items.item(i));
-            if ((tmp != null) && (tmp.lbAddr != INVALID_INT)) {
-                System.out.println("signal mapping: " + tmp.toString());
-                allSignalMappings.add(tmp);
+            IntPair maSig = parseMultiAspectAddress(items.item(i));
+            if ((maSig != null) && (maSig.a != INVALID_INT)) {
+                System.out.println("signal a/t = " + maSig.toString());
+                lanbahnData.put(maSig.a, new LbData(0, maSig.t));
             }
         }
 
@@ -111,19 +124,21 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " sensors");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            int sensAddress = parseDCCSensorAddress(items.item(i));
+            int sensAddress = parseAddress(items.item(i));
             if (sensAddress != INVALID_INT) {
-                System.out.println("sensor found with address: " + sensAddress);
-                allSensors.add(sensAddress);
+                System.out.println("sensor a=" + sensAddress);
+                lanbahnData.put( sensAddress, new LbData(0, TYPE_SENSOR));
             }
         }
 
     }
     // code template from lanbahnPanel
 
-    private static DCCMultiAspectSignalMapping parseDCCMapping(Node item) {
+    private static IntPair parseMultiAspectAddress(Node item) {
 
-        DCCMultiAspectSignalMapping dccmap = new DCCMultiAspectSignalMapping();
+        IntPair dccmap = new IntPair(INVALID_INT, 0);
+        int addr = INVALID_INT;
+        int nBit = INVALID_INT;
 
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -131,27 +146,24 @@ public class ReadDCCConfig {
             // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
             if (theAttribute.getNodeName().equals("adr")) {
-                dccmap.lbAddr = getPositionNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("dccadr")) {
-                dccmap.dccAddr = getPositionNode(theAttribute);
+                addr = getPositionNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("nbit")) {
-                dccmap.nBit = getPositionNode(theAttribute);
+               nBit = getPositionNode(theAttribute);
             }
         }
 
-        if (dccmap.nBit == 2) {
-            // currently implemented only for 4 aspect signals
-            if (dccmap.lbAddr != INVALID_INT) {
-                // lanbahn address is defined, calculate mainui
-                dccmap.dccAddr = dccmap.lbAddr;
-                return dccmap;
-            } else if ((dccmap.dccAddr != INVALID_INT) && (dccmap.dccAddr <= DCCMAX)) {
-                // we have a valid mainui address
-                dccmap.lbAddr = dccmap.dccAddr;
-                return dccmap;
-            } else {
-                System.out.println("invalid config data, dccAddr=" + dccmap.dccAddr + " nBit=" + dccmap.nBit);
-            }
+        if (addr != INVALID_INT) {                 
+            switch (nBit) {
+                case 1:
+                case INVALID_INT:  // == nBit defaults to 1
+                    return new IntPair(addr, TYPE_SIGNAL_1BIT);
+                case 2:
+                   return new IntPair(addr, TYPE_SIGNAL_2BIT);
+                case 3:
+                   return new IntPair(addr, TYPE_SIGNAL_3BIT);
+                default:
+                   return null;
+            } 
         }
         return null;
     }
@@ -182,18 +194,17 @@ public class ReadDCCConfig {
         return "";
     }
 
-    /** read a sensor address from XML node
+    /** read an address 'adr' from XML node
      * 
      * @param item
      * @return 
      */
-    private static int parseDCCSensorAddress(Node item) {
+    private static int parseAddress(Node item) {
         int sensA = INVALID_INT;
 
         NamedNodeMap attributes = item.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node theAttribute = attributes.item(i);
-
             if (theAttribute.getNodeName().equals("adr")) {
                 try {
                     int a = Integer.parseInt(theAttribute.getNodeValue());

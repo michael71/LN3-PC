@@ -35,9 +35,6 @@ public class Variables {
      */
     public static final int LBMIN = 1; // 
     /**
-     */
-    public static final int LBMIN_LB = 1278;
-    /**
      * {@value #LBMAX} =maximum lanbahn channel number
      */
     public static final int LBMAX = 9999;
@@ -72,13 +69,9 @@ public class Variables {
     static final int STOP = 0;
     static final int RUNNING = 1;   // automatic increase and reverse speed ONLY when "RUNNING"
     
-    static final int TYPE_SENSOR = 0;
-    static final int TYPE_SWITCH = 0;
-    
-    public static final ConcurrentHashMap<Integer, Integer> lanbahnData = new ConcurrentHashMap<Integer, Integer>(N_LANBAHN);
-    public static final ArrayList<DCCMultiAspectSignalMapping> allSignalMappings = new ArrayList<DCCMultiAspectSignalMapping>();
-    public static final ArrayList<Integer> allSensors = new ArrayList<Integer>();   // contains addresses which are sensors - needed to distinguish sensors from accessories for DCC commands
-
+  
+    public static final ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<Integer, LbData>(N_LANBAHN);
+        
     static int progState = STOP;
 
     static byte awaitingLack = 0;
@@ -95,4 +88,10 @@ public class Variables {
     static final int POWER_ON = 1;
     static final int POWER_OFF = 0;
     static final int POWER_UNKNOWN = INVALID_INT;
+    
+    static final int TYPE_ACCESSORY = 0;
+    static final int TYPE_SIGNAL_1BIT = 1;
+    static final int TYPE_SIGNAL_2BIT= 2;
+    static final int TYPE_SIGNAL_3BIT= 3;
+    static final int TYPE_SENSOR = 10;
 }

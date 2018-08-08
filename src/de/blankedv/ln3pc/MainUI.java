@@ -38,8 +38,8 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "1.1 - 06 Aug 2018; protocol3";
-    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 04 Aug 2018";
+    public static final String VERSION = "1.11 - 08 Aug 2018; protocol3";
+    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 08 Aug 2018";
 
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
@@ -584,14 +584,17 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVtestActionPerformed
 
     private void btnReadSensorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadSensorsActionPerformed
-        if (serialIF.isConnected()) {
+        readAllSensorData();
+    }//GEN-LAST:event_btnReadSensorsActionPerformed
+
+    public void readAllSensorData() {
+         if (serialIF.isConnected()) {
             // see manual for 63320 Rückmeldemodul/Uhlenbrock           
             byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
             serialIF.send(buf);
             //LNUtil.test();
         }
-    }//GEN-LAST:event_btnReadSensorsActionPerformed
-
+    }
     private void toggleConnectStatus() {
         if (serialIF.isConnected()) {
             closeConnection();

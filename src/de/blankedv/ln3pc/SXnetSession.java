@@ -30,9 +30,8 @@ public class SXnetSession implements Runnable {
     private PrintWriter out;
 
     // list of channels which are of interest for this device
-    private final HashMap<Integer, Integer> lanbahnDataCopy = new HashMap<>(N_LANBAHN);
+    private final HashMap<Integer, LbData> lanbahnDataCopy = new HashMap<>(N_LANBAHN);
     private int globalPowerCopy = INVALID_INT;
-    private final int ERROR = INVALID_INT;  // ERROR kept for readability
 
     /**
      * Constructs a handler.
@@ -76,7 +75,8 @@ public class SXnetSession implements Runnable {
                 mySleep(100);
 
             }
-
+            sendMessage("QUIT");   // TODO does not work as expected
+            mySleep(100);
             SXnetServerUI.taClients.append("client" + sn + " disconnected " + incoming.getRemoteSocketAddress().toString() + "\n");
         } catch (IOException e) {
             System.out.println("SXnetServerHandler" + sn + " Error: " + e);
@@ -150,7 +150,7 @@ public class SXnetSession implements Runnable {
             return "ERROR";
         }
         if (DEBUG) {
-            System.out.println("setSXMessage");
+            System.out.println("setLocoMessage");
         }
         int adr = getDCCAddrFromString(par[1]);
         int data = getByteFromString(par[2]);
@@ -172,50 +172,57 @@ public class SXnetSession implements Runnable {
     }
 
     private String createLanbahnFeedbackMessage(String[] par) {
-        if (DEBUG) {
-            //System.out.println("createLanbahnFeedbackMessage");
-        }
+        /* if (DEBUG) {
+            System.out.println("createLanbahnFeedbackMessage");
+        } */
         int lbAddr = getLanbahnAddrFromString(par[1]);
-        if (lbAddr == ERROR) {
+        if (lbAddr == INVALID_INT) {
             return "ERROR";
         }
 
-        if (isPureLanbahnAddressRange(lbAddr)) {
-            if (!lanbahnData.containsKey(lbAddr)) {
+        if (isSimulationAddressRange(lbAddr)) {
+            if (!lanbahnData.containsKey(lbAddr)) {  
+                // this should never happen if a proper laýout-config file is read
                 // initialize to "0" (=start simulation and init to "0")
                 // if not already exists
-                lanbahnData.put(lbAddr, 0);
+                lanbahnData.put(lbAddr, new LbData(0, TYPE_ACCESSORY));
             }
+        }
+        if (lanbahnData.containsKey(lbAddr)) {
             // send lanbahnData, when already set
             return "XL " + lbAddr + " " + lanbahnData.get(lbAddr);
         } else {
+            // check if sensor address - 
+            /*if (isSwitchAddress(lbAddr)) {
+                byte[] buf = LNUtil.makeREQ_SW_STATE(lbAddr - 1);
+                serialIF.send(buf);
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                    System.out.println("ERROR: " + ex.getMessage());
+                }
+                return "";
+            } else { */
+            // SHOULD NOT HAPPEN ANY MORE (i.e. correct layout file)
+            System.out.println("ERROR: uninitialized address");
             return "ERROR";
+            
         }
     }
 
-    private boolean isPureLanbahnAddressRange(int a) {
+    private boolean isSimulationAddressRange(int a) {
         if ((a == INVALID_INT) || (a < 0)) {
             return false;
         }
 
-        if ((a > LBMIN_LB) && (a <= LBMAX)) {
+        if ((a > DCCMAX) && (a <= LBMAX)) {
             return true;
         } else {
             return false;
         }
     }
 
-    private boolean isLanbahnOverlapAddressRange(int a) {
-        if ((a == INVALID_INT) || (a < 0)) {
-            return false;
-        }
-        if (a <= LBMIN_LB) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
+    
     private String setLanbahnMessage(String[] par) {
         if (DEBUG) {
             System.out.println("setLanbahnMessage");
@@ -233,18 +240,16 @@ public class SXnetSession implements Runnable {
 
         // check whether we are in an DCC or pure lanbahn (simulation) address range
         if (lbAddr > DCCMAX) {
-            lanbahnData.put(lbAddr, lbdata);  // update (or create) data    
+            lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ACCESSORY));  // update (or create) data    
             // send lanbahnData
             return "XL " + lbAddr + " " + lanbahnData.get(lbAddr);
         } else {
             // we are in DCC address range, check if it is no sensor
-            if (allSensors.contains(lbAddr)) {
+            if (lanbahnData.get(lbAddr).type != TYPE_SENSOR) {
                 return ""; // not allowed to set sensors
             }
-            lanbahnData.put(lbAddr, lbdata);  // update local data
-            if (DCCMultiAspectSignalMapping.isLanbahnMultiAspect(lbAddr)) {
-                // TODO - must be handled separately
-            }
+            lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ACCESSORY));  // update  local data
+            
             byte[] buf;
             switch (lbdata) {
                 case 0:
@@ -281,10 +286,10 @@ public class SXnetSession implements Runnable {
             if ((data >= 0) && (data <= 255)) {  // 1 byte
                 return data;
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             //
         }
-        return ERROR;
+        return INVALID_INT;
     }
 
     private int getLanbahnDataFromString(String s) {
@@ -296,7 +301,7 @@ public class SXnetSession implements Runnable {
             if ((data >= LBDATAMIN) && (data <= LBDATAMAX)) {
                 return data;
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             //
         }
         return ERROR;
@@ -311,7 +316,7 @@ public class SXnetSession implements Runnable {
      */
     int getDCCAddrFromString(String s) {
         if (DEBUG) {
-            System.out.println("get SXAddr from " + s);
+            System.out.println("INVALID_INTXAddr from " + s);
         }
         Integer channel = ERROR;
         try {
@@ -449,12 +454,13 @@ public class SXnetSession implements Runnable {
 
         }
 
-        for (Map.Entry<Integer, Integer> e : lanbahnData.entrySet()) {
+        for (Map.Entry<Integer, LbData> e : lanbahnData.entrySet()) {
             Integer key = e.getKey();
-            Integer value = e.getValue();
+            LbData lbd = e.getValue();
+            Integer value = lbd.data;
             if (!lanbahnDataCopy.containsKey(key) || (!Objects.equals(lanbahnDataCopy.get(key), lanbahnData.get(key)))) {  // null-safe '=='
                 // value is new or has changed
-                lanbahnDataCopy.put(key, value);
+                lanbahnDataCopy.put(key, lbd);
                 if (!first) {
                     msg.append(";");
                 }
