@@ -70,18 +70,21 @@ public class Variables {
     static final int RUNNING = 1;   // automatic increase and reverse speed ONLY when "RUNNING"
     
   
-    public static final ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<Integer, LbData>(N_LANBAHN);
-        
+    public static final ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
+      
+    public static final ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
+    public static final ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
     static int progState = STOP;
 
     static byte awaitingLack = 0;
     static int lastAddress = 0;   // used for LACK response
 
-    static enum State {
-        IDLE, REQUEST, NULLMOVE, HAVE_SLOT
-    };
+    static final int STATE_IDLE = 0;
+    static final int STATE_REQUEST = 1;
+    static final int STATE_NULLMOVE = 2;
+    static final int STATE_HAVE_SLOT = 3;
 
-    static State requestSlotState;
+
 
     static final int SELECTED_LISSY = 1;
     

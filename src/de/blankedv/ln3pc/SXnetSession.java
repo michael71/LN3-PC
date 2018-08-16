@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -32,6 +33,8 @@ public class SXnetSession implements Runnable {
     // list of channels which are of interest for this device
     private final HashMap<Integer, LbData> lanbahnDataCopy = new HashMap<>(N_LANBAHN);
     private int globalPowerCopy = INVALID_INT;
+
+    private byte[] lastDirFunc = {0x00, 0x00, 0x00, 0x00};
 
     /**
      * Constructs a handler.
@@ -154,12 +157,38 @@ public class SXnetSession implements Runnable {
         }
         int adr = getDCCAddrFromString(par[1]);
         int data = getByteFromString(par[2]);
-
         if ((adr == INVALID_INT) || (data == INVALID_INT)) {
             return "ERROR";
         }
+        // TODO check, if we have a new loco - or a Loco with an existing slot-mapping
+        LocoSlot locoS = null;
+        for (LocoSlot ls : locoSlots) {
+            if (adr == ls.loco.getLok_adr()) {
+                locoS = ls;
+                break;
+            }
+        }
 
-        return "";
+        if (locoS == null) {
+            byte[] buf = LNUtil.aquireLoco(adr,data);
+            if (buf != null) {
+            serialIF.send(buf);
+            }
+            // TODO - what to do next ??
+            return "";
+        } else {
+            locoS.loco.setFromSX(data);
+            byte[] buf = LNUtil.getLNLocoSpeed(locoS);
+            if (buf != null) {
+                serialIF.send(buf);
+            }
+            buf = LNUtil.getLNLocoDirAndFunctions(locoS); // TODO
+            if ((buf != null) && (!Arrays.equals(buf, lastDirFunc))) {
+                serialIF.send(buf);
+            }
+            return "";
+        }
+
     }
 
     private String createPowerFeedbackMessage() {
@@ -181,7 +210,7 @@ public class SXnetSession implements Runnable {
         }
 
         if (isSimulationAddressRange(lbAddr)) {
-            if (!lanbahnData.containsKey(lbAddr)) {  
+            if (!lanbahnData.containsKey(lbAddr)) {
                 // this should never happen if a proper laýout-config file is read
                 // initialize to "0" (=start simulation and init to "0")
                 // if not already exists
@@ -206,7 +235,7 @@ public class SXnetSession implements Runnable {
             // SHOULD NOT HAPPEN ANY MORE (i.e. correct layout file)
             System.out.println("ERROR: uninitialized address");
             return "ERROR";
-            
+
         }
     }
 
@@ -222,7 +251,6 @@ public class SXnetSession implements Runnable {
         }
     }
 
-    
     private String setLanbahnMessage(String[] par) {
         if (DEBUG) {
             System.out.println("setLanbahnMessage");
@@ -249,7 +277,7 @@ public class SXnetSession implements Runnable {
                 return ""; // not allowed to set sensors
             }
             lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ACCESSORY));  // update  local data
-            
+
             byte[] buf;
             switch (lbdata) {
                 case 0:

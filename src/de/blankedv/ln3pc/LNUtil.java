@@ -25,6 +25,9 @@ import static de.blankedv.ln3pc.MainUI.*;
  */
 public class LNUtil {
 
+    private static int requestSlotState;
+    private static Loco aquiringLoco = null;
+
     public static void interpret(final byte[] buf, final int count) {
         if ((count == 0) || (count != getLength(buf))) {
             return;
@@ -83,7 +86,7 @@ public class LNUtil {
                 }
                 if (state == 0) {
                     disp.append(" OFF");
-                } else {
+                } else { 
                     disp.append(" ON");
                 }
 
@@ -101,7 +104,7 @@ Report/status bits and 4 MS adr bits.
                 adr = getSensorAddress(buf);
                 state = getOnOffState(buf);
                 disp.append("-> sensor adr=").append(adr);
-                if (state == 0) {
+                if (state == 0) { 
                     disp.append(" free");
                     lanbahnData.put( adr, new LbData(0, TYPE_SENSOR)); 
                 } else {
@@ -122,7 +125,7 @@ Report/status bits and 4 MS adr bits.
                     dir = getDirection(buf);
                     //if (state == 0) {
                     disp.append("-> lack, adr=").append(adr);
-                    String s = String.format("%02X", buf[2]);
+                    String s = String.format("%02X", buf[2]); 
                     disp.append(" ACK1=").append(s).append(" dir=").append(dir);
                     lanbahnData.put(adr, new LbData((1 - dir), TYPE_ACCESSORY));
                 } else {
@@ -180,7 +183,7 @@ Report/status bits and 4 MS adr bits.
                 break;
             case (byte) 0xE7:
                 if (buf[1] == (byte) 0x0E) {
-                    if (requestSlotState == State.REQUEST) {
+                    if (requestSlotState == STATE_REQUEST) {
                         slotAquired = buf[2];
                         String stat = Throttle.statusToString(buf[3]);
                         System.out.println("slot=" + slotAquired
@@ -188,15 +191,18 @@ Report/status bits and 4 MS adr bits.
                                 + "(" + stat + ")");
                         //btnStart.setEnabled(true);
                         if (!stat.equals("In-Use")) {
-                            requestSlotState = State.NULLMOVE;
+                            requestSlotState = STATE_NULLMOVE;
                             // TODO lnc.send(Messages.nullMove(slotAquired));
+                            System.out.print("ERROR nullMove not yet implemented!");
                         } else {
                             disp.append(" stealing, aquire finished");
-                            requestSlotState = State.HAVE_SLOT;
+                            requestSlotState = STATE_HAVE_SLOT;
+                            initLoco(slotAquired, aquiringLoco);                                                    
                         }
-                    } else if (requestSlotState == State.NULLMOVE) {
+                    } else if (requestSlotState == STATE_NULLMOVE) {
                         disp.append(" aquire finished");
-                        requestSlotState = State.HAVE_SLOT;
+                        requestSlotState = STATE_HAVE_SLOT;
+                        initLoco(slotAquired, aquiringLoco);
                     }
                 }
                 break;
@@ -219,6 +225,14 @@ Report/status bits and 4 MS adr bits.
             iBit = 1;
         }
         return adr + 1 + iBit;
+    }
+    
+    static private void initLoco(int slotAquired, Loco lo) {
+        LocoSlot ls = new LocoSlot(slotAquired,lo);
+                            locoSlots.add(ls);   // TODO check if it exists already
+                            byte[] buf = getLNLocoSpeed(ls);
+                            serialIF.send(buf);
+                            
     }
 
     static private int getDirection(byte[] buf) {
@@ -309,6 +323,65 @@ Report/status bits and 4 MS adr bits.
         buf[2] = (byte) 0x00;
         buf[2] |= (byte) ((address >> 7) & 0x0F);
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
+
+        return buf;
+    }
+    
+    static public byte[] aquireLoco(int addr, int data) {
+        if ((addr < 0) || (addr > 9999)) {
+            System.out.println("ERROR: invalid address in aquireLoco");
+            return null;
+        }
+
+        System.out.println("aquiring addr=" + addr);
+        requestSlotState = STATE_REQUEST;
+        aquiringLoco = null;
+        for (Loco l : allLocos) {
+            if (l.getLok_adr() == addr) {
+                aquiringLoco = l; // we found the loco
+                
+            }
+        }
+        if (aquiringLoco == null) {
+            // create a new one
+            aquiringLoco = new Loco(addr);
+            allLocos.add(aquiringLoco);
+        }
+        aquiringLoco.setFromSX(data);
+
+        byte[] buf = new byte[4];
+        buf[0] = (byte) 0xbf;
+        buf[1] = (byte) (addr & 0x7f);
+        buf[2] = (byte) ((addr >> 7) & 0x0F);
+        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);     
+
+        return buf;
+    }
+    
+    static public byte[] getLNLocoSpeed(LocoSlot ls) {
+        // 0xA1 ;SET SLOT dir,F0-4 state
+        // 0xA0 ;SET SLOT speed
+        byte[] buf = new byte[4];
+        if (ls.loco.getLok_adr() == INVALID_INT) return null;
+        
+        buf[0] = (byte) 0xa0;
+        buf[1] = (byte) (ls.slot);
+        buf[2] = (byte) (ls.loco.getSpeed());
+        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);     
+
+        return buf;
+    }
+    
+    static public byte[] getLNLocoDirAndFunctions(LocoSlot ls) {
+        // 0xA1 ;SET SLOT dir,F0-4 state
+        // 0xA0 ;SET SLOT speed
+        byte[] buf = new byte[4];
+        if (ls.loco.getLok_adr() == INVALID_INT) return null;
+        
+        buf[0] = (byte) 0xa1;
+        buf[1] = (byte) (ls.slot);
+        buf[2] = (byte) (0x00 & 0x0F);  // TODO make sense of the 0xa1 command - not documented in the "personal edition"
+        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);     
 
         return buf;
     }

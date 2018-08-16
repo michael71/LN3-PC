@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.blankedv.ln3pc;
 
 /**
@@ -10,13 +9,28 @@ package de.blankedv.ln3pc;
  * @author mblank
  */
 public class Loco {
+
     private boolean forward = true;
     private int speed = 0;
     private boolean licht = false;
     private boolean horn = false;
     private int lok_adr = 1;
- 
+
     public Loco() {
+    }
+
+    public Loco(int addr) {
+        if ((addr > 0) && (addr < 9999)) {
+            lok_adr = addr;
+
+        } else {
+            // create loco with std addr=3
+            lok_adr = 3;
+        }
+        speed = 0;
+        licht = false;
+        horn = false;
+        forward = true;
     }
 
     public boolean isForward() {
@@ -56,9 +70,18 @@ public class Loco {
     }
 
     public void setSpeed(int speed) {
-        if (speed <0 ) speed = 0;
-        if (speed >31) speed = 31;
+        if (speed < 0) {
+            speed = 0;
+        }
+        if (speed > 31) {
+            speed = 31;
+        }
         this.speed = speed;
+    }
+
+    public void setFromSX(int data) {
+        // 
+        // TODO
     }
 
 }
