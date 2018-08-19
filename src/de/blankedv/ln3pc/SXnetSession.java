@@ -273,7 +273,7 @@ public class SXnetSession implements Runnable {
             return "XL " + lbAddr + " " + lanbahnData.get(lbAddr);
         } else {
             // we are in DCC address range, check if it is no sensor
-            if (lanbahnData.get(lbAddr).type != TYPE_SENSOR) {
+            if (lanbahnData.get(lbAddr).type == TYPE_SENSOR) {
                 return ""; // not allowed to set sensors
             }
             lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ACCESSORY));  // update  local data

@@ -408,7 +408,9 @@ public class SettingsUI extends javax.swing.JFrame {
 
         }
 
-        JOptionPane.showMessageDialog(this, "Needs Restart");
+        //JOptionPane.showMessageDialog(this, "Needs Restart");
+        mainui.reloadSettings();
+        
         settingsWindow = null;
         dispose();
     }//GEN-LAST:event_btnSaveActionPerformed

@@ -21,16 +21,17 @@ import java.net.URI;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.prefs.Preferences;
 
 public class ConfigWebserver {
 
     String fileName = "";
     String locoFileName = "";
     HttpServer server;
+    Preferences appPrefs;
 
-    public ConfigWebserver(String fName, String lName, int port) throws Exception {
-        fileName = fName;
-        locoFileName = lName;
+    public ConfigWebserver(Preferences p, int port) throws Exception {
+        appPrefs = p;
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new MyHandler());
         server.setExecutor(null); // creates a default executor
@@ -52,25 +53,28 @@ public class ConfigWebserver {
             System.out.println("URI="+requestURI.getPath());
             String fname = "";
             try {
+                String fileName = appPrefs.get("configfilename", "-keiner-");
                 if (requestURI.getPath().contains("config")) {
-                    fname = fileName;
-                    response = new String(Files.readAllBytes(Paths.get(fname)));
-                } else if (requestURI.getPath().contains("loco")) {
-                    fname = locoFileName;
-                    response = new String(Files.readAllBytes(Paths.get(fname)));
+                    if (fileName.equals("-keiner-")) {
+                        response = " ERROR - no config file selected";
+                        fname = "?";
+                    } else {
+                        fname = fileName;
+                        response = new String(Files.readAllBytes(Paths.get(fname)));
+                    }
                 } else {
-                    response = "ERROR:  only URLs :8000/config or:8000/loco are possible";
+                    response = "ERROR:  use URL :8000/config";
                 }
                 t.sendResponseHeaders(200, response.length());
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
             } catch (IOException ex) {
-                System.out.println("Config/Loco File: " + fname + " not found - only :8000/config and :8000/loco allowed");
-                response = "ERROR FILE NOT FOUND OR WRONG URL: " + fname + " - only :8000/config and :8000/loco allowed";
+                System.out.println("Config File: " + fname + " not found - only :8000/config allowed");
+                response = "ERROR FILE NOT FOUND OR WRONG URL: " + fname + " - only :8000/config allowed";
                 try {
                     t.sendResponseHeaders(200, response.length());
-                     OutputStream os = t.getResponseBody();
+                    OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
                 } catch (IOException ex1) {

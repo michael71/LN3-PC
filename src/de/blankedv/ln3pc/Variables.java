@@ -70,10 +70,11 @@ public class Variables {
     static final int RUNNING = 1;   // automatic increase and reverse speed ONLY when "RUNNING"
     
   
-    public static final ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
+    public static ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
+    public static ArrayList<SignalMapping> allSignalMappings = new ArrayList<SignalMapping>();
       
-    public static final ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
-    public static final ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    public static ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
+    public static ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
     static int progState = STOP;
 
     static byte awaitingLack = 0;

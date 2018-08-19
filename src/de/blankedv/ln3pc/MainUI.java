@@ -11,8 +11,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -85,13 +87,14 @@ public class MainUI extends javax.swing.JFrame {
     private String ifType;
 
     private ConfigWebserver configWebserver;
-    private String configFile;
-    private String locoConfigFile;
 
-    private final ImageIcon green, red, grey;
-    private List<Integer> pList = new LinkedList<>();
+    private ImageIcon green, red, grey;
+
     Timer timer;  // user for updating UI every second
     private String downloadFrom;
+
+    private String configFile = "";
+    private String resultReadConfigFile = "";
 
     /**
      * Creates new form InterfaceUI
@@ -99,80 +102,114 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() throws Exception {
 
         loadWindowPrefs();
+        
+        myip = NIC.getmyip();   // only the first one will be used
+        System.out.println("Number of usable Network Interfaces=" + myip.size());
+        
+        initConfigFile();
+        
         initComponents();
         setAppIcon();
-        
-        loadOtherPrefs();  //portName, baudrate, simulation
 
+        loadOtherPrefs();  //portName, baudrate, simulation
+      
+        initSerial();
+        initStatusText();     
+
+        initTimer();
+
+        openSerial();
+        loadConfigFile();
+  
+        
+
+        if (!myip.isEmpty()) {  // makes only sense when we have network connectivity
+            configWebserver = new ConfigWebserver(prefs, CONFIG_PORT);
+            
+            sxnetserver = new SXnetServerUI();
+            sxnetserver.setVisible(true);
+        }
+        
+        this.setTitle("LN3-PC"); // + panelName);
+        setVisible(true);
+
+    }
+
+    private void initSerial() {
         serialIF = new SerialInterface(portName, baudrate);
+    }
+
+    private void initStatusText() {
 
         // init status icon
         green = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/greendot.png"));
         red = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/reddot.png"));
         grey = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/greydot.png"));
+
         statusIcon.setIcon(grey);
-        
         labelStatus.setText("LN Interface at Port " + portName);
         btnPowerOnOff.setEnabled(false);  // works only after connection
         statusIcon.setEnabled(false);  // works only after connection
 
-        setVisible(true);
-
-        initNetwork();
-        
-        initTimer();
-
-        setTitle("LN3-PC");
-       
-        
-        openSerialConnection();
-
-        
-
     }
 
-    private void initNetwork() {
-         // get network info
-        myip = NIC.getmyip();   // only the first one will be used
-        System.out.println("Number of usable Network Interfaces=" + myip.size());
-        if (myip.isEmpty()) {
-            System.out.println("ERROR: no network !!! cannot do much");
-            downloadFrom = "download von http://hostname:8000/config  .../loco";
-        } else {
-            downloadFrom = "download from http:/" + myip.get(0).toString() + ":8000/config   .../loco";
-        }
- 
-        
+    private void initConfigFile() {
         configFile = prefs.get("configfilename", "-keiner-");
-        locoConfigFile = prefs.get("lococonfigfilename", "-keiner-");
-        
-        if (myip.size() >= 1) {  // makes only sense when we have network connectivity
-            sxnetserver = new SXnetServerUI();
-            sxnetserver.setVisible(true);
+        resultReadConfigFile = ReadSignalMapping.readXML(configFile);
 
-            if (!configFile.equalsIgnoreCase("-keiner-")) {
-                try {
-                    configWebserver = new ConfigWebserver(configFile, locoConfigFile, CONFIG_PORT);
-                } catch (Exception ex) {
-                    System.out.println("ERROR: "+ ex.getMessage());
-                }
-                lblMainConfigFilename.setText(configFile);
-                lblMainLocoConfigFilename.setText(locoConfigFile);
-                ReadDCCConfig.init(configFile);
-
+        if (myip.isEmpty()) {
+            System.out.println("ERROR: not network !!! cannot do anything");
+            downloadFrom = "no network - no download of config file ";
+        } else {
+            if (resultReadConfigFile.equalsIgnoreCase("OK")) {
+                downloadFrom = "download von http:/" + myip.get(0).toString() + ":8000/config";
             } else {
-                lblMainConfigFilename.setText("Bitte Config File auswählen! (f. Signale und Sensoren)");
-                lblMainLocoConfigFilename.setText(locoConfigFile);
+                downloadFrom = "corrupt config file - no download";
             }
+        }
+    }
 
+    private void loadConfigFile() {
+        if (!myip.isEmpty()) {  // makes only sense when we have network connectivity
+            if (!configFile.equalsIgnoreCase("-keiner-")) {
+                if (resultReadConfigFile.equalsIgnoreCase("OK")) {
+                    lblMainConfigFilename.setText(configFile);
+                } else {
+                    lblMainConfigFilename.setText(resultReadConfigFile.substring(0, Math.min(60, resultReadConfigFile.length() - 1)) + " ...");
+                    JOptionPane.showMessageDialog(this, "ERROR in reading XML File, cannot start ConfigFile-Webserver");
+                }
+            } else {
+                lblMainConfigFilename.setText("bisher nicht ausgewählt");
+            }
         } else {
             lblMainConfigFilename.setText("kein Netzwerk!!");
-            lblMainLocoConfigFilename.setText("");
             JOptionPane.showMessageDialog(this, "ERROR no network, cannot start SXnet");
-
         }
     }
-    
+
+
+    public void reloadSettings() {
+        System.out.println("Reloading all settings and re-connecting serial port");
+
+        if (serialIF != null) {
+            serialIF.close();
+        }
+
+        // clear all data
+        // TODO locoAddresses = new ArrayList<>();
+        lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
+        allSignalMappings = new ArrayList<>();
+
+        initConfigFile();
+        loadWindowPrefs();
+        loadOtherPrefs();
+        initSerial();
+
+
+        initStatusText();
+        loadConfigFile();
+    }
+
     private void setAppIcon() {
         URL url;
         try {
@@ -181,11 +218,11 @@ public class MainUI extends javax.swing.JFrame {
             Image img = kit.createImage(url);
             setIconImage(img);
         } catch (Exception ex) {
-            System.out.println("ERROR " +ex.getMessage());
+            System.out.println("ERROR " + ex.getMessage());
         }
 
     }
-    
+
     private void closeAll() {
         System.out.println("close all.");
         timer.stop();
@@ -237,7 +274,6 @@ public class MainUI extends javax.swing.JFrame {
         statusIcon = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         lblMainConfigFilename = new javax.swing.JLabel();
-        lblMainLocoConfigFilename = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuExit = new javax.swing.JMenuItem();
@@ -395,17 +431,12 @@ public class MainUI extends javax.swing.JFrame {
         lblMainConfigFilename.setFont(new java.awt.Font("Ubuntu", 0, 12)); // NOI18N
         lblMainConfigFilename.setText("jLabel1");
 
-        lblMainLocoConfigFilename.setFont(new java.awt.Font("Ubuntu", 0, 12)); // NOI18N
-        lblMainLocoConfigFilename.setText("jLabel1");
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblMainConfigFilename)
-                    .addComponent(lblMainLocoConfigFilename))
+                .addComponent(lblMainConfigFilename)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -413,8 +444,7 @@ public class MainUI extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(lblMainConfigFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(lblMainLocoConfigFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jMenu1.setText("File");
@@ -588,22 +618,23 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     public void readAllSensorData() {
-         if (serialIF.isConnected()) {
+        if (serialIF.isConnected()) {
             // see manual for 63320 Rückmeldemodul/Uhlenbrock           
             byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
             serialIF.send(buf);
             //LNUtil.test();
         }
     }
+
     private void toggleConnectStatus() {
         if (serialIF.isConnected()) {
             closeConnection();
         } else {
-           openSerialConnection();
+            openSerial();
         }
     }
-    
-    private void openSerialConnection() {
+
+    private void openSerial() {
         if (serialIF.open()) {
 
             statusIcon.setEnabled(true);
@@ -654,25 +685,6 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
         timer.start();
-    }
-
-    public void addToPlist(Integer a) {  // a vom Typ Integer, nicht int !!!
-        pList.add(a);
-        if (DEBUG) {
-            System.out.println("List " + pList.toString());
-        }
-    }
-
-    public void removeFromPlist(Integer a) {
-        pList.remove(a);  // wichtig: a muss ein Integer-OBJECT sein, kein Integer, sonst wird
-        //  nicht das "Object a", sondern das Object an der Position "a" gelöscht.
-        if (DEBUG) {
-            System.out.println("List " + pList.toString());
-        }
-    }
-
-    public List<Integer> getpList() {
-        return pList;
     }
 
     public static int toUnsignedInt(byte value) {
@@ -801,15 +813,14 @@ public class MainUI extends javax.swing.JFrame {
         portName = prefs.get("commPort", "/dev/ttyUSS0");
         simulation = prefs.getBoolean("simulation", false);
         System.out.println("simulation=" + simulation);
-
+        String baudStr = prefs.get("baudrate", "9600");
+        baudrate = Integer.parseInt(baudStr);
         ifType = prefs.get("type", "");
 
-        String baudStr = prefs.get("baudrate", "57600");
-        baudrate = Integer.parseInt(baudStr);
-        if (DEBUG) {
+        if (!simulation && DEBUG) {
             System.out.println("IF=" + ifType + " serial port=" + portName + " at " + baudrate + " baud");
         }
- 
+
     }
 
 
@@ -832,7 +843,6 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JPopupMenu jPopupMenu1;
     private javax.swing.JLabel labelStatus;
     private javax.swing.JLabel lblMainConfigFilename;
-    private javax.swing.JLabel lblMainLocoConfigFilename;
     private javax.swing.JMenuItem menuExit;
     private javax.swing.JMenuItem menuSettings;
     private javax.swing.JPanel panelInterface;
