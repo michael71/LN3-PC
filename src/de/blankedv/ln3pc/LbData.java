@@ -42,8 +42,10 @@ public class LbData {
         sb.append("d=").append(data);
         switch(type) {
             case TYPE_ACCESSORY:
-            case TYPE_SIGNAL_1BIT:
                 sb.append (" acc");
+                break;
+            case TYPE_SIGNAL_1BIT:
+                sb.append (" sig1bit");
                 break;
             case TYPE_SIGNAL_2BIT:
                 sb.append (" sig2bit");

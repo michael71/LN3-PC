@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received addr copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package de.blankedv.ln3pc;
@@ -20,23 +20,26 @@ import static de.blankedv.ln3pc.Variables.*;
 
 
 /**
- *
+ * declares a generic multiaspect Signal with its first DCC address and the
+ * Type : 1,2 or 3 bit (=2,4,8 aspects)  
+ * 2 bit => 2 addresses : addr, addr+1  etc
+ * 
  * @author mblank
  */
-public class IntPair {
-    int a;
-    int t;
+public class Signal {
+    int addr;   // first address
+    int sigType;      // type: 1,2 or 3 bit (=2,4,8 aspects)
     
-    IntPair (int addr, int type) {
-        a = addr;
-        t = type;
+    Signal (int addr, int type) {
+        this.addr = addr;
+        sigType = type;
     }
     
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (a == INVALID_INT) return ("invalid");
-        sb.append("a=").append(a);
-        switch(t) {
+        if (addr == INVALID_INT) return ("invalid");
+        sb.append("a=").append(addr);
+        switch(sigType) {
             case TYPE_ACCESSORY:
             case TYPE_SIGNAL_1BIT:
                 sb.append (" acc");

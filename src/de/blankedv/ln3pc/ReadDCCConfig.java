@@ -12,7 +12,6 @@ package de.blankedv.ln3pc;
  * and open the template in the editor.
  */
 import static de.blankedv.ln3pc.Variables.*;
-import static de.blankedv.ln3pc.Variables.DCCMAX;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,14 +35,8 @@ public class ReadDCCConfig {
 
     private static final boolean CFG_DEBUG = true;
 
-    public static void init(String configfilename) {
-
-        readXMLConfigFile(configfilename);
-
-    }
-
     // code template taken from lanbahnPanel
-    private static String readXMLConfigFile(String fname) {
+    public static String readXML(String fname) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
 
@@ -56,7 +49,7 @@ public class ReadDCCConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
-            parseSignalsAndSensors(doc);
+            parseActivePanelElements(doc);
 
         } catch (SAXException e) {
             System.out.println("SAX Exception - " + e.getMessage());
@@ -64,13 +57,16 @@ public class ReadDCCConfig {
         } catch (IOException e) {
             System.out.println("IO Exception - " + e.getMessage());
             return "IO Exception - " + e.getMessage();
+        } catch (Exception e) {
+            System.out.println("other Exception - " + e.getMessage());
+            return "other Exception - " + e.getMessage();
         }
 
-        return "";
+        return "OK";
     }
 
     // code template from lanbahnPanel
-    private static void parseSignalsAndSensors(Document doc) {
+    private static void parseActivePanelElements(Document doc) {
         // assemble new ArrayList of tickets.
         //<layout-config>
 //<panel name="Lonstoke West 2">
@@ -112,10 +108,10 @@ public class ReadDCCConfig {
         }
         
         for (int i = 0; i < items.getLength(); i++) {
-            IntPair maSig = parseMultiAspectAddress(items.item(i));
-            if ((maSig != null) && (maSig.a != INVALID_INT)) {
+            Signal maSig = parseMultiAspectAddress(items.item(i));
+            if ((maSig != null) && (maSig.addr != INVALID_INT)) {
                 System.out.println("signal a/t = " + maSig.toString());
-                lanbahnData.put(maSig.a, new LbData(0, maSig.t));
+                lanbahnData.put(maSig.addr, new LbData(0, maSig.sigType));
             }
         }
 
@@ -134,9 +130,9 @@ public class ReadDCCConfig {
     }
     // code template from lanbahnPanel
 
-    private static IntPair parseMultiAspectAddress(Node item) {
+    private static Signal parseMultiAspectAddress(Node item) {
 
-        IntPair dccmap = new IntPair(INVALID_INT, 0);
+        Signal dccmap = new Signal(INVALID_INT, 0);
         int addr = INVALID_INT;
         int nBit = INVALID_INT;
 
@@ -156,11 +152,11 @@ public class ReadDCCConfig {
             switch (nBit) {
                 case 1:
                 case INVALID_INT:  // == nBit defaults to 1
-                    return new IntPair(addr, TYPE_SIGNAL_1BIT);
+                    return new Signal(addr, TYPE_SIGNAL_1BIT);
                 case 2:
-                   return new IntPair(addr, TYPE_SIGNAL_2BIT);
+                   return new Signal(addr, TYPE_SIGNAL_2BIT);
                 case 3:
-                   return new IntPair(addr, TYPE_SIGNAL_3BIT);
+                   return new Signal(addr, TYPE_SIGNAL_3BIT);
                 default:
                    return null;
             } 
@@ -208,6 +204,9 @@ public class ReadDCCConfig {
             if (theAttribute.getNodeName().equals("adr")) {
                 try {
                     int a = Integer.parseInt(theAttribute.getNodeValue());
+                    // this is the FIRST address, the attribute can be of 
+                    // type adr="1,2" with two addresses 1 (for occupation) and
+                    // 2 for "in-route"
                     return a;
                 } catch (NumberFormatException e) {
                     return INVALID_INT;

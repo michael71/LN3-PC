@@ -11,8 +11,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -40,8 +38,8 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "1.11 - 08 Aug 2018; protocol3";
-    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 08 Aug 2018";
+    public static final String VERSION = "1.12 - 19 Aug 2018; protocol3";
+    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 19 Aug 2018";
 
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
@@ -155,7 +153,7 @@ public class MainUI extends javax.swing.JFrame {
 
     private void initConfigFile() {
         configFile = prefs.get("configfilename", "-keiner-");
-        resultReadConfigFile = ReadSignalMapping.readXML(configFile);
+        resultReadConfigFile = ReadDCCConfig.readXML(configFile);
 
         if (myip.isEmpty()) {
             System.out.println("ERROR: not network !!! cannot do anything");
@@ -198,7 +196,6 @@ public class MainUI extends javax.swing.JFrame {
         // clear all data
         // TODO locoAddresses = new ArrayList<>();
         lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
-        allSignalMappings = new ArrayList<>();
 
         initConfigFile();
         loadWindowPrefs();

@@ -71,7 +71,6 @@ public class Variables {
     
   
     public static ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
-    public static ArrayList<SignalMapping> allSignalMappings = new ArrayList<SignalMapping>();
       
     public static ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
     public static ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)

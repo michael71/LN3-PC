@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
-import static de.blankedv.ln3pc.Variables.*;  
-import static de.blankedv.ln3pc.MainUI.*;  
+import static de.blankedv.ln3pc.Variables.*;
+import static de.blankedv.ln3pc.MainUI.*;
 import purejavacomm.*;
 
 /**
@@ -19,20 +19,15 @@ import purejavacomm.*;
  */
 public class SerialInterface {
 
-    private boolean noPollingFlag;
     private String portName;
 
     private int baudrate;
-    private final int dataBits = SerialPort.DATABITS_8;
-    private final int stopBits = SerialPort.STOPBITS_1;
-    private final int parity = SerialPort.PARITY_NONE;
+
     CommPortIdentifier serialPortId;
     Enumeration enumComm;
     SerialPort serialPort;
     OutputStream outputStream;
     InputStream inputStream;
-
-    private List<Integer> pListCopy;
 
     private static long lastReceived = 0;
     Boolean regFeedback = false;
@@ -49,8 +44,8 @@ public class SerialInterface {
         this.baudrate = baud;
     }
 
-    public void setPort(String port) {
-        portName = port;
+    public String getPortName() {
+        return portName;
     }
 
     public boolean open() {
@@ -98,7 +93,7 @@ public class SerialInterface {
         serialPort.notifyOnDataAvailable(true);
 
         try {
-            serialPort.setSerialPortParams(baudrate, dataBits, stopBits, parity);
+            serialPort.setSerialPortParams(baudrate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
         } catch (UnsupportedCommOperationException e) {
             System.out.println("Konnte Schnittstellen-Paramter nicht setzen");
         }
@@ -136,7 +131,7 @@ public class SerialInterface {
         // darf nicht unterbrochen werden
 
         if (connected != true) {
-            System.out.println("Fehler beim Senden, serial port nicht geöffnet und simul. nicht gesetzt");
+            System.out.println("Fehler beim Senden, serial port nicht geöffnet und Simulation nicht gesetzt");
             return;
         }
 
@@ -151,7 +146,7 @@ public class SerialInterface {
             }
             // done via polling of mainui data in LanbahnUI / this.doLanbahnUpdate((byte)(data[0] & 0x7f), data[1]);
         } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
+            System.out.println("Fehler beim Senden: " + e.getMessage());
         }
     }
 
@@ -165,7 +160,7 @@ public class SerialInterface {
             outputStream.flush();
             globalPower = POWER_OFF;
         } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
+            System.out.println("Fehler beim Senden: " + e.getMessage());
         }
 
     }
@@ -180,12 +175,12 @@ public class SerialInterface {
             outputStream.flush();
             globalPower = POWER_ON;
         } catch (IOException e) {
-            System.out.println("Fehler beim Senden");
+            System.out.println("Fehler beim Senden: " + e.getMessage());
         }
     }
 
     public int readPower() {
-       return globalPower;
+        return globalPower;
     }
 
     public boolean isConnected() {
@@ -233,11 +228,18 @@ public class SerialInterface {
                     count++;
                 }
                 
-                LNUtil.interpret(buf, count);
+                boolean completeCMD = LNUtil.interpret(buf, count);
+                if (completeCMD && DEBUG) {
+                    System.out.print("serial read: ");
+                    for (int i = 0; i < count; i++) {
+                        System.out.printf("%02X ", buf[i]);
+                    }
+                    System.out.println();
+                }
             }
 
         } catch (IOException e) {
-            System.out.println("Fehler beim Lesen empfangener Daten");
+            System.out.println("Fehler beim Lesen empfangener Daten: " + e.getMessage());
         }
 
     }
