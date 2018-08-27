@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,6 +72,8 @@ public class MainUI extends javax.swing.JFrame {
     public static boolean connectionOK = false;  // watchdog for connection
     public static String panelName = "";
     public static String panelControl = "";  // command station type
+    
+    public static final int DCC_SPEED_FACTOR = 4;   // SX-speeds (0..31) will be multiplied by this factor to get DCC speed (0..126)
 
     OutputStream outputStream;
     InputStream inputStream;
@@ -89,6 +92,9 @@ public class MainUI extends javax.swing.JFrame {
     private ImageIcon green, red, grey;
 
     Timer timer;  // user for updating UI every second
+    private boolean sensorReadAtStart = false;
+    private long sensorTimer = 0;
+    
     private String downloadFrom;
 
     private String configFile = "";
@@ -130,7 +136,9 @@ public class MainUI extends javax.swing.JFrame {
         
         this.setTitle("LN3-PC"); // + panelName);
         setVisible(true);
-
+        
+        sensorTimer = System.currentTimeMillis();
+      
     }
 
     private void initSerial() {
@@ -329,7 +337,7 @@ public class MainUI extends javax.swing.JFrame {
         });
 
         btnReadSensors.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
-        btnReadSensors.setText("Read Sensors");
+        btnReadSensors.setText("INIT (Sensors,TC)");
         btnReadSensors.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnReadSensorsActionPerformed(evt);
@@ -612,12 +620,22 @@ public class MainUI extends javax.swing.JFrame {
 
     private void btnReadSensorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadSensorsActionPerformed
         readAllSensorData();
+        unlockTrackControl();
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     public void readAllSensorData() {
         if (serialIF.isConnected()) {
             // see manual for 63320 Rückmeldemodul/Uhlenbrock           
             byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
+            serialIF.send(buf);
+            //LNUtil.test();
+        }
+    }
+    
+    public void unlockTrackControl() {
+        if (serialIF.isConnected()) {
+            // see manual for 63320 Rückmeldemodul/Uhlenbrock           
+            byte[] buf = LNUtil.makeOPC_SW_REQ(2000 - 1, 1, 1);
             serialIF.send(buf);
             //LNUtil.test();
         }
@@ -735,6 +753,13 @@ public class MainUI extends javax.swing.JFrame {
         ThrottleUI.updateAll();
         FunkreglerUI.updateAll();
         FunkreglerUI.checkAlive();
+        
+        // read sensors once, 10 secs after start.
+        if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 5000) ) {
+            sensorReadAtStart = true;
+            readAllSensorData();
+             unlockTrackControl();
+        }
 
     }
 

@@ -25,13 +25,15 @@ import static de.blankedv.ln3pc.Variables.INVALID_INT;
 public class LocoSlot {
     public int slot = INVALID_INT;
     public Loco loco = null;
+    public boolean step128 = true;   // 128 or 28 speed steps 
  
     public LocoSlot() {
     }
     
-    public LocoSlot(int sl, Loco lo) {
+    public LocoSlot(int sl, Loco lo, boolean st128) {
         slot = sl;
         loco = lo;
+        step128 = st128;
     }
     
 }

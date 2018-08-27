@@ -35,6 +35,12 @@ public class SXnetSession implements Runnable {
     private int globalPowerCopy = INVALID_INT;
 
     private byte[] lastDirFunc = {0x00, 0x00, 0x00, 0x00};
+    
+    private byte[] lastA0Msg =  {0x00, 0x00, 0x00, 0x00};
+    private byte[] lastA1Msg =  {0x00, 0x00, 0x00, 0x00};
+    
+    private long lastLocoRefreshTime = 0;
+    private final long LOCO_REFRESH_INTERVAL = 5000;
 
     /**
      * Constructs a handler.
@@ -101,6 +107,7 @@ public class SXnetSession implements Runnable {
         public void run() {
             while (running) {
                 checkForChangesAndSendUpdates();
+                refreshLoco();
                 mySleep(300);  // send update only every 300msecs
             }
         }
@@ -165,7 +172,7 @@ public class SXnetSession implements Runnable {
         // TODO check, if we have a new loco - or a Loco with an existing slot-mapping
         LocoSlot locoS = null;
         for (LocoSlot ls : locoSlots) {
-            if (adr == ls.loco.getLok_adr()) {
+            if (adr == ls.loco.getAddr()) {
                 locoS = ls;
                 break;
             }
@@ -184,10 +191,12 @@ public class SXnetSession implements Runnable {
             locoS.loco.setFromSX(data);
             byte[] buf = LNUtil.getLNLocoSpeed(locoS);
             if (buf != null) {
+                lastA0Msg = buf.clone();
                 serialIF.send(buf);
             }
-            buf = LNUtil.getLNLocoDirAndFunctions(locoS); // TODO
-            if ((buf != null) && (!Arrays.equals(buf, lastDirFunc))) {
+            buf = LNUtil.getLNLocoDirAndFunctions(locoS); // only DIR, F0 and F1 so far
+            if (buf != null) {
+                lastA1Msg = buf.clone();
                 serialIF.send(buf);
             }
             return "";
@@ -209,7 +218,7 @@ public class SXnetSession implements Runnable {
         //  check, if we have a new loco - or a Loco with an existing slot-mapping
         LocoSlot locoS = null;
         for (LocoSlot ls : locoSlots) {
-            if (adr == ls.loco.getLok_adr()) {
+            if (adr == ls.loco.getAddr()) {
                 locoS = ls;
                 break;
             }
@@ -225,8 +234,8 @@ public class SXnetSession implements Runnable {
             return "";
         } else {
             if (DEBUG) System.out.println("read loco has slot#"+locoS.slot);
-            int s = locoS.loco.getSpeed();
-            return "XLOCO "+adr+" "+s;
+            int sxData = locoS.loco.getSX();
+            return "XLOCO "+adr+" "+sxData;
         }
 
     }
@@ -557,5 +566,21 @@ public class SXnetSession implements Runnable {
         if (msg.length() > 0) {
             sendMessage(msg.toString());
         }
+    }
+    
+    private void refreshLoco() {
+        if ( (System.currentTimeMillis() - lastLocoRefreshTime) < LOCO_REFRESH_INTERVAL) {
+
+                    return;
+        }
+lastLocoRefreshTime = System.currentTimeMillis();
+         if (lastA0Msg[0]!= (byte)0x00) {
+             serialIF.send(lastA1Msg);
+        }
+        if (lastA1Msg[0] != (byte)0x00) {
+             serialIF.send(lastA1Msg);
+        }
+       
+        
     }
 }

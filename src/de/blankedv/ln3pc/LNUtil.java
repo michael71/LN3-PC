@@ -180,12 +180,19 @@ Report/status bits and 4 MS adr bits.
                 break;
             case (byte) 0xE7:
                 if (buf[1] == (byte) 0x0E) {
+                    //   OPC_SL_RD_DATA    0xE7 ;SLOT DATA return, 10 bytes
+                    // ;<0xE7>,<0E>,<SLOT#>,<STAT>,<ADR>,<SPD>,<DIRF>,<TRK>
+                    // ;<SS2>,<ADR2>,<SND>,<ID1>,<ID2>,<CHK>
+
                     if (requestSlotState == STATE_REQUEST) {
                         slotAquired = buf[2];
                         String stat = Throttle.statusToString(buf[3]);
                         System.out.println("slot=" + slotAquired
                                 + " st=0x" + buf[3]
                                 + "(" + stat + ")");
+                        //byte spd = buf[5];
+                        // byte dirf = buf[6];   // dir,F0-4 state
+                        //byte trk = buf[7];
                         //btnStart.setEnabled(true);
                         if (!stat.equals("In-Use")) {
                             requestSlotState = STATE_NULLMOVE;
@@ -194,12 +201,12 @@ Report/status bits and 4 MS adr bits.
                         } else {
                             disp.append(" stealing, aquire finished");
                             requestSlotState = STATE_HAVE_SLOT;
-                            initLoco(slotAquired, aquiringLoco);
+                            initLoco(slotAquired, aquiringLoco, (byte)(0x07 & buf[3]), buf[5], buf[6], buf[7]);
                         }
                     } else if (requestSlotState == STATE_NULLMOVE) {
                         disp.append(" aquire finished");
                         requestSlotState = STATE_HAVE_SLOT;
-                        initLoco(slotAquired, aquiringLoco);
+                        initLoco(slotAquired, aquiringLoco, (byte)(0x07 & buf[3]), buf[5], buf[6], buf[7]);
                     }
                 }
                 break;
@@ -227,14 +234,87 @@ Report/status bits and 4 MS adr bits.
         return adr + 1 + iBit;
     }
 
-    static private void initLoco(int slotAquired, Loco lo) {
-        LocoSlot ls = new LocoSlot(slotAquired, lo);
+    static private void initLoco(int slotAquired, Loco lo, byte sp, byte dectype, byte dirf, byte trk) {
+
+        
+        setGlobalPower(trk);
+        if (DEBUG) printTRKinfo(trk);
+        LocoSlot ls = new LocoSlot(slotAquired, lo, is128SpeedSteps(dectype));
         locoSlots.add(ls);   // TODO check if it exists already
+        lo.setDirf(dirf);
+        lo.setSpeed(0); // stop loco first (int)sp);
         byte[] buf = getLNLocoSpeed(ls);
         serialIF.send(buf);
 
     }
 
+    /**
+     * calculate number of speedsteps for this slot from last 3 bits of "decoder
+     * type"
+     *
+     * @param dtype
+     * @return
+     */
+    static boolean is128SpeedSteps(byte dtype) {
+        // D2..D0  BITS for Decoder TYPE encoding for this SLOT
+// 011=send 128 speed mode packets
+//;010=14 step MODE
+//;001=28 step. Generate Trinary packets for this Mobile ADR
+// 000=28 step/ 3 BYTE PKT regular mode
+//;111=128 Step decoder, Allow Advanced DCC consisting
+//;100=28 Step decoder ,Allow Advanced DCC consisting
+        boolean step128;
+        switch (dtype) {
+            case 0b010:
+                System.out.println("ERROR:  14 speedsteps not allowed!!!");
+                step128 = false;
+                break;
+            case 0:
+            case 0b01:
+                
+                step128 = false;
+                break;
+            default:
+                step128 = true;
+                break;
+        }
+        if (step128) {
+            System.out.println("128 speed steps");
+        } else {
+            System.out.println("28 speed steps");
+        }
+        return step128;
+    }
+
+    static public void printTRKinfo(byte t) {
+                // TRK byte: D7-D4 Reserved, D3 = prog.track.is.busy
+        // D2 = Loconet 1.1 cap.
+        // D1 = Track is NOT paused (no emergency stop)
+        // D0 = Global Power ON
+        if ((t & 0x80) != 0) {
+            System.out.println("prog track busy");
+        }
+        if ((t & 0x40) != 0) {
+            System.out.println("loconet 1.1 cap.");
+        }
+        if ((t & 0x20) != 0) {
+            System.out.println("no emergency stop");
+        } else {
+            System.out.println("EMERGENCY stop"); 
+        }
+       
+        
+    }
+    
+    static private void setGlobalPower(byte t) {
+         if ((t & 0x10) != 0) {
+            System.out.println("globalPower is ON");
+            globalPower = POWER_ON;
+        } else {
+            System.out.println("globalPower is OFF"); 
+            globalPower = POWER_OFF;
+        }
+    }
     static private int getDirection(byte[] buf) {
         int dir = (int) buf[2] & 0x20;  // GREEN/RED
         if (dir != 0) {
@@ -285,7 +365,7 @@ Report/status bits and 4 MS adr bits.
         return sb.toString();
     }
 
-    static public byte[] test() {
+   /** static public byte[] test() {
         //A0 01 00 5e
         byte[] buf = new byte[4];
         buf[0] = (byte) 0xa0;
@@ -296,7 +376,7 @@ Report/status bits and 4 MS adr bits.
             System.out.println(String.format("ERROR, chk=%02X", buf[3]));
         }
         return buf;
-    }
+    } */
 
     /* NOT USED
      static public byte[] makePOWER_ON_OFF(int onoff) {
@@ -355,7 +435,7 @@ Report/status bits and 4 MS adr bits.
         requestSlotState = STATE_REQUEST;
         aquiringLoco = null;
         for (Loco l : allLocos) {
-            if (l.getLok_adr() == addr) {
+            if (l.getAddr() == addr) {
                 aquiringLoco = l; // we found the loco
 
             }
@@ -369,8 +449,9 @@ Report/status bits and 4 MS adr bits.
 
         byte[] buf = new byte[4];
         buf[0] = (byte) 0xbf;
-        buf[1] = (byte) (addr & 0x7f);
-        buf[2] = (byte) ((addr >> 7) & 0x0F);
+        buf[1] = (byte) 0x00;  // TODO: impl long addresses
+        buf[2] = (byte) (addr & 0x7f);
+        //buf[2] = (byte) ((addr >> 7) & 0x0F);
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
 
         return buf;
@@ -390,13 +471,16 @@ Report/status bits and 4 MS adr bits.
         // 0xA1 ;SET SLOT dir,F0-4 state
         // 0xA0 ;SET SLOT speed
         byte[] buf = new byte[4];
-        if (ls.loco.getLok_adr() == INVALID_INT) {
+        if (ls.loco.getAddr() == INVALID_INT) {
             return null;
         }
 
         buf[0] = (byte) 0xa0;
         buf[1] = (byte) (ls.slot);
-        buf[2] = (byte) (ls.loco.getSpeed());
+        buf[2] = (byte) (ls.loco.getSpeed() * DCC_SPEED_FACTOR);
+        if (buf[2] == (byte)0x01) {
+            buf[2] = (byte) 0x02;
+        }  // 0x01 is emergency stop !!
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
 
         return buf;
@@ -406,13 +490,18 @@ Report/status bits and 4 MS adr bits.
         // 0xA1 ;SET SLOT dir,F0-4 state
         // 0xA0 ;SET SLOT speed
         byte[] buf = new byte[4];
-        if (ls.loco.getLok_adr() == INVALID_INT) {
+        if (ls.loco.getAddr() == INVALID_INT) {
             return null;
         }
 
         buf[0] = (byte) 0xa1;
         buf[1] = (byte) (ls.slot);
-        buf[2] = (byte) (0x00 & 0x0F);  // TODO make sense of the 0xa1 command - not documented in the "personal edition"
+        buf[2] = (byte) (0x00);  
+        
+        if (ls.loco.isForward()) buf[2] += (byte) 0x20;
+        if (ls.loco.isLight()) buf[2] += (byte) 0x10;
+        if (ls.loco.isF1()) buf[2] += (byte) 0x01;
+        
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
 
         return buf;
