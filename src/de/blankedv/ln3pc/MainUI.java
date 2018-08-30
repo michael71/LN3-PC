@@ -54,6 +54,8 @@ public class MainUI extends javax.swing.JFrame {
     public static MainUI mainui;
 
     public static SettingsUI settingsWindow;
+    public static FahrplanUI fahrplanWindow;
+    public static boolean fahrplanActive = false;
     public static int globalPower = INVALID_INT;
 
     /**
@@ -72,7 +74,7 @@ public class MainUI extends javax.swing.JFrame {
     public static boolean connectionOK = false;  // watchdog for connection
     public static String panelName = "";
     public static String panelControl = "";  // command station type
-    
+
     public static final int DCC_SPEED_FACTOR = 4;   // SX-speeds (0..31) will be multiplied by this factor to get DCC speed (0..126)
 
     OutputStream outputStream;
@@ -94,7 +96,7 @@ public class MainUI extends javax.swing.JFrame {
     Timer timer;  // user for updating UI every second
     private boolean sensorReadAtStart = false;
     private long sensorTimer = 0;
-    
+
     private String downloadFrom;
 
     private String configFile = "";
@@ -106,39 +108,37 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() throws Exception {
 
         loadWindowPrefs();
-        
+
         myip = NIC.getmyip();   // only the first one will be used
         System.out.println("Number of usable Network Interfaces=" + myip.size());
-        
+
         initConfigFile();
-        
+
         initComponents();
         setAppIcon();
 
         loadOtherPrefs();  //portName, baudrate, simulation
-      
+
         initSerial();
-        initStatusText();     
+        initStatusText();
 
         initTimer();
 
         openSerial();
         loadConfigFile();
-  
-        
 
         if (!myip.isEmpty()) {  // makes only sense when we have network connectivity
-            configWebserver = new ConfigWebserver(prefs, CONFIG_PORT);
-            
             sxnetserver = new SXnetServerUI();
             sxnetserver.setVisible(true);
+            
+            configWebserver = new ConfigWebserver(prefs, CONFIG_PORT);
         }
-        
+
         this.setTitle("LN3-PC"); // + panelName);
         setVisible(true);
-        
+
         sensorTimer = System.currentTimeMillis();
-      
+
     }
 
     private void initSerial() {
@@ -193,7 +193,6 @@ public class MainUI extends javax.swing.JFrame {
         }
     }
 
-
     public void reloadSettings() {
         System.out.println("Reloading all settings and re-connecting serial port");
 
@@ -209,7 +208,6 @@ public class MainUI extends javax.swing.JFrame {
         loadWindowPrefs();
         loadOtherPrefs();
         initSerial();
-
 
         initStatusText();
         loadConfigFile();
@@ -272,6 +270,7 @@ public class MainUI extends javax.swing.JFrame {
         btnMonitor = new javax.swing.JButton();
         btnReset = new javax.swing.JButton();
         btnReadSensors = new javax.swing.JButton();
+        btnFahrplan = new javax.swing.JButton();
         panelInterface = new javax.swing.JPanel();
         btnConnectDisconnect = new javax.swing.JButton();
         btnPowerOnOff = new javax.swing.JButton();
@@ -344,6 +343,14 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
+        btnFahrplan.setFont(new java.awt.Font("Ubuntu", 0, 14)); // NOI18N
+        btnFahrplan.setText("Fahrplan");
+        btnFahrplan.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFahrplanActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelWindowsLayout = new javax.swing.GroupLayout(panelWindows);
         panelWindows.setLayout(panelWindowsLayout);
         panelWindowsLayout.setHorizontalGroup(
@@ -351,19 +358,24 @@ public class MainUI extends javax.swing.JFrame {
             .addGroup(panelWindowsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnThrottle, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnReadSensors, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(35, 35, 35)
-                .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panelWindowsLayout.createSequentialGroup()
-                        .addComponent(btnTurnout, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
-                        .addComponent(btnSensor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnThrottle, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnReadSensors, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(35, 35, 35)
+                        .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelWindowsLayout.createSequentialGroup()
+                                .addComponent(btnTurnout, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
+                                .addComponent(btnSensor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(panelWindowsLayout.createSequentialGroup()
+                                .addComponent(btnMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnReset, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(panelWindowsLayout.createSequentialGroup()
-                        .addComponent(btnMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnReset, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(btnFahrplan, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         panelWindowsLayout.setVerticalGroup(
@@ -379,7 +391,9 @@ public class MainUI extends javax.swing.JFrame {
                     .addComponent(btnReset)
                     .addComponent(btnMonitor)
                     .addComponent(btnReadSensors))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(btnFahrplan)
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
         panelInterface.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Interface"));
@@ -508,13 +522,13 @@ public class MainUI extends javax.swing.JFrame {
                         .addGap(12, 12, 12)
                         .addComponent(panelInterface, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(panelWindows, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jLabel2)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(panelWindows, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -523,10 +537,10 @@ public class MainUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelInterface, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(panelWindows, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(panelWindows, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
@@ -610,7 +624,7 @@ public class MainUI extends javax.swing.JFrame {
             this.setCursor(c);
         }
         if (simulation) {
-            // TODO implement for lanbahn
+            // TODO implement for lanbahn/LocoNet
         }
     }//GEN-LAST:event_btnResetActionPerformed
 
@@ -623,6 +637,13 @@ public class MainUI extends javax.swing.JFrame {
         unlockTrackControl();
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
+    private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed
+        if (fahrplanWindow == null) {
+            fahrplanWindow = new FahrplanUI();
+        }
+        fahrplanWindow.setVisible(true);
+    }//GEN-LAST:event_btnFahrplanActionPerformed
+
     public void readAllSensorData() {
         if (serialIF.isConnected()) {
             // see manual for 63320 Rückmeldemodul/Uhlenbrock           
@@ -631,7 +652,7 @@ public class MainUI extends javax.swing.JFrame {
             //LNUtil.test();
         }
     }
-    
+
     public void unlockTrackControl() {
         if (serialIF.isConnected()) {
             // see manual for 63320 Rückmeldemodul/Uhlenbrock           
@@ -753,12 +774,12 @@ public class MainUI extends javax.swing.JFrame {
         ThrottleUI.updateAll();
         FunkreglerUI.updateAll();
         FunkreglerUI.checkAlive();
-        
+
         // read sensors once, 10 secs after start.
-        if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 5000) ) {
+        if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 5000)) {
             sensorReadAtStart = true;
             readAllSensorData();
-             unlockTrackControl();
+            unlockTrackControl();
         }
 
     }
@@ -848,6 +869,7 @@ public class MainUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnConnectDisconnect;
+    private javax.swing.JButton btnFahrplan;
     private javax.swing.JButton btnMonitor;
     private javax.swing.JButton btnPowerOnOff;
     private javax.swing.JButton btnReadSensors;
