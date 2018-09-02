@@ -5,6 +5,7 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.MainUI.DEBUG;
+import static de.blankedv.ln3pc.Variables.MAX_SPEED;
 
 /**
  *
@@ -34,6 +35,28 @@ public class Loco {
         light = false;
         F1 = false;
         forward = true;
+    }
+    
+    public Loco(int addr, int dir, int sp) {
+         if ((addr > 0) && (addr < 9999)) {
+            this.addr = addr;
+
+        } else {
+            // create loco with std addr=3
+            this.addr = 3;
+        }
+        if (dir == 1) {
+            forward = true;
+        } else {
+            forward = false;
+        }
+        if ((sp >= 0) && (sp <= MAX_SPEED)) {
+            speed = sp;
+        } else {
+            speed = 0;
+        }
+        light = false;
+        F1 = false;
     }
 
     public boolean isForward() {

@@ -138,6 +138,7 @@ public class MainUI extends javax.swing.JFrame {
         setVisible(true);
 
         sensorTimer = System.currentTimeMillis();
+        btnFahrplan.setEnabled(false);
 
     }
 
@@ -638,6 +639,8 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed
+        if (sensorReadAtStart == false) return;
+        
         if (fahrplanWindow == null) {
             fahrplanWindow = new FahrplanUI();
         }
@@ -650,6 +653,7 @@ public class MainUI extends javax.swing.JFrame {
             byte[] buf = LNUtil.makeOPC_SW_REQ(1017 - 1, 1, 1);
             serialIF.send(buf);
             //LNUtil.test();
+            btnFahrplan.setEnabled(true);  // can be activated only after sensors are read
         }
     }
 
@@ -776,7 +780,7 @@ public class MainUI extends javax.swing.JFrame {
         FunkreglerUI.checkAlive();
 
         // read sensors once, 10 secs after start.
-        if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 5000)) {
+        if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 3000)) {
             sensorReadAtStart = true;
             readAllSensorData();
             unlockTrackControl();

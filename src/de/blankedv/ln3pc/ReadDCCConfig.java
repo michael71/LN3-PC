@@ -15,6 +15,7 @@ import static de.blankedv.ln3pc.Variables.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -49,7 +50,9 @@ public class ReadDCCConfig {
         Document doc;
         try {
             doc = builder.parse(new File(fname));
-            parseActivePanelElements(doc);
+            parsePEsAndTimetable(doc);
+            // sort the trips by ID
+            Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
         } catch (SAXException e) {
             System.out.println("SAX Exception - " + e.getMessage());
@@ -66,7 +69,7 @@ public class ReadDCCConfig {
     }
 
     // code template from lanbahnPanel
-    private static void parseActivePanelElements(Document doc) {
+    private static void parsePEsAndTimetable(Document doc) {
         // assemble new ArrayList of tickets.
         //<layout-config>
 //<panel name="Lonstoke West 2">
@@ -126,6 +129,16 @@ public class ReadDCCConfig {
                 lanbahnData.put( sensAddress, new LbData(0, TYPE_SENSOR));
             }
         }
+        
+        items = root.getElementsByTagName("trip");
+        for (int i = 0; i < items.getLength(); i++) {
+            Trip tr = parseTrip(items.item(i));
+            if (tr != null) {
+                System.out.println("trip id=" + tr.id);
+                allTrips.add(tr);
+            }
+        }
+        
 
     }
     // code template from lanbahnPanel
@@ -142,9 +155,9 @@ public class ReadDCCConfig {
             // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
             // theAttribute.getNodeValue());
             if (theAttribute.getNodeName().equals("adr")) {
-                addr = getPositionNode(theAttribute);
+                addr = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("nbit")) {
-               nBit = getPositionNode(theAttribute);
+               nBit = getIntValueOfNode(theAttribute);
             }
         }
 
@@ -165,15 +178,16 @@ public class ReadDCCConfig {
     }
 
     // code from lanbahnPanel
-    private static int getPositionNode(Node a) {
+    private static int getIntValueOfNode(Node a) {
         return Integer.parseInt(a.getNodeValue());
     }
     // code from lanbahnPanel
 
-    private static int getValue(String s) {
+    /* private static float getFloatValueOfNode(String s) {
         float b = Float.parseFloat(s);
-        return (int) b;
-    }
+        return  b;
+    } */
+    
     // code from lanbahnPanel
 
     private static String parsePanelAttribute(Node item, String att) {
@@ -216,4 +230,43 @@ public class ReadDCCConfig {
         return INVALID_INT;
 
     }
+    
+    private static Trip parseTrip(Node item) {
+
+        Trip t = new Trip();
+
+        NamedNodeMap attributes = item.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node theAttribute = attributes.item(i);
+            if (theAttribute.getNodeName().equals("id")) {
+                t.id = getIntValueOfNode(theAttribute);
+            } else if (theAttribute.getNodeName().equals("route")) {
+                t.route = theAttribute.getNodeValue();
+            } else if (theAttribute.getNodeName().equals("sens1")) {
+                t.sens1 = getIntValueOfNode(theAttribute);
+            } else if (theAttribute.getNodeName().equals("sens2")) {
+               t.sens2 = getIntValueOfNode(theAttribute);
+            } else if (theAttribute.getNodeName().equals("loco")) {
+               t.locoString =theAttribute.getNodeValue();
+            } else if (theAttribute.getNodeName().equals("stopdelay")) {
+               t.stopDelay = getIntValueOfNode(theAttribute);
+            }
+        }
+
+        // check if Trip information is complete
+        if ((t.id != INVALID_INT) && 
+                (!t.route.isEmpty())&&
+                ( t.sens1 != INVALID_INT) &&
+                ( t.sens2 != INVALID_INT) &&
+                ( t.convertLocoData() ) ) {
+            // we have the minimum info needed
+          
+            if (t.stopDelay == INVALID_INT) t.stopDelay = 0;
+            return t;
+        } else {
+            System.out.println("invalid trip, id=" + t.id);
+            return null;
+        }
+    }
+
 }

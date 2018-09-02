@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.prefs.Preferences;
+import javax.swing.JLabel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 
 /**
  *
@@ -49,6 +52,15 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
         oldLbCopy = new HashMap<>();
         update(); // from Lanbahn data
         this.setVisible(true);
+        
+        DefaultTableCellRenderer tableRenderer = new DefaultTableCellRenderer();
+        tableRenderer.setHorizontalAlignment(JLabel.CENTER); //Aligning the table data centrally.
+        jTable1.setDefaultRenderer(Object.class, tableRenderer);
+        
+         JTableHeader Theader = jTable1.getTableHeader();
+          ((DefaultTableCellRenderer)Theader.getDefaultRenderer())
+                .setHorizontalAlignment(JLabel.CENTER); // center header text
+         
     }
 
     /**

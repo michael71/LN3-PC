@@ -64,7 +64,8 @@ public class Variables {
     static int direction = 0;
     static int slot = -1, slotAquired;
 
-    static final int SPEED_STEP = 20;   // increase speed by ...
+    static final int SPEED_STEP = 20;   // increase speed by .
+    static final int MAX_SPEED = 28;  // TODO !!!!
 
     static final int STOP = 0;
     static final int RUNNING = 1;   // automatic increase and reverse speed ONLY when "RUNNING"
@@ -74,6 +75,8 @@ public class Variables {
       
     public static ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
     public static ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    public static ArrayList<Trip> allTrips =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    
     static int progState = STOP;
 
     static byte awaitingLack = 0;
@@ -97,4 +100,5 @@ public class Variables {
     static final int TYPE_SIGNAL_2BIT= 2;
     static final int TYPE_SIGNAL_3BIT= 3;
     static final int TYPE_SENSOR = 10;
+
 }
