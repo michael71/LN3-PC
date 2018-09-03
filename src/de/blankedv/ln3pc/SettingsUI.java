@@ -174,7 +174,6 @@ public class SettingsUI extends javax.swing.JFrame {
         });
 
         cbSimulation.setText("Simulation");
-        cbSimulation.setEnabled(false);
         cbSimulation.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cbSimulationActionPerformed(evt);
@@ -321,8 +320,6 @@ public class SettingsUI extends javax.swing.JFrame {
                     .addComponent(btnCancel))
                 .addContainerGap(21, Short.MAX_VALUE))
         );
-
-        jPanel1.getAccessibleContext().setAccessibleName("Serial Interface");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

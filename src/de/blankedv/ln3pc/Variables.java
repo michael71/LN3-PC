@@ -100,5 +100,6 @@ public class Variables {
     static final int TYPE_SIGNAL_2BIT= 2;
     static final int TYPE_SIGNAL_3BIT= 3;
     static final int TYPE_SENSOR = 10;
+    static final int TYPE_SENSOR_INROUTE = 11;
 
 }

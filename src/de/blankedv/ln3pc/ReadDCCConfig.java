@@ -15,6 +15,7 @@ import static de.blankedv.ln3pc.Variables.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -99,17 +100,17 @@ public class ReadDCCConfig {
         }
         for (int i = 0; i < items.getLength(); i++) {
             int aTurnout = parseAddress(items.item(i));
-            if ( aTurnout != INVALID_INT) {
-                System.out.println("turnout a=" +  aTurnout );
-                lanbahnData.put( aTurnout, new LbData(0, TYPE_ACCESSORY));
+            if (aTurnout != INVALID_INT) {
+                System.out.println("turnout a=" + aTurnout);
+                lanbahnData.put(aTurnout, new LbData(0, TYPE_ACCESSORY));
             }
         }
-        
+
         items = root.getElementsByTagName("signal");
         if (CFG_DEBUG) {
             System.out.println("config: " + items.getLength() + " signals");
         }
-        
+
         for (int i = 0; i < items.getLength(); i++) {
             Signal maSig = parseMultiAspectAddress(items.item(i));
             if ((maSig != null) && (maSig.addr != INVALID_INT)) {
@@ -123,13 +124,20 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " sensors");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            int sensAddress = parseAddress(items.item(i));
-            if (sensAddress != INVALID_INT) {
-                System.out.println("sensor a=" + sensAddress);
-                lanbahnData.put( sensAddress, new LbData(0, TYPE_SENSOR));
+
+            ArrayList<Integer> sensAddresses = getIntegerNodeValueArray(items.item(i));
+            if (sensAddresses != null) {
+                if ((sensAddresses.size() >= 1) && (sensAddresses.get(0) != INVALID_INT)) {
+                    System.out.println("sensor a1=" + sensAddresses.get(0));
+                    lanbahnData.put(sensAddresses.get(0), new LbData(0, TYPE_SENSOR));
+                }
+                if ((sensAddresses.size() >= 2) && (sensAddresses.get(1) != INVALID_INT)) {
+                    System.out.println("sensor a2=" + sensAddresses.get(1));
+                    lanbahnData.put(sensAddresses.get(1), new LbData(0, TYPE_SENSOR_INROUTE));
+                }
             }
         }
-        
+
         items = root.getElementsByTagName("trip");
         for (int i = 0; i < items.getLength(); i++) {
             Trip tr = parseTrip(items.item(i));
@@ -138,7 +146,6 @@ public class ReadDCCConfig {
                 allTrips.add(tr);
             }
         }
-        
 
     }
     // code template from lanbahnPanel
@@ -157,22 +164,22 @@ public class ReadDCCConfig {
             if (theAttribute.getNodeName().equals("adr")) {
                 addr = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("nbit")) {
-               nBit = getIntValueOfNode(theAttribute);
+                nBit = getIntValueOfNode(theAttribute);
             }
         }
 
-        if (addr != INVALID_INT) {                 
+        if (addr != INVALID_INT) {
             switch (nBit) {
                 case 1:
                 case INVALID_INT:  // == nBit defaults to 1
                     return new Signal(addr, TYPE_SIGNAL_1BIT);
                 case 2:
-                   return new Signal(addr, TYPE_SIGNAL_2BIT);
+                    return new Signal(addr, TYPE_SIGNAL_2BIT);
                 case 3:
-                   return new Signal(addr, TYPE_SIGNAL_3BIT);
+                    return new Signal(addr, TYPE_SIGNAL_3BIT);
                 default:
-                   return null;
-            } 
+                    return null;
+            }
         }
         return null;
     }
@@ -187,7 +194,31 @@ public class ReadDCCConfig {
         float b = Float.parseFloat(s);
         return  b;
     } */
-    
+    private static ArrayList<Integer> getIntegerNodeValueArray(Node a) {
+        NamedNodeMap attributes = a.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            Node theAttribute = attributes.item(i);
+            if (theAttribute.getNodeName().equals("adr")) {
+                String s = theAttribute.getNodeValue();
+                s = s.replace(".", "");
+                //s = s.replace("\\s+", "");
+                String[] sArr = s.split(",");
+                ArrayList<Integer> iArr = new ArrayList<>();
+
+                for (String s2 : sArr) {
+                    int addr = INVALID_INT;
+                    try {
+                        addr = Integer.parseInt(s2);
+                    } catch (NumberFormatException ex) {
+                    }
+                    iArr.add(addr);
+                }
+                return iArr;
+
+            }
+        }
+        return null;
+    }
     // code from lanbahnPanel
 
     private static String parsePanelAttribute(Node item, String att) {
@@ -204,10 +235,11 @@ public class ReadDCCConfig {
         return "";
     }
 
-    /** read an address 'adr' from XML node
-     * 
+    /**
+     * read an address 'adr' from XML node
+     *
      * @param item
-     * @return 
+     * @return
      */
     private static int parseAddress(Node item) {
         int sensA = INVALID_INT;
@@ -230,7 +262,7 @@ public class ReadDCCConfig {
         return INVALID_INT;
 
     }
-    
+
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();
@@ -245,23 +277,25 @@ public class ReadDCCConfig {
             } else if (theAttribute.getNodeName().equals("sens1")) {
                 t.sens1 = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("sens2")) {
-               t.sens2 = getIntValueOfNode(theAttribute);
+                t.sens2 = getIntValueOfNode(theAttribute);
             } else if (theAttribute.getNodeName().equals("loco")) {
-               t.locoString =theAttribute.getNodeValue();
+                t.locoString = theAttribute.getNodeValue();
             } else if (theAttribute.getNodeName().equals("stopdelay")) {
-               t.stopDelay = getIntValueOfNode(theAttribute);
+                t.stopDelay = getIntValueOfNode(theAttribute);
             }
         }
 
         // check if Trip information is complete
-        if ((t.id != INVALID_INT) && 
-                (!t.route.isEmpty())&&
-                ( t.sens1 != INVALID_INT) &&
-                ( t.sens2 != INVALID_INT) &&
-                ( t.convertLocoData() ) ) {
+        if ((t.id != INVALID_INT)
+                && (!t.route.isEmpty())
+                && (t.sens1 != INVALID_INT)
+                && (t.sens2 != INVALID_INT)
+                && (t.convertLocoData())) {
             // we have the minimum info needed
-          
-            if (t.stopDelay == INVALID_INT) t.stopDelay = 0;
+
+            if (t.stopDelay == INVALID_INT) {
+                t.stopDelay = 0;
+            }
             return t;
         } else {
             System.out.println("invalid trip, id=" + t.id);

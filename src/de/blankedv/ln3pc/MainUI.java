@@ -39,7 +39,7 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final boolean FORCE_SIM = true;  // don't read simulation setting
+    public static final boolean FORCE_SIM = false; //true;  // don't read simulation setting
 
     public static final String VERSION = "1.20 - 03 Sep 2018; protocol3";
     public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - " + VERSION;
@@ -603,7 +603,7 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSensorActionPerformed
 
     private void btnTurnoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTurnoutActionPerformed
-
+        new TurnoutUI();
     }//GEN-LAST:event_btnTurnoutActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
@@ -648,7 +648,7 @@ public class MainUI extends javax.swing.JFrame {
             readAllSensorData();
             unlockTrackControl();
         }
-        
+
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed

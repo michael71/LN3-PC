@@ -174,6 +174,7 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     StringBuffer sb;
                     switch (lbCopy.get(key).type) {  // background color depending on type
                         case TYPE_SENSOR:
+                        case TYPE_SENSOR_INROUTE:
                             sb = new StringBuffer("<html><p bgcolor='#FFFF00'>BM-");                           
                             break;
                         case TYPE_SIGNAL_1BIT:
