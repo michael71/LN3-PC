@@ -39,8 +39,10 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * {@value #VERSION} = program version, displayed in HELP window
      */
-    public static final String VERSION = "1.12 - 19 Aug 2018; protocol3";
-    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - 19 Aug 2018";
+    public static final boolean FORCE_SIM = true;  // don't read simulation setting
+
+    public static final String VERSION = "1.20 - 03 Sep 2018; protocol3";
+    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - " + VERSION;
 
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
@@ -130,7 +132,7 @@ public class MainUI extends javax.swing.JFrame {
         if (!myip.isEmpty()) {  // makes only sense when we have network connectivity
             sxnetserver = new SXnetServerUI();
             sxnetserver.setVisible(true);
-            
+
             configWebserver = new ConfigWebserver(prefs, CONFIG_PORT);
         }
 
@@ -154,7 +156,15 @@ public class MainUI extends javax.swing.JFrame {
         grey = new javax.swing.ImageIcon(getClass().getResource("/de/blankedv/ln3pc/icons/greydot.png"));
 
         statusIcon.setIcon(grey);
-        labelStatus.setText("LN Interface at Port " + portName);
+        if (simulation) {
+            lblInterface.setText("Simulation !");
+            btnConnectDisconnect.setEnabled(false);
+            btnReadSensors.setEnabled(false);
+        } else {
+            lblInterface.setText("LN Interface at Port " + portName);
+            btnConnectDisconnect.setEnabled(true);
+            btnReadSensors.setEnabled(true);
+        }
         btnPowerOnOff.setEnabled(false);  // works only after connection
         statusIcon.setEnabled(false);  // works only after connection
 
@@ -275,7 +285,7 @@ public class MainUI extends javax.swing.JFrame {
         panelInterface = new javax.swing.JPanel();
         btnConnectDisconnect = new javax.swing.JButton();
         btnPowerOnOff = new javax.swing.JButton();
-        labelStatus = new javax.swing.JLabel();
+        lblInterface = new javax.swing.JLabel();
         statusIcon = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         lblMainConfigFilename = new javax.swing.JLabel();
@@ -414,7 +424,7 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        labelStatus.setText("??");
+        lblInterface.setText("??");
 
         javax.swing.GroupLayout panelInterfaceLayout = new javax.swing.GroupLayout(panelInterface);
         panelInterface.setLayout(panelInterfaceLayout);
@@ -429,14 +439,14 @@ public class MainUI extends javax.swing.JFrame {
                         .addComponent(btnPowerOnOff, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(statusIcon))
-                    .addComponent(labelStatus))
+                    .addComponent(lblInterface))
                 .addContainerGap())
         );
         panelInterfaceLayout.setVerticalGroup(
             panelInterfaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelInterfaceLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(labelStatus)
+                .addComponent(lblInterface)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(panelInterfaceLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(statusIcon)
@@ -634,13 +644,18 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVtestActionPerformed
 
     private void btnReadSensorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadSensorsActionPerformed
-        readAllSensorData();
-        unlockTrackControl();
+        if (!simulation) {
+            readAllSensorData();
+            unlockTrackControl();
+        }
+        
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed
-        if (sensorReadAtStart == false) return;
-        
+        if (sensorReadAtStart == false) {
+            return;
+        }
+
         if (fahrplanWindow == null) {
             fahrplanWindow = new FahrplanUI();
         }
@@ -782,8 +797,13 @@ public class MainUI extends javax.swing.JFrame {
         // read sensors once, 10 secs after start.
         if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 3000)) {
             sensorReadAtStart = true;
-            readAllSensorData();
-            unlockTrackControl();
+            if (simulation) {
+                // init all turnouts, signals and sensors
+                // TODO
+            } else {
+                readAllSensorData();
+                unlockTrackControl();
+            }
         }
 
     }
@@ -858,8 +878,12 @@ public class MainUI extends javax.swing.JFrame {
 
     private void loadOtherPrefs() {
         portName = prefs.get("commPort", "/dev/ttyUSS0");
-        simulation = prefs.getBoolean("simulation", false);
-        System.out.println("simulation=" + simulation);
+        if (FORCE_SIM) {
+            simulation = true;
+        } else {
+            simulation = prefs.getBoolean("simulation", false);
+            System.out.println("simulation=" + simulation);
+        }
         String baudStr = prefs.get("baudrate", "9600");
         baudrate = Integer.parseInt(baudStr);
         ifType = prefs.get("type", "");
@@ -889,7 +913,7 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPopupMenu jPopupMenu1;
-    private javax.swing.JLabel labelStatus;
+    private javax.swing.JLabel lblInterface;
     private javax.swing.JLabel lblMainConfigFilename;
     private javax.swing.JMenuItem menuExit;
     private javax.swing.JMenuItem menuSettings;

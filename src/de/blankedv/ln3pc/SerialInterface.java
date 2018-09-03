@@ -43,12 +43,23 @@ public class SerialInterface {
         this.portName = portName;
         this.baudrate = baud;
     }
+    
+    public SerialInterface() {
+
+        this.portName = "NONE";
+        this.baudrate = 57600;
+    }
 
     public String getPortName() {
         return portName;
     }
 
     public boolean open() {
+        
+        if (simulation) {
+            connected = true;
+            return true;
+        }
 
         Boolean foundPort = false;
         if (connected != false) {
@@ -104,6 +115,11 @@ public class SerialInterface {
     }
 
     public synchronized void close() {
+        
+        if (simulation) {
+            connected = false;
+            return ;
+        }
 
         if ((serialPort != null) && (connected == true)) {
             serialPort.removeEventListener();
@@ -126,7 +142,10 @@ public class SerialInterface {
      * send some bytes to loconet add checksum
      */
     public synchronized void send(byte[] buf) {
-
+        
+        if (simulation) return;
+        // TODO implement "LACK_FLAG" - if next receice should be "LACK"
+        
         int count = LNUtil.getLength(buf);
         // darf nicht unterbrochen werden
 
@@ -152,6 +171,12 @@ public class SerialInterface {
 
     public synchronized void switchPowerOff() {
         // loconet global power off
+        
+        if (simulation){
+            globalPower = POWER_OFF;
+            return;
+            
+        }
 
         Byte[] b = {(byte) 0x82, (byte) 0x7D};
         try {
@@ -166,7 +191,13 @@ public class SerialInterface {
     }
 
     public synchronized void switchPowerOn() {
-        // loconet global power on   
+        // loconet global power on  
+        
+        if (simulation){
+            globalPower = POWER_ON;
+            return;
+            
+        }
 
         Byte[] b = {(byte) 0x83, (byte) 0x7C};
         try {
@@ -228,8 +259,11 @@ public class SerialInterface {
                     count++;
                 }
                 
+                // TODO implement checking of LACK FLAG
                 boolean completeCMD = LNUtil.interpret(buf, count);
                 if (completeCMD && DEBUG) {
+                    
+                    
                     System.out.print("serial read: ");
                     for (int i = 0; i < count; i++) {
                         System.out.printf("%02X ", buf[i]);

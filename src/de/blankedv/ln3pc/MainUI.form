@@ -293,7 +293,7 @@
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="statusIcon" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <Component id="labelStatus" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="lblInterface" alignment="0" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -303,7 +303,7 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace max="32767" attributes="0"/>
-                  <Component id="labelStatus" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblInterface" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="statusIcon" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -337,7 +337,7 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPowerOnOffActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JLabel" name="labelStatus">
+        <Component class="javax.swing.JLabel" name="lblInterface">
           <Properties>
             <Property name="text" type="java.lang.String" value="??"/>
           </Properties>

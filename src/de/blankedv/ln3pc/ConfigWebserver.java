@@ -25,6 +25,8 @@ import java.net.URI;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 public class ConfigWebserver {
@@ -57,12 +59,14 @@ public class ConfigWebserver {
             URI requestURI = t.getRequestURI();
             System.out.println("URI=" + requestURI.getPath());
             String fname = "";
+            OutputStream os = null;
             try {
                 String fileName = appPrefs.get("configfilename", "-keiner-");
                 Headers h = t.getResponseHeaders();
+                os = t.getResponseBody();
                 if (requestURI.getPath().contains("config")) {
                     if (fileName.equals("-keiner-")) {
-                        response = " ERROR - no config file selected";
+                        response = " ERROR! config file not yet selected ";
                         fname = "?";
                         h.add("Content-Type", "text/html ; charset=utf-8");
                     } else {
@@ -72,47 +76,56 @@ public class ConfigWebserver {
                     }
 
                     t.sendResponseHeaders(200, response.length());
-                    OutputStream os = t.getResponseBody();
+
                     os.write(response.getBytes());
-                    os.close();
                 } else if (requestURI.getPath().contains("lanbahnpanel.apk")) {
 
-                    h.add("Content-Type", "application/vnd.android.package-archive");
-
                     File file = new File("dist/apk/lanbahnpanel.apk");
-                    byte[] bytearray = new byte[(int) file.length()];
-                    FileInputStream fis = new FileInputStream(file);
-                    BufferedInputStream bis = new BufferedInputStream(fis);
-                    bis.read(bytearray, 0, bytearray.length);
+                    if (file.exists()) {
+                        h.add("Content-Type", "application/vnd.android.package-archive");
+                        byte[] bytearray = new byte[(int) file.length()];
+                        FileInputStream fis = new FileInputStream(file);
+                        BufferedInputStream bis = new BufferedInputStream(fis);
+                        bis.read(bytearray, 0, bytearray.length);
 
-                    // ok, we are ready to send the response.
-                    t.sendResponseHeaders(200, file.length());
-                    OutputStream os = t.getResponseBody();
-                    os.write(bytearray, 0, bytearray.length);
-                    os.close();
+                        // ok, we are ready to send the response.
+                        t.sendResponseHeaders(200, file.length());
 
+                        os.write(bytearray, 0, bytearray.length);
+                    } else {
+                        response = "ERROR! lanbahnpanel.apk does not exist in dist/apk directory";
+                        h.add("Content-Type", "text/html ; charset=utf-8");
+                        t.sendResponseHeaders(200, response.length());
+                        os.write(response.getBytes());
+                    }
                 } else {
-                    response = "ERROR:  use URL :8000/config or :8000/lanbahnpanel.apk";
+                    response = "ERROR! use URL http://serverip:8000/config or http://serverip:8000/lanbahnpanel.apk";
                     h.add("Content-Type", "text/html ; charset=utf-8");
                     t.sendResponseHeaders(200, response.length());
-                    OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
-                    os.close();
                 }
 
             } catch (IOException ex) {
                 System.out.println("ERROR " + ex.getMessage());
-                /*System.out.println("Config File: " + fname + " not found - only :8000/config allowed");
-                response = "ERROR FILE NOT FOUND OR WRONG URL: " + fname + " - only :8000/config allowed";
+                response = "ERROR";
                 try {
+                    Headers h = t.getResponseHeaders();
+                    h.add("Content-Type", "text/html ; charset=utf-8");
                     t.sendResponseHeaders(200, response.length());
-                    OutputStream os = t.getResponseBody();
+                    os = t.getResponseBody();
                     os.write(response.getBytes());
-                    os.close();
                 } catch (IOException ex1) {
-                    System.out.println("ERROR "+ex1.getMessage());
-                } */
+                    System.out.println("ERROR " + ex1.getMessage());
+                }
 
+            } finally {
+                try {
+                    if (os != null) {
+                        os.close();
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(ConfigWebserver.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
 
         }
