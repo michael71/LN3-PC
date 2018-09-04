@@ -159,7 +159,7 @@
                           <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
-                                  <Component id="btnTurnout" min="-2" pref="120" max="-2" attributes="1"/>
+                                  <Component id="btnAccessory" min="-2" pref="120" max="-2" attributes="1"/>
                                   <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" attributes="0">
@@ -184,7 +184,7 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="btnThrottle" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="btnTurnout" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="btnAccessory" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
@@ -208,12 +208,12 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnThrottleActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="btnTurnout">
+        <Component class="javax.swing.JButton" name="btnAccessory">
           <Properties>
             <Property name="text" type="java.lang.String" value="+Accessories"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTurnoutActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAccessoryActionPerformed"/>
           </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btnMonitor">
@@ -226,7 +226,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="btnReset">
           <Properties>
-            <Property name="text" type="java.lang.String" value="RESET"/>
+            <Property name="text" type="java.lang.String" value="SOD / RESET"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnResetActionPerformed"/>

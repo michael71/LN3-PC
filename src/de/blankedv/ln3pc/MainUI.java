@@ -276,7 +276,7 @@ public class MainUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         panelWindows = new javax.swing.JPanel();
         btnThrottle = new javax.swing.JButton();
-        btnTurnout = new javax.swing.JButton();
+        btnAccessory = new javax.swing.JButton();
         btnMonitor = new javax.swing.JButton();
         btnReset = new javax.swing.JButton();
         btnReadSensors = new javax.swing.JButton();
@@ -317,10 +317,10 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        btnTurnout.setText("+Accessories");
-        btnTurnout.addActionListener(new java.awt.event.ActionListener() {
+        btnAccessory.setText("+Accessories");
+        btnAccessory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTurnoutActionPerformed(evt);
+                btnAccessoryActionPerformed(evt);
             }
         });
 
@@ -331,7 +331,7 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        btnReset.setText("RESET");
+        btnReset.setText("SOD / RESET");
         btnReset.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnResetActionPerformed(evt);
@@ -368,7 +368,7 @@ public class MainUI extends javax.swing.JFrame {
                         .addGap(35, 35, 35)
                         .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(panelWindowsLayout.createSequentialGroup()
-                                .addComponent(btnTurnout, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(btnAccessory, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(panelWindowsLayout.createSequentialGroup()
                                 .addComponent(btnMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -385,7 +385,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnThrottle)
-                    .addComponent(btnTurnout))
+                    .addComponent(btnAccessory))
                 .addGap(18, 18, 18)
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnReset)
@@ -586,9 +586,9 @@ public class MainUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnMonitorActionPerformed
 
-    private void btnTurnoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTurnoutActionPerformed
+    private void btnAccessoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAccessoryActionPerformed
         new AccessoryUI();
-    }//GEN-LAST:event_btnTurnoutActionPerformed
+    }//GEN-LAST:event_btnAccessoryActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
         System.out.println("exit button pressed.");
@@ -777,6 +777,7 @@ public class MainUI extends javax.swing.JFrame {
         ThrottleUI.updateAll();
         FunkreglerUI.updateAll();
         FunkreglerUI.checkAlive();
+        AccessoryUI.updateAll();
 
         // read sensors once, 10 secs after start.
         if (!sensorReadAtStart && ((System.currentTimeMillis() - sensorTimer) > 3000)) {
@@ -880,6 +881,7 @@ public class MainUI extends javax.swing.JFrame {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAccessory;
     private javax.swing.JButton btnConnectDisconnect;
     private javax.swing.JButton btnFahrplan;
     private javax.swing.JButton btnMonitor;
@@ -887,7 +889,6 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btnReadSensors;
     private javax.swing.JButton btnReset;
     private javax.swing.JButton btnThrottle;
-    private javax.swing.JButton btnTurnout;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;

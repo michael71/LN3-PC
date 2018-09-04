@@ -60,9 +60,9 @@ public class AccessoryUI extends javax.swing.JFrame {
         if (DEBUG) {
             System.out.println("turnout row start adr=" + w_adr);
         }
-        jComboBox1.setSelectedIndex(w_adr);  // index starts from 0, addresses start also at 0
+        jComboBox1.setSelectedIndex(0);  // index starts from 0, addresses start also at 0
         wl.add(this);
-        this.setTitle("Turnouts/Signals");
+        this.setTitle("Turnouts/Signals A:" + w_adr + "ff");
 
         update(); // from lanbahnData
         this.setVisible(true);
@@ -284,6 +284,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         if (DEBUG) {
             System.out.println("w adr=" + w_adr);
         }
+        this.setTitle("Turnouts/Signals A:" + w_adr + "ff");
         update();
 }//GEN-LAST:event_jComboBox1ActionPerformed
 
@@ -297,6 +298,9 @@ public class AccessoryUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBox3ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
+        if (w_adr == 0) {
+            return;   // "0" is no valid address
+        }
         if (jCheckBox1.getModel().isSelected()) {
             data = 1;
         } else {
@@ -441,11 +445,18 @@ public class AccessoryUI extends javax.swing.JFrame {
     }
 
     private void update() {
-        if (update(0)) {
-            jCheckBox1.setSelected(true);
+        if (w_adr == 0) {
+            // "0" is no valid lanbahn address
+            jCheckBox1.setEnabled(false);
         } else {
-            jCheckBox1.setSelected(false);
+            jCheckBox1.setEnabled(true);
+            if (update(0)) {
+                jCheckBox1.setSelected(true);
+            } else {
+                jCheckBox1.setSelected(false);
+            }
         }
+
         if (update(1)) {
             jCheckBox2.setSelected(true);
         } else {
