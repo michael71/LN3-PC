@@ -277,7 +277,6 @@ public class MainUI extends javax.swing.JFrame {
         panelWindows = new javax.swing.JPanel();
         btnThrottle = new javax.swing.JButton();
         btnTurnout = new javax.swing.JButton();
-        btnSensor = new javax.swing.JButton();
         btnMonitor = new javax.swing.JButton();
         btnReset = new javax.swing.JButton();
         btnReadSensors = new javax.swing.JButton();
@@ -318,17 +317,10 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        btnTurnout.setText("+Turnouts");
+        btnTurnout.setText("+Accessories");
         btnTurnout.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnTurnoutActionPerformed(evt);
-            }
-        });
-
-        btnSensor.setText("+Sensors");
-        btnSensor.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSensorActionPerformed(evt);
             }
         });
 
@@ -377,12 +369,10 @@ public class MainUI extends javax.swing.JFrame {
                         .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(panelWindowsLayout.createSequentialGroup()
                                 .addComponent(btnTurnout, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
-                                .addComponent(btnSensor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(panelWindowsLayout.createSequentialGroup()
                                 .addComponent(btnMonitor, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
                                 .addComponent(btnReset, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(panelWindowsLayout.createSequentialGroup()
                         .addComponent(btnFahrplan, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -395,8 +385,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnThrottle)
-                    .addComponent(btnTurnout)
-                    .addComponent(btnSensor))
+                    .addComponent(btnTurnout))
                 .addGap(18, 18, 18)
                 .addGroup(panelWindowsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnReset)
@@ -597,13 +586,8 @@ public class MainUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnMonitorActionPerformed
 
-    private void btnSensorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSensorActionPerformed
-
-
-    }//GEN-LAST:event_btnSensorActionPerformed
-
     private void btnTurnoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTurnoutActionPerformed
-        new TurnoutUI();
+        new AccessoryUI();
     }//GEN-LAST:event_btnTurnoutActionPerformed
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
@@ -902,7 +886,6 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btnPowerOnOff;
     private javax.swing.JButton btnReadSensors;
     private javax.swing.JButton btnReset;
-    private javax.swing.JButton btnSensor;
     private javax.swing.JButton btnThrottle;
     private javax.swing.JButton btnTurnout;
     private javax.swing.JLabel jLabel2;

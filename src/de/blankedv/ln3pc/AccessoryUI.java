@@ -4,7 +4,7 @@
  */
 
  /*
- * TurnoutUI.java
+ * AccessoryUI.java
  *
  * Created on 08.04.2011, 14:24:32
  */
@@ -24,7 +24,7 @@ import static de.blankedv.ln3pc.Variables.lanbahnData;
  *
  * @author mblank
  */
-public class TurnoutUI extends javax.swing.JFrame {
+public class AccessoryUI extends javax.swing.JFrame {
 
     private static final long serialVersionUID = 534251256456411L;
     private int w_adr;      // weichen adresse
@@ -32,20 +32,20 @@ public class TurnoutUI extends javax.swing.JFrame {
 
     // Bilden einer Liste, damit wir später an alle Fenster dieses Typs die
     // Updates verschicken können
-    static List<TurnoutUI> wl = new ArrayList<TurnoutUI>();
+    static List<AccessoryUI> wl = new ArrayList<AccessoryUI>();
 
     private int myInstance;
     Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     static int WeichenUIInstance = 0;
 
     public static void updateAll() {
-        for (TurnoutUI w : wl) {
+        for (AccessoryUI w : wl) {
             w.update();
         }
     }
 
     public static void saveAllPrefs() {
-        for (TurnoutUI w : wl) {
+        for (AccessoryUI w : wl) {
             w.savePrefs();
         }
     }
@@ -53,7 +53,7 @@ public class TurnoutUI extends javax.swing.JFrame {
     /**
      * Creates new form WeichenUI
      */
-    public TurnoutUI() {
+    public AccessoryUI() {
         initComponents();
         myInstance = WeichenUIInstance++;
         loadPrefs(); //myInstance is used here.
@@ -79,6 +79,7 @@ public class TurnoutUI extends javax.swing.JFrame {
 
         lblAddress = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox<>();
+        jPanel1 = new javax.swing.JPanel();
         jCheckBox1 = new javax.swing.JCheckBox();
         jCheckBox2 = new javax.swing.JCheckBox();
         jCheckBox3 = new javax.swing.JCheckBox();
@@ -87,21 +88,21 @@ public class TurnoutUI extends javax.swing.JFrame {
         jCheckBox6 = new javax.swing.JCheckBox();
         jCheckBox7 = new javax.swing.JCheckBox();
         jCheckBox8 = new javax.swing.JCheckBox();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
         jCheckBox9 = new javax.swing.JCheckBox();
         jCheckBox10 = new javax.swing.JCheckBox();
-        jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel();
+        jLabel14 = new javax.swing.JLabel();
+        jLabel12 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        jLabel18 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
+        jLabel20 = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
+        jLabel22 = new javax.swing.JLabel();
+        jLabel13 = new javax.swing.JLabel();
 
-        setTitle("Weichen, Signale, AUX");
+        setTitle("Accessories, Sensors, Sig1bit");
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -118,6 +119,8 @@ public class TurnoutUI extends javax.swing.JFrame {
             }
         });
 
+        jPanel1.setLayout(new java.awt.GridLayout(2, 10, 1, 0));
+
         jCheckBox1.setBorder(null);
         jCheckBox1.setBorderPainted(true);
         jCheckBox1.addActionListener(new java.awt.event.ActionListener() {
@@ -125,6 +128,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox1ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox1);
 
         jCheckBox2.setBorder(null);
         jCheckBox2.setBorderPainted(true);
@@ -133,6 +137,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox2ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox2);
 
         jCheckBox3.setBorder(null);
         jCheckBox3.setBorderPainted(true);
@@ -141,6 +146,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox3ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox3);
 
         jCheckBox4.setBorder(null);
         jCheckBox4.setBorderPainted(true);
@@ -149,6 +155,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox4ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox4);
 
         jCheckBox5.setBorder(null);
         jCheckBox5.setBorderPainted(true);
@@ -157,6 +164,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox5ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox5);
 
         jCheckBox6.setBorder(null);
         jCheckBox6.setBorderPainted(true);
@@ -165,6 +173,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox6ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox6);
 
         jCheckBox7.setBorder(null);
         jCheckBox7.setBorderPainted(true);
@@ -173,6 +182,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox7ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox7);
 
         jCheckBox8.setBorder(null);
         jCheckBox8.setBorderPainted(true);
@@ -181,22 +191,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox8ActionPerformed(evt);
             }
         });
-
-        jLabel1.setText("  0");
-
-        jLabel2.setText("  2");
-
-        jLabel3.setText("  3");
-
-        jLabel4.setText("  4");
-
-        jLabel5.setText("  5");
-
-        jLabel6.setText("  6");
-
-        jLabel7.setText("  7");
-
-        jLabel8.setText("  8");
+        jPanel1.add(jCheckBox8);
 
         jCheckBox9.setBorder(null);
         jCheckBox9.setBorderPainted(true);
@@ -205,6 +200,7 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox9ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox9);
 
         jCheckBox10.setBorder(null);
         jCheckBox10.setBorderPainted(true);
@@ -213,119 +209,70 @@ public class TurnoutUI extends javax.swing.JFrame {
                 jCheckBox10ActionPerformed(evt);
             }
         });
+        jPanel1.add(jCheckBox10);
 
-        jLabel9.setText("  8");
+        jLabel14.setText("  0 ");
+        jPanel1.add(jLabel14);
 
-        jLabel10.setText("9");
+        jLabel12.setText("  1");
+        jPanel1.add(jLabel12);
 
-        jLabel11.setText("1");
+        jLabel15.setText("  2");
+        jPanel1.add(jLabel15);
+
+        jLabel16.setText("  3");
+        jPanel1.add(jLabel16);
+
+        jLabel17.setText("  4");
+        jPanel1.add(jLabel17);
+
+        jLabel18.setText("  5");
+        jPanel1.add(jLabel18);
+
+        jLabel19.setText("  6");
+        jPanel1.add(jLabel19);
+
+        jLabel20.setText("  7");
+        jPanel1.add(jLabel20);
+
+        jLabel21.setText("  8");
+        jPanel1.add(jLabel21);
+
+        jLabel22.setText("  9");
+        jPanel1.add(jLabel22);
+
+        jLabel13.setText("Basis");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(11, 11, 11)
-                .addComponent(lblAddress)
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblAddress)
+                    .addComponent(jLabel13))
+                .addGap(3, 3, 3)
+                .addComponent(jComboBox1, 0, 97, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
-                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBox1)
-                    .addComponent(jLabel1))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jCheckBox2))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel11)))
-                .addGap(8, 8, 8)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jCheckBox3)
-                    .addComponent(jLabel2))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jCheckBox4)
-                        .addGap(8, 8, 8)
-                        .addComponent(jCheckBox5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jCheckBox6))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(jLabel3)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel5)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jCheckBox7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBox8))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel8)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel10)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jCheckBox9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBox10)
-                        .addGap(0, 17, Short.MAX_VALUE)))
-                .addGap(37, 37, 37))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(391, Short.MAX_VALUE)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(76, 76, 76)))
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 363, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(16, 16, 16)
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lblAddress))
-                    .addComponent(jCheckBox8)
-                    .addComponent(jCheckBox7)
-                    .addComponent(jCheckBox6)
-                    .addComponent(jCheckBox5)
-                    .addComponent(jCheckBox4)
-                    .addComponent(jCheckBox3)
-                    .addComponent(jCheckBox2)
-                    .addComponent(jCheckBox1)
-                    .addComponent(jCheckBox9)
-                    .addComponent(jCheckBox10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel10)
-                        .addComponent(jLabel8)
-                        .addComponent(jLabel7)
-                        .addComponent(jLabel6))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel5)
-                        .addComponent(jLabel4)
-                        .addComponent(jLabel3)
-                        .addComponent(jLabel2)
-                        .addComponent(jLabel11)))
-                .addContainerGap(26, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(65, Short.MAX_VALUE)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(32, 32, 32)))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel13)
+                                .addGap(9, 9, 9)
+                                .addComponent(lblAddress))
+                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         pack();
@@ -469,17 +416,18 @@ public class TurnoutUI extends javax.swing.JFrame {
     private javax.swing.JCheckBox jCheckBox8;
     private javax.swing.JCheckBox jCheckBox9;
     private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblAddress;
     // End of variables declaration//GEN-END:variables
 
