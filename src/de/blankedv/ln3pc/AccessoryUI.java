@@ -398,6 +398,7 @@ public class AccessoryUI extends javax.swing.JFrame {
             case TYPE_SENSOR:
             case TYPE_SENSOR_INROUTE:
                 lanbahnData.put(addr, new LbData(data, lb.type));   // don't change type, only change data
+                serialIF.send(LNUtil.makeOPC_SW_REQ(addr-1, data, 1));   // TODO test
                 break;
             default:
                 // cannot set other types

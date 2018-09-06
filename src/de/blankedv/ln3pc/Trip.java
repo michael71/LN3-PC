@@ -17,6 +17,9 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
+import static de.blankedv.ln3pc.Variables.SENSOR_OCCUPIED;
+import static de.blankedv.ln3pc.Variables.allTrips;
+import static de.blankedv.ln3pc.Variables.lanbahnData;
 
 /**
  *
@@ -33,7 +36,7 @@ public class Trip implements Comparable<Trip> {
     int locoDir = INVALID_INT;
     int locoSpeed = INVALID_INT;
     int stopDelay = INVALID_INT;  // milliseconds
-    boolean isActive = false;
+    boolean active = false;
     Loco loco = null;
 
     public boolean convertLocoData() {
@@ -63,6 +66,29 @@ public class Trip implements Comparable<Trip> {
         return true;
     }
 
+    public boolean start() {
+        // check if start sensor is occupied and rest of route is cleared
+        
+        // set the route(s)
+        // int[] routes = 
+        
+        // start loco
+        
+        // activate listener for "end sensor"
+        
+        return true;
+    }
+    
+    public boolean checkEndSensor() {
+        if (lanbahnData.get(sens2).data == SENSOR_OCCUPIED) {
+            // this trip ends
+            loco.setSpeed(0);  // stop loco
+                // TODO free loco
+            return true;
+        } else {
+            return false;
+        }
+    }
     // to be able to sort the trips by their ID
     @Override
     public int compareTo(Trip o) {
@@ -71,5 +97,15 @@ public class Trip implements Comparable<Trip> {
         } else {
             return -1;
         }
+    }
+    
+    
+    static Trip get(int index) {
+        for (Trip t: allTrips) {
+            if (t.id == index) {
+                return t;
+            }
+        }
+        return null;  // not found
     }
 }

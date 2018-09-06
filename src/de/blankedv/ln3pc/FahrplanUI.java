@@ -19,16 +19,15 @@ package de.blankedv.ln3pc;
 import static de.blankedv.ln3pc.MainUI.serialIF;
 import static de.blankedv.ln3pc.MainUI.fahrplanActive;
 import static de.blankedv.ln3pc.MainUI.running;
+import static de.blankedv.ln3pc.Variables.allTimetables;
 import static de.blankedv.ln3pc.Variables.allTrips;
-import static de.blankedv.ln3pc.Variables.lanbahnData;
 import java.awt.Color;
 import java.awt.Component;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
@@ -42,6 +41,8 @@ public class FahrplanUI extends javax.swing.JFrame {
     private static boolean active = false;
     private static Trip activeTrip = null;
     public static volatile int activeRow = -1;
+
+    private Timetable timetable0;
 
     /**
      * Creates new form FahrplanUI
@@ -59,12 +60,26 @@ public class FahrplanUI extends javax.swing.JFrame {
 
     private void setTbtnStartStopText() {
         if (tbtnStartStop.isSelected()) {
+
+            // for the time being, we only use 1 timetable
+            try {
+            timetable0 = allTimetables.get(0);
+            } catch (IndexOutOfBoundsException e) {
+                JOptionPane.showMessageDialog(this, "ERROR: could not start a timetable - allTimetables EMPTY.");
+                return;
+            }
+            if (timetable0 == null) {
+                JOptionPane.showMessageDialog(this, "ERROR: could not start a timetable - timetable0 EMPTY.");
+                return;
+            }
+
             tbtnStartStop.setText("FP aktiv!");
-            initTimeTable();
+
+            serialIF.switchPowerOn();
             active = true;
             activeRow = 0;
             jTable1.repaint();
-
+            timetable0.start();
         } else {
             tbtnStartStop.setText("FP nicht aktiv");
             active = false;
@@ -73,64 +88,28 @@ public class FahrplanUI extends javax.swing.JFrame {
         }
     }
 
-    // start with lowest ID
-    private void initTimeTable() {
-        int idMin = 10000;
-        activeTrip = null;
-        for (Trip t : allTrips) {
-            if (t.id < idMin) {
-                idMin = t.id;
-                activeTrip = t;
-            }
-        }
-        if (activeTrip == null) {
-            System.out.println("could not start new trip");
-        } else {
-            startNewTrip(activeTrip);
-        }
 
-    }
-
-    private void startNewTrip(Trip t) {
-        // check if start sensor is occupied and endsensor is free
-        if ((lanbahnData.get(t.sens1).data != 1) && (lanbahnData.get(t.sens2).data == 0)) {
-            System.out.println("start sensor occ and end sensor free, we can start the trip");
-            // aquire locoString and start 'full' speed
-            int dirBit = 0;
-            if (t.locoDir == 1) {
-                dirBit = 32;
-            }
-            int d = 25 + dirBit;
-            LNUtil.aquireLoco(t.locoAddr, d);
-            t.isActive = true;
-
-        } else {
-            System.out.println("start sensor free or end sensor occupied, we CANNOT start the trip");
-        }
-
-    }
-
+    
     class FahrplanTask extends TimerTask {
 
         public void run() {
             if (active && running) {
-                checkFahrplan();
+                timetable0.start();
+                checkActiveTrips();
             }
         }
     }
 
-    private void checkFahrplan() {
-        LbData S3 = lanbahnData.get(3);
-        LbData S7 = lanbahnData.get(7);
-        System.out.println("checking FP S3=" + S3.data + " S7=" + S7.data);
-        if ((activeTrip != null) && (activeTrip.isActive)) {
-            // check for stop
-            if (lanbahnData.get(activeTrip.sens2).data != 0 ) {
-                activeTrip.loco.setSpeed(0);  // stop loco
-                // TODO free loco
+    private void checkActiveTrips() {
+        for (Trip t : allTrips) {
+            if (t.active == true) {
+                if (t.checkEndSensor()) {
+                    Utils.mySleep(3000);
+                    timetable0.advanceToNextTrip();
+
+                }
             }
         }
-
     }
 
     private void initFromTrips() {
@@ -165,7 +144,9 @@ public class FahrplanUI extends javax.swing.JFrame {
             }
         };
         tableRenderer.setHorizontalAlignment(JLabel.CENTER); //Aligning the table data centrally.
-        jTable1.setDefaultRenderer(Object.class, tableRenderer);
+        jTable1
+                .setDefaultRenderer(Object.class,
+                         tableRenderer);
 
         JTableHeader Theader = jTable1.getTableHeader();
         ((DefaultTableCellRenderer) Theader.getDefaultRenderer())
@@ -246,6 +227,7 @@ public class FahrplanUI extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        jTable1.setRowSelectionAllowed(false);
         jTable1.setSelectionBackground(new java.awt.Color(171, 236, 243));
         jScrollPane1.setViewportView(jTable1);
 

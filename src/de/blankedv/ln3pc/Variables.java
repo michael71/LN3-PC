@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author mblank
  */
 public class Variables {
-     
+
     /**
      * {@value #N_LANBAHN} number of entries in lanbahn array (i.e. maximum
      * number of usable lanbahn addresses)
@@ -56,7 +56,7 @@ public class Variables {
     public static final int INVALID_INT = -1;
     public static final int STATUS_CONNECTED = 1;
     public static final int STATUS_NOT_CONNECTED = 0;
-    
+
     static boolean shutdownFlag = false;
     static int speed = 0;   // =DCC speed
     static int loco = 0;    // loco address
@@ -69,14 +69,17 @@ public class Variables {
 
     static final int STOP = 0;
     static final int RUNNING = 1;   // automatic increase and reverse speed ONLY when "RUNNING"
-    
-  
+
     public static ConcurrentHashMap<Integer, LbData> lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
-      
-    public static ArrayList<LocoSlot> locoSlots =  new ArrayList<>();   // slot to Loco mapping
-    public static ArrayList<Loco> allLocos =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
-    public static ArrayList<Trip> allTrips =  new ArrayList<>();   // all Locos we have heard of (via sxnet)
-    
+
+    public static ArrayList<LocoSlot> locoSlots = new ArrayList<>();   // slot to Loco mapping
+    public static ArrayList<Loco> allLocos = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    public static ArrayList<Trip> allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    public static ArrayList<Timetable> allTimetables = new ArrayList<>();
+    public static ArrayList<PanelElement> panelElements = new ArrayList<>();
+    public static ArrayList<Route> routes = new ArrayList<>();
+    public static ArrayList<CompRoute> compRoutes = new ArrayList<>();
+
     static int progState = STOP;
 
     static byte awaitingLack = 0;
@@ -87,19 +90,43 @@ public class Variables {
     static final int STATE_NULLMOVE = 2;
     static final int STATE_HAVE_SLOT = 3;
 
+    /**
+     * {@value #MAX_ROUTES} =maximum number of routes in a compound route
+     */
+    static final int MAX_ROUTES = 20;
 
+    /**
+     * {@value #MAX_TRIPS} =maximum number of trips in a single Timetable
+     */
+    static final int MAX_TRIPS = 20;
 
     static final int SELECTED_LISSY = 1;
-    
+
     static final int POWER_ON = 1;
     static final int POWER_OFF = 0;
     static final int POWER_UNKNOWN = INVALID_INT;
-    
-    static final int TYPE_ACCESSORY = 0;
-    static final int TYPE_SIGNAL_1BIT = 1;
-    static final int TYPE_SIGNAL_2BIT= 2;
-    static final int TYPE_SIGNAL_3BIT= 3;
-    static final int TYPE_SENSOR = 10;
-    static final int TYPE_SENSOR_INROUTE = 11;
 
+    // type of lanbahn data
+    static final int TYPE_ACCESSORY = 0;   // values 0 or 1
+    static final int TYPE_SIGNAL_1BIT = 1; // values 0 or 1
+    static final int TYPE_SIGNAL_2BIT = 2; // values 0 .. 3
+    static final int TYPE_SIGNAL_3BIT = 3;
+    static final int TYPE_SENSOR = 10;     // sensor for occupation
+    static final int TYPE_SENSOR_INROUTE = 11;  // sensor for "ausleuchtung" (Uhlenbrock TC)
+    static final int TYPE_ROUTE = 20;   // this is a route.
+
+    // sensor values
+    static final int SENSOR_FREE = 0;         // bit0, mapped to occupation
+    static final int SENSOR_OCCUPIED = 1;     // bit0, mapped to occupation
+    static final int SENSOR_NOT_INROUTE = 2;  // bit1, mapped to "ausleuchtung"
+    static final int SENSOR_INROUTE = 3;      // bit1, mapped to "ausleuchtung"
+
+    // signals
+    static final int STATE_RED = 0;
+    static final int STATE_GREEN = 1;
+    static final int STATE_YELLOW = 2;
+    static final int STATE_YELLOW_FEATHER = 3;
+    static final int STATE_SWITCHING = 4;
+
+    static final int AUTO_CLEAR_ROUTE_TIME_SEC = 30;    // clear routes automatically after 30secs
 }

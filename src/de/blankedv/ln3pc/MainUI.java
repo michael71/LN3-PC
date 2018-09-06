@@ -30,6 +30,8 @@ import javax.swing.UnsupportedLookAndFeelException;
  * commands S 47 67 == SX Command, Feedback returned X 47 67 Read channel : R 47
  * SET 902 1 == LANBAHN COMMAND (internally interpretet as "set addr 90, bit 2
  * FEEDBACK RETURN XS 902 1 READ 987 == READ LANBAHN CHANNEL 987
+ * 
+ * TODO : Join Signal(lanbahn) and SignalElement(used in routes) classes to one Signal Class
  *
  * @author mblank
  *
@@ -41,8 +43,8 @@ public class MainUI extends javax.swing.JFrame {
      */
     public static final boolean FORCE_SIM = false; //true;  // don't read simulation setting
 
-    public static final String VERSION = "1.20 - 03 Sep 2018; protocol3";
-    public static final String S_XNET_SERVER_REV = "SXnet-Server 3.1 - " + VERSION;
+    public static final String VERSION = "1.21 - 06 Sep 2018";
+    public static final String S_XNET_SERVER_REV = "SXnet-Server(3.1) - " + VERSION;
 
     public static boolean DEBUG = true;
     public static final boolean doUpdateFlag = false;
@@ -140,7 +142,6 @@ public class MainUI extends javax.swing.JFrame {
         setVisible(true);
 
         sensorTimer = System.currentTimeMillis();
-        btnFahrplan.setEnabled(false);
 
     }
 
@@ -160,10 +161,12 @@ public class MainUI extends javax.swing.JFrame {
             lblInterface.setText("Simulation !");
             btnConnectDisconnect.setEnabled(false);
             btnReadSensors.setEnabled(false);
+            btnFahrplan.setEnabled(true);  // can be activated only after sensors are read
         } else {
             lblInterface.setText("LN Interface at Port " + portName);
             btnConnectDisconnect.setEnabled(true);
             btnReadSensors.setEnabled(true);
+            btnFahrplan.setEnabled(false);
         }
         btnPowerOnOff.setEnabled(false);  // works only after connection
         statusIcon.setEnabled(false);  // works only after connection
@@ -636,7 +639,7 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed
-        if (sensorReadAtStart == false) {
+        if (!simulation && (sensorReadAtStart == false) ) {
             return;
         }
 
