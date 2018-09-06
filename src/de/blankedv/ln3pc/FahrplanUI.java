@@ -17,7 +17,6 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.MainUI.serialIF;
-import static de.blankedv.ln3pc.MainUI.fahrplanActive;
 import static de.blankedv.ln3pc.MainUI.running;
 import static de.blankedv.ln3pc.Variables.allTimetables;
 import static de.blankedv.ln3pc.Variables.allTrips;
@@ -31,6 +30,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import static de.blankedv.ln3pc.MainUI.timetableRunning;
 
 /**
  *
@@ -38,11 +38,11 @@ import javax.swing.table.TableColumnModel;
  */
 public class FahrplanUI extends javax.swing.JFrame {
 
-    private static boolean active = false;
     private static Trip activeTrip = null;
     public static volatile int activeRow = -1;
 
     private Timetable timetable0;
+    private Timer timer = new Timer();
 
     /**
      * Creates new form FahrplanUI
@@ -53,9 +53,9 @@ public class FahrplanUI extends javax.swing.JFrame {
         setTbtnStartStopText();
 
         initFromTrips();
-
-        Timer timer = new Timer();
+        
         timer.schedule(new FahrplanTask(), 200, 250);
+
     }
 
     private void setTbtnStartStopText() {
@@ -63,7 +63,7 @@ public class FahrplanUI extends javax.swing.JFrame {
 
             // for the time being, we only use 1 timetable
             try {
-            timetable0 = allTimetables.get(0);
+                timetable0 = allTimetables.get(0);
             } catch (IndexOutOfBoundsException e) {
                 JOptionPane.showMessageDialog(this, "ERROR: could not start a timetable - allTimetables EMPTY.");
                 return;
@@ -76,25 +76,31 @@ public class FahrplanUI extends javax.swing.JFrame {
             tbtnStartStop.setText("FP aktiv!");
 
             serialIF.switchPowerOn();
-            active = true;
             activeRow = 0;
             jTable1.repaint();
-            timetable0.start();
+            boolean res = timetable0.start();
+            if (res == false) {
+                stop();
+                JOptionPane.showMessageDialog(this, "ERROR: could not start the trip - NO TRAIN (on start-sensor track).");
+                return;
+            }
+            timetableRunning = true;
         } else {
-            tbtnStartStop.setText("FP nicht aktiv");
-            active = false;
-            activeRow = -1;
-            jTable1.repaint();
+            stop();
         }
     }
 
+    private void stop() {
+        tbtnStartStop.setText("FP nicht aktiv");
+        timetableRunning = false;
+        activeRow = -1;
+        jTable1.repaint();
+    }
 
-    
     class FahrplanTask extends TimerTask {
 
         public void run() {
-            if (active && running) {
-                timetable0.start();
+            if (timetableRunning && running) {
                 checkActiveTrips();
             }
         }
@@ -105,7 +111,11 @@ public class FahrplanUI extends javax.swing.JFrame {
             if (t.active == true) {
                 if (t.checkEndSensor()) {
                     Utils.mySleep(3000);
-                    timetable0.advanceToNextTrip();
+                    boolean res = timetable0.advanceToNextTrip();
+                    if (res == false) {
+                        // timetable ended
+                        stop();
+                    }
 
                 }
             }
@@ -146,7 +156,7 @@ public class FahrplanUI extends javax.swing.JFrame {
         tableRenderer.setHorizontalAlignment(JLabel.CENTER); //Aligning the table data centrally.
         jTable1
                 .setDefaultRenderer(Object.class,
-                         tableRenderer);
+                        tableRenderer);
 
         JTableHeader Theader = jTable1.getTableHeader();
         ((DefaultTableCellRenderer) Theader.getDefaultRenderer())
@@ -262,7 +272,7 @@ public class FahrplanUI extends javax.swing.JFrame {
 
     private void tbtnStartStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tbtnStartStopActionPerformed
         System.out.println("Fahrplan status=" + tbtnStartStop.isSelected());
-        fahrplanActive = tbtnStartStop.isSelected();
+        timetableRunning = tbtnStartStop.isSelected();
         setTbtnStartStopText();
     }//GEN-LAST:event_tbtnStartStopActionPerformed
 

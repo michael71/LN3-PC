@@ -107,8 +107,11 @@ public class Timetable {
         currentTripId++;
 
         // get trip 
-        cTrip = Trip.get(tripIds.get(currentTripId));
-
+        try {
+        cTrip = Trip.get(tripIds.get(currentTripId)); 
+        } catch (IndexOutOfBoundsException ex) {
+            cTrip = null;
+        }
         if (cTrip == null) {
             System.out.println("ERROR in Timetable - no trip found for id=" + currentTripId);
             return false;

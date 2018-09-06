@@ -59,7 +59,7 @@ public class MainUI extends javax.swing.JFrame {
 
     public static SettingsUI settingsWindow;
     public static FahrplanUI fahrplanWindow;
-    public static boolean fahrplanActive = false;
+    public static boolean timetableRunning = false;
     public static int globalPower = INVALID_INT;
 
     /**
