@@ -56,10 +56,10 @@ public class ReadDCCConfig {
             // sort the trips by ID
             Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
-            routes = parseRoutes(doc); // can be done only after all panel
+            allRoutes = parseRoutes(doc); // can be done only after all panel
             // elements have been read
-            Route.calcOffendingRoutes(); // calculate offending routes
-            compRoutes = parseCompRoutes(doc); // can be done only after routes
+            Route.calcOffendingRoutes(); // calculate offending allRoutes
+            allCompRoutes = parseCompRoutes(doc); // can be done only after allRoutes
         } catch (SAXException e) {
             System.out.println("SAX Exception - " + e.getMessage());
             return "SAX Exception - " + e.getMessage();
@@ -363,7 +363,7 @@ public class ReadDCCConfig {
         Element root = doc.getDocumentElement();
 
         // items = root.getElementsByTagName("panel");
-        // look for routes - this is the lowest layer
+        // look for allRoutes - this is the lowest layer
         items = root.getElementsByTagName("route");
         if (DEBUG) {
             System.out.println("config: " + items.getLength() + " routes");
@@ -427,7 +427,7 @@ public class ReadDCCConfig {
         NodeList items;
         Element root = doc.getDocumentElement();
 
-        // look for comp routes - this is the lowest layer
+        // look for comp allRoutes - this is the lowest layer
         items = root.getElementsByTagName("comproute");
         if (DEBUG) {
             System.out.println("config: " + items.getLength() + " comproutes");

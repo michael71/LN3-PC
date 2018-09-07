@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,8 +31,9 @@ import javax.swing.UnsupportedLookAndFeelException;
  * commands S 47 67 == SX Command, Feedback returned X 47 67 Read channel : R 47
  * SET 902 1 == LANBAHN COMMAND (internally interpretet as "set addr 90, bit 2
  * FEEDBACK RETURN XS 902 1 READ 987 == READ LANBAHN CHANNEL 987
- * 
- * TODO : Join Signal(lanbahn) and SignalElement(used in routes) classes to one Signal Class
+ *
+ * TODO : Join Signal(lanbahn) and SignalElement(used in allRoutes) classes to
+ * one Signal Class
  *
  * @author mblank
  *
@@ -43,10 +45,11 @@ public class MainUI extends javax.swing.JFrame {
      */
     public static final boolean FORCE_SIM = false; //true;  // don't read simulation setting
 
-    public static final String VERSION = "1.21 - 06 Sep 2018";
+    public static final String VERSION = "1.22 - 07 Sep 2018";
     public static final String S_XNET_SERVER_REV = "SXnet-Server(3.1) - " + VERSION;
 
-    public static boolean DEBUG = true;
+    public static boolean DEBUG;   // read from settings
+
     public static final boolean doUpdateFlag = false;
     public static volatile boolean running = true;   // used for stopping threads
     public static boolean simulation;
@@ -112,6 +115,8 @@ public class MainUI extends javax.swing.JFrame {
     public MainUI() throws Exception {
 
         loadWindowPrefs();
+
+        DEBUG = prefs.getBoolean("enableDebug", false);
 
         myip = NIC.getmyip();   // only the first one will be used
         System.out.println("Number of usable Network Interfaces=" + myip.size());
@@ -209,14 +214,22 @@ public class MainUI extends javax.swing.JFrame {
 
     public void reloadSettings() {
         System.out.println("Reloading all settings and re-connecting serial port");
+        DEBUG = prefs.getBoolean("enableDebug", false);
 
         if (serialIF != null) {
             serialIF.close();
         }
 
         // clear all data
-        // TODO locoAddresses = new ArrayList<>();
+        
         lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
+        locoSlots = new ArrayList<>();   // slot to Loco mapping
+        allLocos = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+        allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+        allTimetables = new ArrayList<>();
+        panelElements = new ArrayList<>();
+        allRoutes = new ArrayList<>();
+        allCompRoutes = new ArrayList<>();
 
         initConfigFile();
         loadWindowPrefs();
@@ -639,7 +652,7 @@ public class MainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnReadSensorsActionPerformed
 
     private void btnFahrplanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFahrplanActionPerformed
-        if (!simulation && (sensorReadAtStart == false) ) {
+        if (!simulation && (sensorReadAtStart == false)) {
             return;
         }
 

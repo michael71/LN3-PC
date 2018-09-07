@@ -73,7 +73,7 @@ public class FahrplanUI extends javax.swing.JFrame {
                 return;
             }
 
-            tbtnStartStop.setText("FP aktiv!");
+            tbtnStartStop.setText("STOP");
 
             serialIF.switchPowerOn();
             activeRow = 0;
@@ -91,7 +91,7 @@ public class FahrplanUI extends javax.swing.JFrame {
     }
 
     private void stop() {
-        tbtnStartStop.setText("FP nicht aktiv");
+        tbtnStartStop.setText("START");
         timetableRunning = false;
         activeRow = -1;
         jTable1.repaint();
@@ -111,6 +111,8 @@ public class FahrplanUI extends javax.swing.JFrame {
             if (t.active == true) {
                 if (t.checkEndSensor()) {
                     Utils.mySleep(3000);
+                    activeRow++;
+                    jTable1.repaint();
                     boolean res = timetable0.advanceToNextTrip();
                     if (res == false) {
                         // timetable ended

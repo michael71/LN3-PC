@@ -16,8 +16,11 @@
  */
 package de.blankedv.ln3pc;
 
+import static de.blankedv.ln3pc.MainUI.DEBUG;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.SENSOR_OCCUPIED;
+import static de.blankedv.ln3pc.Variables.allCompRoutes;
+import static de.blankedv.ln3pc.Variables.allRoutes;
 import static de.blankedv.ln3pc.Variables.allTrips;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 
@@ -28,7 +31,7 @@ import static de.blankedv.ln3pc.Variables.lanbahnData;
 public class Trip implements Comparable<Trip> {
 
     int id = INVALID_INT;
-    String route = "";  // all routes to activate, separated by comma
+    String route = "";  // all allRoutes to activate, separated by comma
     int sens1 = INVALID_INT;     // startSensor
     int sens2 = INVALID_INT;     // stopSensor
     String locoString = "";    // adr,dir,speed
@@ -66,29 +69,53 @@ public class Trip implements Comparable<Trip> {
         return true;
     }
 
-    public boolean start() {
-        // check if start sensor is occupied and rest of route is cleared
-        
-        // set the route(s)
-        // int[] routes = 
-        
-        // start loco
-        
-        // activate listener for "end sensor"
-        
-        return true;
+    public void start() {
+        setRoutes();
+
+        // aquire locoString and start 'full' speed
+        startLoco();
+        active = true;
+
     }
-    
+
+    private void startLoco() {
+        int dirBit = 0;
+        if (locoDir == 1) {
+            dirBit = 32;
+        }
+        int d = 25 + dirBit;
+        LNUtil.aquireLoco(locoAddr, d);
+    }
+
+    private void setRoutes() {
+        if (DEBUG) System.out.println("trip: setRoutes ="+route);
+        String[] routeIds = route.split(",");
+        for (String sRouteId : routeIds) {
+            Integer rid = Integer.parseInt(sRouteId);
+            for (Route r : allRoutes) {
+                if (r.id == rid) {
+                    r.set();
+                }
+            }
+            for (CompRoute cr : allCompRoutes) {
+                if (cr.id == rid) {
+                    cr.set();
+                }
+            }
+        }
+    }
+
     public boolean checkEndSensor() {
         if (lanbahnData.get(sens2).data == SENSOR_OCCUPIED) {
             // this trip ends
             loco.setSpeed(0);  // stop loco
-                // TODO free loco
+            // TODO free loco
             return true;
         } else {
             return false;
         }
     }
+
     // to be able to sort the trips by their ID
     @Override
     public int compareTo(Trip o) {
@@ -98,10 +125,9 @@ public class Trip implements Comparable<Trip> {
             return -1;
         }
     }
-    
-    
+
     static Trip get(int index) {
-        for (Trip t: allTrips) {
+        for (Trip t : allTrips) {
             if (t.id == index) {
                 return t;
             }

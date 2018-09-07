@@ -6,12 +6,12 @@ import java.util.ArrayList;
 
 /**
  * Class Route stores a complete route, which contains sensors, signals and
- * turnouts. Offending routes are calculated automatically (defined as all
- * routes which also set one of the turnouts). In addition offending routes can
- * also be defined in the config file (needed for crossing routes, which cannot
- * be found automatically)
- *
- * adapted from lanbahnpanel (android software)
+ * turnouts. Offending allRoutes are calculated automatically (defined as all
+ allRoutes which also set one of the turnouts). In addition offending allRoutes can
+ also be defined in the config file (needed for crossing allRoutes, which cannot
+ be found automatically)
+
+ adapted from lanbahnpanel (android software)
  *
  * @author mblank
  *
@@ -26,7 +26,7 @@ public class Route {
     String routeString = "";
     String sensorsString = "";
     String offendingString = ""; // comma separated list of id's of offending
-    // routes
+    // allRoutes
 
     // sensors turnout activate for the display of this route
     private ArrayList<SensorElement> rtSensors = new ArrayList<>();
@@ -37,7 +37,7 @@ public class Route {
     // turnouts of this route
     private ArrayList<RouteTurnout> rtTurnouts = new ArrayList<>();
 
-    // offending routes
+    // offending allRoutes
     private ArrayList<Route> rtOffending = new ArrayList<>();
 
     int btn1, btn2;
@@ -50,7 +50,7 @@ public class Route {
      * @param allSensors string for sensors like "2000,2001,2002"
      * @param btn1 address of first route button
      * @param btn2 address of second route button
-     * @param offending string with offending routes, separated by comma
+     * @param offending string with offending allRoutes, separated by comma
      */
     public Route(int id, String route, String allSensors,
             String offending) {
@@ -116,7 +116,7 @@ public class Route {
 
         String[] offRoutes = offendingString.split(",");
         for (int i = 0; i < offRoutes.length; i++) {
-            for (Route rt : routes) {
+            for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
                     if ((rt.id == offID) && (rt.active)) {
@@ -127,7 +127,7 @@ public class Route {
             }
         }
         //	if (DEBUG)
-        //		Log.d(TAG, rtOffending.size() + " offending routes in config");
+        //		Log.d(TAG, rtOffending.size() + " offending allRoutes in config");
     }
 
     public void clear() {
@@ -169,7 +169,7 @@ public class Route {
         }
         String[] offRoutes = offendingString.split(",");
         for (int i = 0; i < offRoutes.length; i++) {
-            for (Route rt : routes) {
+            for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
                     if ((rt.id == offID) && (rt.active)) {
@@ -187,7 +187,7 @@ public class Route {
         }
         String[] offRoutes = offendingString.split(",");
         for (int i = 0; i < offRoutes.length; i++) {
-            for (Route rt : routes) {
+            for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
                     if ((rt.id == offID) && (rt.active)) {
@@ -215,15 +215,19 @@ public class Route {
             return;
         }
 
+        
+
+        clearOffendingRoutes();
+        
         // notify that route is set
         lanbahnData.put(id, new LbData(1, TYPE_ROUTE));
         active = true;
 
-        clearOffendingRoutes();
-
         // activate sensors
         for (SensorElement se : rtSensors) {
             se.setState(SENSOR_INROUTE);
+            int tp = lanbahnData.get(se.adr).type;
+            lanbahnData.put(se.adr, new LbData(se.getState(), TYPE_SENSOR));
         }
 
         // set signals
@@ -309,8 +313,8 @@ public class Route {
     }
 
     public static void auto() {
-        // check for auto reset of routes
-        for (Route rt : routes) {
+        // check for auto reset of allRoutes
+        for (Route rt : allRoutes) {
             if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
                     && (rt.active)) {
                 rt.clear();
@@ -358,20 +362,20 @@ public class Route {
             }
         }
         /*		if (sb.length() == 0)
-			Log.d(TAG, "route id=" + id + " has no offending routes.");
+			Log.d(TAG, "route id=" + id + " has no offending allRoutes.");
 		else
-			Log.d(TAG, "route id=" + id + " has offending routes with ids="
+			Log.d(TAG, "route id=" + id + " has offending allRoutes with ids="
 					+ sb.toString()); */
         return sb.toString();
 
     }
 
     public static void calcOffendingRoutes() {
-        for (Route rt : routes) {
+        for (Route rt : allRoutes) {
             for (RouteTurnout t : rt.rtTurnouts) {
                 // iterate over all turnouts of rt and check, if another route
                 // activates the same turnout to a different position 
-                for (Route rt2 : routes) {
+                for (Route rt2 : allRoutes) {
                     if (rt.id != rt2.id) {
                         for (RouteTurnout t2 : rt2.rtTurnouts) {
                             if ((t.turnout.adr == t2.turnout.adr)

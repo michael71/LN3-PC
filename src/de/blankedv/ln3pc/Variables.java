@@ -77,8 +77,8 @@ public class Variables {
     public static ArrayList<Trip> allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
     public static ArrayList<Timetable> allTimetables = new ArrayList<>();
     public static ArrayList<PanelElement> panelElements = new ArrayList<>();
-    public static ArrayList<Route> routes = new ArrayList<>();
-    public static ArrayList<CompRoute> compRoutes = new ArrayList<>();
+    public static ArrayList<Route> allRoutes = new ArrayList<>();
+    public static ArrayList<CompRoute> allCompRoutes = new ArrayList<>();
 
     static int progState = STOP;
 
@@ -91,7 +91,7 @@ public class Variables {
     static final int STATE_HAVE_SLOT = 3;
 
     /**
-     * {@value #MAX_ROUTES} =maximum number of routes in a compound route
+     * {@value #MAX_ROUTES} =maximum number of allRoutes in a compound route
      */
     static final int MAX_ROUTES = 20;
 
@@ -128,5 +128,5 @@ public class Variables {
     static final int STATE_YELLOW_FEATHER = 3;
     static final int STATE_SWITCHING = 4;
 
-    static final int AUTO_CLEAR_ROUTE_TIME_SEC = 30;    // clear routes automatically after 30secs
+    static final int AUTO_CLEAR_ROUTE_TIME_SEC = 30;    // clear allRoutes automatically after 30secs
 }

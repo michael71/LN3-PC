@@ -5,9 +5,9 @@ import static de.blankedv.ln3pc.Variables.*;
 import java.util.ArrayList;
 
 /**
- * composite route, i.e. a list of routes which build a new route, is only a
- * helper for ease of use, no more functionality than the "simple" Route which
- * it is comprised of
+ * composite route, i.e. a list of allRoutes which build a new route, is only a
+ helper for ease of use, no more functionality than the "simple" Route which
+ it is comprised of
  *
  * @author mblank
  *
@@ -17,7 +17,7 @@ public class CompRoute {
     int id; // must be unique
     String routesString = ""; // identical to config string
 
-    // route is comprised of a list of routes
+    // route is comprised of a list of allRoutes
     private ArrayList<Route> myroutes = new ArrayList<>();
 
     /**
@@ -36,12 +36,12 @@ public class CompRoute {
             System.out.println("creating comproute id=" + id);
         }
 
-        // routes = "12,13": these routes need to be activated.
+        // allRoutes = "12,13": these allRoutes need to be activated.
         String[] iID = routesString.split(",");
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < iID.length; i++) {
             int routeID = Integer.parseInt(iID[i]);
-            for (Route rt : routes) {
+            for (Route rt : allRoutes) {
                 try {
                     if (rt.id == routeID) {
                         myroutes.add(rt);
