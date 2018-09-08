@@ -146,6 +146,8 @@ public class SXnetSession implements Runnable {
             case "SET":
             case "SL":
                 return setLanbahnMessage(param);
+            case "REQ":
+                return requestRouteMessage(param);
             case "SETLOCO":
                 return setLocoMessage(param);
             case "READLOCO":
@@ -357,6 +359,51 @@ public class SXnetSession implements Runnable {
             serialIF.send(buf);
             return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).data;  // success
         }
+    }
+    
+    private String requestRouteMessage(String[] par) {
+        if (DEBUG) {
+            System.out.println("requestRouteMessage");
+        }
+        if (par.length <= 2) {
+            return "ERROR";
+        }
+
+        // convert the lanbahn "SET" message to a DCC Message if in DCC address range
+        int lbAddr = getLanbahnAddrFromString(par[1]);
+        int lbdata = getLanbahnDataFromString(par[2]);   // can only be 1= set and 0=clear
+        if ((lbAddr == INVALID_INT) || ((lbdata != 0) && (lbdata != 1))) {
+            return "ERROR";
+        }
+
+        // check whether there is a route with this address(=id)
+        for (Route r : allRoutes) {
+            if (r.id == lbAddr) {
+                lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ROUTE));
+                boolean res = r.set();
+                if (res) {
+                return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).data;  // success
+                } else {
+                    return "ERROR: ROUTE";
+                }
+            }
+        }
+        // check whether there is a compund route with this address(=id)
+        for (CompRoute cr : allCompRoutes) {
+            if (cr.id == lbAddr) {
+                lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ROUTE));
+                boolean res = cr.set();
+                if (res) {
+                return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).data;  // success
+                } else {
+                    return "ERROR: ROUTE";
+                }
+            }
+        }
+        
+        
+        return "ERROR";
+
     }
 
     int nBits(int lbaddr) {

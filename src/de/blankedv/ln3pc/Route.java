@@ -200,7 +200,7 @@ public class Route {
         return false;
     }
 
-    public void set() {
+    public boolean set() {
         timeSet = System.currentTimeMillis(); // store for resetting
         // automatically
 
@@ -212,7 +212,7 @@ public class Route {
             if (DEBUG) {
                 System.out.println(" offending route active");
             }
-            return;
+            return false;
         }
 
         
@@ -242,6 +242,7 @@ public class Route {
             lanbahnData.put(rtt.turnout.adr, new LbData(rtt.valueToSetForRoute, tp));
         }
 
+        return true;
     }
 
     public boolean isActive() {

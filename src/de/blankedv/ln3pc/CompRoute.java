@@ -6,8 +6,8 @@ import java.util.ArrayList;
 
 /**
  * composite route, i.e. a list of allRoutes which build a new route, is only a
- helper for ease of use, no more functionality than the "simple" Route which
- it is comprised of
+ * helper for ease of use, no more functionality than the "simple" Route which
+ * it is comprised of
  *
  * @author mblank
  *
@@ -79,16 +79,25 @@ public class CompRoute {
         }
     }
 
-    public void set() {
+    public boolean set() {
 
         if (DEBUG) {
             System.out.println(" setting comproute id=" + id);
         }
 
+        // check if all routes can be set successfully
+        boolean res = true;
         for (Route rt : myroutes) {
-            rt.set();
-
+            res = rt.set();
+            if (res == false) {
+                if (DEBUG) {
+                    System.out.println("ERROR cannot set comproute id=" + id + " because route=" + rt.id + " cannot be set.");
+                }
+                return false;  // cannot set comproute.
+            }
+            // else continue with next route
         }
+        return res;
     }
 
 }
