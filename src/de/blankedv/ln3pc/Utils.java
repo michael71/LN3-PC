@@ -5,6 +5,9 @@
  */
 package de.blankedv.ln3pc;
 
+import static de.blankedv.ln3pc.Variables.TYPE_ACCESSORY;
+import static de.blankedv.ln3pc.Variables.lanbahnData;
+
 /**
  *
  * @author mblank
@@ -67,6 +70,23 @@ public class Utils {
         } catch (InterruptedException ex) {
             System.out.println("ERROR could not sleep");
         }
+    }
+    
+    /** put a new value to a lanbahn address, and keep the type unchanged
+     * or (if the address does not exist so far, create it new with type ACCESSORY
+     * 
+     * @param a
+     * @param v 
+     */
+    static void updateLanbahnData(int a, int v) {
+         LbData lb = lanbahnData.get(a);
+         if (lb == null) {
+            lb = new LbData(v, TYPE_ACCESSORY);
+         }
+         lanbahnData.put(a, new LbData(v, lb.getType()));
+         if (lanbahnData.get(a).getData() != v) {
+             System.out.println("ERROR setting addr="+a+" to val="+v+" not successful");
+         }
     }
 
 }

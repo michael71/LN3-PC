@@ -15,18 +15,18 @@ public class TurnoutElement extends ActivePanelElement {
     } 
 
     @Override
-    public boolean setState(int state) {
-        if (state < N_STATES_TURNOUTS) {
-            this.state = state;
+    public int setState(int st) {
+        if (st < N_STATES_TURNOUTS) {
+            state = st;
             lastUpdateTime = System.currentTimeMillis();
-            return true;
+            return state;
         } else {
-            return false;
+            return state;
         }
 
     }
 
-    public static TurnoutElement findTurnoutByAddress(int address) {
+    public static TurnoutElement getByAddress(int address) {
         for (PanelElement pe : panelElements) {
             if (pe instanceof TurnoutElement) {
                 if (pe.getAdr() == address) {

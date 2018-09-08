@@ -15,6 +15,10 @@ import java.util.ArrayList;
 public class CompRoute {
 
     int id; // must be unique
+    
+        boolean active = false;
+    private long timeSet;
+    
     String routesString = ""; // identical to config string
 
     // route is comprised of a list of allRoutes
@@ -84,7 +88,8 @@ public class CompRoute {
         if (DEBUG) {
             System.out.println(" setting comproute id=" + id);
         }
-
+        timeSet = System.currentTimeMillis();
+        active = true;
         // check if all routes can be set successfully
         boolean res = true;
         for (Route rt : myroutes) {
@@ -100,4 +105,18 @@ public class CompRoute {
         return res;
     }
 
+     public static void auto() {
+        // check for auto reset of allCompRoutes
+        // this function is only needed for the lanbahn-value display, because the individual single routes,
+        // which are set by a compound route, are autocleared by the "Route.auto()" function
+        for (CompRoute rt : allCompRoutes) {
+            if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
+                    && (rt.active)) {
+                rt.active = false;
+                lanbahnData.put(rt.id, new LbData(0, TYPE_ROUTE));  // reset lanbahn value
+            }
+
+        }
+
+    }
 }

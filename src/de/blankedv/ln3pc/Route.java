@@ -139,16 +139,14 @@ public class Route {
 
         // deactivate sensors
         for (SensorElement se : rtSensors) {
-            se.setState(SENSOR_FREE);
-            int tp = lanbahnData.get(se.adr).type;
-            lanbahnData.put(se.adr, new LbData(se.getState(), tp));
+            se.setState(SENSOR_NOT_INROUTE);
+           Utils.updateLanbahnData(se.adr, se.getState());
         }
 
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
             rs.signal.setState(STATE_RED);
-            int tp = lanbahnData.get(rs.signal.adr).type;
-            lanbahnData.put(rs.signal.adr, new LbData(rs.signal.getState(), tp));
+            Utils.updateLanbahnData(rs.signal.adr, rs.signal.getState());
         }
 
         // TODO unlock turnouts
@@ -160,7 +158,7 @@ public class Route {
          */
         active = false;
         // notify that route was cleared
-        lanbahnData.put(id, new LbData(0, TYPE_ROUTE));
+        lanbahnData.put(id, new LbData(0, TYPE_ROUTE));  // route has only 0 or 1 as value
     }
 
     public void clearOffendingRoutes() {
@@ -226,22 +224,18 @@ public class Route {
         // activate sensors
         for (SensorElement se : rtSensors) {
             se.setState(SENSOR_INROUTE);
-            int tp = lanbahnData.get(se.adr).type;
-            lanbahnData.put(se.adr, new LbData(se.getState(), TYPE_SENSOR));
+            Utils.updateLanbahnData(se.adr, se.getState());
         }
 
         // set signals
         for (RouteSignal rs : rtSignals) {
-            int tp = lanbahnData.get(rs.signal.adr).type;
-            lanbahnData.put(rs.signal.adr, new LbData(rs.dynamicValueToSetForRoute(), tp));
-
+            Utils.updateLanbahnData(rs.signal.adr, rs.dynamicValueToSetForRoute());
         }
         // set and // TODO lock turnouts
         for (RouteTurnout rtt : rtTurnouts) {
-            int tp = lanbahnData.get(rtt.turnout.adr).type;
-            lanbahnData.put(rtt.turnout.adr, new LbData(rtt.valueToSetForRoute, tp));
-        }
-
+            Utils.updateLanbahnData(rtt.turnout.adr, rtt.valueToSetForRoute);
+        }   
+         
         return true;
     }
 
@@ -293,9 +287,7 @@ public class Route {
             if (rs.depFrom != INVALID_INT) {
                 if (rs.signal.getState() != rs.dynamicValueToSetForRoute()) {
                     rs.signal.state = rs.dynamicValueToSetForRoute();
-
-                    int tp = lanbahnData.get(rs.signal.adr).type;
-                    lanbahnData.put(rs.signal.adr, new LbData(rs.signal.state, tp));
+                    Utils.updateLanbahnData(rs.signal.adr, rs.signal.state);
                 }
             }
         }

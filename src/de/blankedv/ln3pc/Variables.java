@@ -111,8 +111,7 @@ public class Variables {
     static final int TYPE_SIGNAL_1BIT = 1; // values 0 or 1
     static final int TYPE_SIGNAL_2BIT = 2; // values 0 .. 3
     static final int TYPE_SIGNAL_3BIT = 3;
-    static final int TYPE_SENSOR = 10;     // sensor for occupation
-    static final int TYPE_SENSOR_INROUTE = 11;  // sensor for "ausleuchtung" (Uhlenbrock TC)
+    static final int TYPE_SENSOR = 10;     // sensor for occupation (and route-lighting with 'adr2')
     static final int TYPE_ROUTE = 20;   // this is a route.
 
     // sensor values

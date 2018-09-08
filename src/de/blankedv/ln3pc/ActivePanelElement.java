@@ -76,8 +76,8 @@ public abstract class ActivePanelElement extends PanelElement {
     }
     
     @Override
-    public int getAdr2() {
-        return adr2;
+    public int getSecondaryAdr() {
+        return secondaryAdr;
     }
 
     @Override
@@ -85,10 +85,7 @@ public abstract class ActivePanelElement extends PanelElement {
         return state;
     }
     
-    @Override
-    public boolean setState(int a) {
-        return false;
-    }
+    
 
     @Override
     public boolean hasAdrX(int address) {
@@ -109,8 +106,8 @@ public abstract class ActivePanelElement extends PanelElement {
         }
     }
     
-    public void setAdr2(int adr) {
-        this.adr2 = adr;
+    public void setSecondaryAdr(int adr) {
+        this.secondaryAdr = adr;
     }
 
    

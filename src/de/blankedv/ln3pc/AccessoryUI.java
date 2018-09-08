@@ -14,9 +14,9 @@ import java.util.prefs.Preferences;
 import java.util.List;
 import java.util.ArrayList;
 import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
+import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.TYPE_ACCESSORY;
 import static de.blankedv.ln3pc.Variables.TYPE_SENSOR;
-import static de.blankedv.ln3pc.Variables.TYPE_SENSOR_INROUTE;
 import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_1BIT;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 
@@ -294,7 +294,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 2, data);
+        sendAccessoryToLocoNet(w_adr + 2, data);
     }//GEN-LAST:event_jCheckBox3ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
@@ -306,7 +306,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr, data);
+        sendAccessoryToLocoNet(w_adr, data);
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
@@ -315,7 +315,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 1, data);
+        sendAccessoryToLocoNet(w_adr + 1, data);
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jCheckBox4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox4ActionPerformed
@@ -324,7 +324,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 3, data);
+        sendAccessoryToLocoNet(w_adr + 3, data);
     }//GEN-LAST:event_jCheckBox4ActionPerformed
 
     private void jCheckBox5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox5ActionPerformed
@@ -333,7 +333,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 4, data);
+        sendAccessoryToLocoNet(w_adr + 4, data);
     }//GEN-LAST:event_jCheckBox5ActionPerformed
 
     private void jCheckBox6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox6ActionPerformed
@@ -342,7 +342,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 5, data);
+        sendAccessoryToLocoNet(w_adr + 5, data);
     }//GEN-LAST:event_jCheckBox6ActionPerformed
 
     private void jCheckBox7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox7ActionPerformed
@@ -351,7 +351,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 6, data);
+        sendAccessoryToLocoNet(w_adr + 6, data);
     }//GEN-LAST:event_jCheckBox7ActionPerformed
 
     private void jCheckBox8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox8ActionPerformed
@@ -360,7 +360,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 7, data);
+        sendAccessoryToLocoNet(w_adr + 7, data);
     }//GEN-LAST:event_jCheckBox8ActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -375,7 +375,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 8, data);
+        sendAccessoryToLocoNet(w_adr + 8, data);
     }//GEN-LAST:event_jCheckBox9ActionPerformed
 
     private void jCheckBox10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox10ActionPerformed
@@ -384,26 +384,35 @@ public class AccessoryUI extends javax.swing.JFrame {
         } else {
             data = 0;
         }
-        sendeWeiche(w_adr + 9, data);
+        sendAccessoryToLocoNet(w_adr + 9, data);
     }//GEN-LAST:event_jCheckBox10ActionPerformed
 
-    private void sendeWeiche(int addr, int data) {
+    private void sendAccessoryToLocoNet(int addr, int data) {
         LbData lb = lanbahnData.get(addr);
         if (lb == null) {
             lb = new LbData(data, TYPE_ACCESSORY);
         }
-        switch (lb.type) {
+        switch (lb.getType()) {
             case TYPE_ACCESSORY:
             case TYPE_SIGNAL_1BIT:
+                data &= 0x01;  // only last bit is used for LocoNet/DCC
+                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, data, 1));   // TODO test
+                break;
             case TYPE_SENSOR:
-            case TYPE_SENSOR_INROUTE:
-                lanbahnData.put(addr, new LbData(data, lb.type));   // don't change type, only change data
-                serialIF.send(LNUtil.makeOPC_SW_REQ(addr-1, data, 1));   // TODO test
+                int data0 = data & 0x01;  // only last bit is used for LocoNet/DCC sensor reporting
+                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, data0, 1));   // TODO test             
+                SensorElement se = SensorElement.getByAddress(addr);
+                if ((se != null) && (se.secondaryAdr != INVALID_INT)) {
+                    int data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
+                    serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, data1, 1));   // TODO test
+                }
                 break;
             default:
                 // cannot set other types
                 if (DEBUG) {
-                    System.out.println("ERROR, cannot set data for type=" + lb.type);
+                    System.out.println("ERROR, cannot set data for type=" + lb.getType());
                 }
                 break;
         }
@@ -441,7 +450,7 @@ public class AccessoryUI extends javax.swing.JFrame {
         if (lb == null) {
             return false;
         } else {
-            return (lb.data != 0);
+            return (lb.getData() != 0);
         }
     }
 

@@ -6,10 +6,6 @@
 package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.MAX_ROUTES;
-import static de.blankedv.ln3pc.Variables.MAX_TRIPS;
-import static de.blankedv.ln3pc.Variables.allCompRoutes;
-import static de.blankedv.ln3pc.Variables.allRoutes;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 import java.util.ArrayList;
 
@@ -82,17 +78,19 @@ public class Timetable {
         // TODO check if complete route is free and set route
         
         // set route(s)
-        
-        if ((lanbahnData.get(t.sens1).data == 1) && (lanbahnData.get(t.sens2).data == 0)) {
+        SensorElement seStart = SensorElement.getByAddress(t.sens1);
+        SensorElement seEnd = SensorElement.getByAddress(t.sens2);
+        if ((seStart == null) || (seEnd == null)) return false;
+        if (seStart.isOccupied() && (!seEnd.isOccupied()) ) {
             System.out.println("start sensor occ and end sensor free, we can start the trip");
             t.start();
             return true;
 
         } else {
-            if (!(lanbahnData.get(t.sens1).data == 1)) {
+            if (!(seStart.isOccupied())) {
                 System.out.println("start sensor free, we CANNOT start the trip");
             }
-            if (!(lanbahnData.get(t.sens2).data == 0)) {
+            if (seEnd.isOccupied()) {
                 System.out.println("stop sensor is not free, we CANNOT start the trip");
             }
             return false;

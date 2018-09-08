@@ -23,8 +23,8 @@ import static de.blankedv.ln3pc.Variables.*;
  * @author mblank
  */
 public class LbData {
-    int data;  
-    int type;
+    private int data;  
+    private int type;
     
     LbData(int d, int t) {
         data = d;
@@ -34,6 +34,14 @@ public class LbData {
     LbData(int d) {
         data = d;
         type = TYPE_ACCESSORY;
+    }
+    
+    public int getData() {
+        return data;
+    }
+    
+    public int getType() {
+        return type;
     }
     
     public String toString() {

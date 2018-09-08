@@ -106,7 +106,9 @@ public class Trip implements Comparable<Trip> {
     }
 
     public boolean checkEndSensor() {
-        if (lanbahnData.get(sens2).data == SENSOR_OCCUPIED) {
+        SensorElement seEnd = SensorElement.getByAddress(sens2) ;
+        if (seEnd == null) return false;
+        if (seEnd.isOccupied()) {
             // this trip ends
             loco.setSpeed(0);  // stop loco
             // TODO free loco

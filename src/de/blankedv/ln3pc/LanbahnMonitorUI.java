@@ -172,9 +172,8 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     // it.remove(); // avoids a ConcurrentModificationException
                     // mark sensors yellow and multi-aspect signals grey
                     StringBuffer sb;
-                    switch (lbCopy.get(key).type) {  // background color depending on type
+                    switch (lbCopy.get(key).getType()) {  // background color depending on type
                         case TYPE_SENSOR:
-                        case TYPE_SENSOR_INROUTE:
                             sb = new StringBuffer("<html><p bgcolor='#FFFF00'>BM-");                           
                             break;
                         case TYPE_SIGNAL_1BIT:
@@ -195,13 +194,13 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     
                     // VALUE
                     StringBuffer s;
-                    int value = lbCopy.get(key).data;
+                    int value = lbCopy.get(key).getData();
                     
                     // display in different color (Red) when value has changed
                     // after the last call of update()
                     int valueOld = INVALID_INT;
                     if (oldLbCopy.containsKey(key)) {
-                        valueOld = oldLbCopy.get(key).data;
+                        valueOld = oldLbCopy.get(key).getData();
                     }
                     if (value != valueOld ) {  // type is NOT compared !
                         s = new StringBuffer("<html><p bgcolor='#FF8800'>" + value + "</p></html>");

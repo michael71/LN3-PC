@@ -135,14 +135,16 @@ public class ReadDCCConfig {
             ArrayList<Integer> sensAddresses = parseAddressArray(items.item(i));
             if (sensAddresses != null) {
                 if ((sensAddresses.size() >= 1) && (sensAddresses.get(0) != INVALID_INT)) {
-                    System.out.println("sensor a1=" + sensAddresses.get(0));
                     lanbahnData.put(sensAddresses.get(0), new LbData(0, TYPE_SENSOR));
-                    panelElements.add(new SensorElement(sensAddresses.get(0)));  // all sensor data stored in this SensorElement
-                }
-                if ((sensAddresses.size() >= 2) && (sensAddresses.get(1) != INVALID_INT)) {
-                    System.out.println("sensor a2=" + sensAddresses.get(1));
-                    lanbahnData.put(sensAddresses.get(1), new LbData(0, TYPE_SENSOR_INROUTE));
-                    // DO NOT CREATE a second SensorElement for this "pseudo-sensor"
+                    if ((sensAddresses.size() >= 2) && (sensAddresses.get(1) != INVALID_INT)) {
+                        // check if we have 2 sensor addresses
+                        System.out.println("sensor adr=" + sensAddresses.get(0) + " sec-adr=" + sensAddresses.get(1));
+                        panelElements.add(new SensorElement(sensAddresses.get(0), sensAddresses.get(1)));  // all sensor data stored in this SensorElement
+                    } else {
+                        System.out.println("sensor adr=" + sensAddresses.get(0) + " no sec-adr.");
+                        panelElements.add(new SensorElement(sensAddresses.get(0)));  // all sensor data stored in this SensorElement
+                    }
+
                 }
             }
         }
@@ -355,8 +357,7 @@ public class ReadDCCConfig {
         }
     }
 
-    
-     private static ArrayList<Route> parseRoutes(Document doc) {
+    private static ArrayList<Route> parseRoutes(Document doc) {
         // assemble new ArrayList of tickets.
         ArrayList<Route> myroutes = new ArrayList<>();
         NodeList items;

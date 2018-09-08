@@ -20,7 +20,7 @@ public class SignalElement extends ActivePanelElement {
         state = STATE_UNKNOWN;
     }
 
-    public static SignalElement findSignalByAddress(int address) {
+    public static SignalElement getByAddress(int address) {
         for (PanelElement pe : panelElements) {
             if (pe instanceof SignalElement) {
                 if (pe.getAdr() == address) {
@@ -34,13 +34,13 @@ public class SignalElement extends ActivePanelElement {
     }
 
     @Override
-    public boolean setState(int state) {
-        if (state < N_STATES_SIGNALS) {
-            this.state = state;
+    public int setState(int st) {
+        if (st < N_STATES_SIGNALS) {
+            state = st;
             lastUpdateTime = System.currentTimeMillis();
-            return true;
+            return state;
         } else {
-            return false;
+            return state;
         }
 
     }

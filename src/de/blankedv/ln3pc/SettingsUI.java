@@ -54,21 +54,20 @@ public class SettingsUI extends javax.swing.JFrame {
                 break;
             }
         }
-       
 
         cbSimulation.setSelected(prefs.getBoolean("simulation", false));
 
         cbDebug.setSelected(prefs.getBoolean("enableDebug", false));
-
-        String fname = prefs.get("configfilename","-keiner-");
+        cbCentralRouting.setSelected(prefs.getBoolean("centralRouting", false));
+        String fname = prefs.get("configfilename", "-keiner-");
         if (fname.length() > 60) {
-            String fname1 = fname.substring(0,59);
+            String fname1 = fname.substring(0, 59);
             String fname2 = fname.substring(60);
-             txtConfigFilename.setText(fname1+"\n"+fname2);
+            txtConfigFilename.setText(fname1 + "\n" + fname2);
         } else {
-        txtConfigFilename.setText(fname);
+            txtConfigFilename.setText(fname);
         }
-                String locoFname = prefs.get("locofilename", "-keiner-");
+        String locoFname = prefs.get("locofilename", "-keiner-");
         if (locoFname.length() > 60) {
             String lfname1 = locoFname.substring(0, 59);
             String lfname2 = locoFname.substring(60);
@@ -77,11 +76,10 @@ public class SettingsUI extends javax.swing.JFrame {
             txtConfigFilename.setText(fname);
         }
         if (myip.isEmpty()) {
-            lblConfigFilenameHelp.setText("download von http://hostname:8000/config");           
+            lblConfigFilenameHelp.setText("download von http://hostname:8000/config");
         } else {
             lblConfigFilenameHelp.setText("download von http:/" + myip.get(0).toString() + ":8000/config");
         }
-
 
         loadPrefs();
 
@@ -114,7 +112,7 @@ public class SettingsUI extends javax.swing.JFrame {
         txtConfigFilename = new javax.swing.JTextArea();
         lblConfigFilenameHelp = new javax.swing.JLabel();
         btnChangeConfigFile = new javax.swing.JButton();
-        cbDebug1 = new javax.swing.JCheckBox();
+        cbCentralRouting = new javax.swing.JCheckBox();
         cbClearRoutesDelay = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
 
@@ -265,7 +263,12 @@ public class SettingsUI extends javax.swing.JFrame {
             }
         });
 
-        cbDebug1.setText("Fahrstraßenmodus");
+        cbCentralRouting.setText("Fahrstraßenmodus");
+        cbCentralRouting.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbCentralRoutingActionPerformed(evt);
+            }
+        });
 
         cbClearRoutesDelay.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "10 sec", "20 sec", "30 sec", "nur über End-Sensor" }));
         cbClearRoutesDelay.setSelectedIndex(1);
@@ -294,7 +297,7 @@ public class SettingsUI extends javax.swing.JFrame {
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(btnChangeConfigFile, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addComponent(cbDebug1)
+                                        .addComponent(cbCentralRouting)
                                         .addGap(56, 56, 56)
                                         .addComponent(jLabel3)))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -312,7 +315,7 @@ public class SettingsUI extends javax.swing.JFrame {
                 .addComponent(btnChangeConfigFile)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cbDebug1)
+                    .addComponent(cbCentralRouting)
                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cbClearRoutesDelay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(25, Short.MAX_VALUE))
@@ -359,6 +362,7 @@ public class SettingsUI extends javax.swing.JFrame {
         prefs.put("baudrate", cbBaudrate.getSelectedItem().toString());
         prefs.putBoolean("simulation", cbSimulation.isSelected());
         prefs.putBoolean("enableDebug", cbDebug.isSelected());
+        prefs.putBoolean("centralRouting", cbCentralRouting.isSelected());
 
         if (comboSelectSerialPort.getItemCount() >= 1) {
             prefs.put("commPort", comboSelectSerialPort.getSelectedItem().toString());
@@ -375,13 +379,14 @@ public class SettingsUI extends javax.swing.JFrame {
             System.out.println("saving Type=" + comboSelectType.getSelectedItem().toString());
             System.out.println("saving Simulation=" + cbSimulation.isSelected());
             System.out.println("saving enableDebug=" + cbDebug.isSelected());
+            System.out.println("saving centralRouting=" + cbCentralRouting.isSelected());
             System.out.println("configfilename=" + prefs.get("configfilename", "-keiner-"));
-  
+
         }
 
         //JOptionPane.showMessageDialog(this, "Needs Restart");
         mainui.reloadSettings();
-        
+
         settingsWindow = null;
         dispose();
     }//GEN-LAST:event_btnSaveActionPerformed
@@ -409,7 +414,7 @@ public class SettingsUI extends javax.swing.JFrame {
 
     private void btnChangeConfigFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChangeConfigFileActionPerformed
         JFileChooser chooser = new JFileChooser();
-        File curDir = new File (prefs.get("configdir", System.getProperty("user.home")));
+        File curDir = new File(prefs.get("configdir", System.getProperty("user.home")));
         chooser.setCurrentDirectory(curDir);
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "xml", "XML");
@@ -430,6 +435,14 @@ public class SettingsUI extends javax.swing.JFrame {
     private void cbClearRoutesDelayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbClearRoutesDelayActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cbClearRoutesDelayActionPerformed
+
+    private void cbCentralRoutingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbCentralRoutingActionPerformed
+        if (cbCentralRouting.isSelected()) {
+            prefs.putBoolean("centralRouting", true);
+        } else {
+            prefs.putBoolean("centralRouting", false);
+        }
+    }//GEN-LAST:event_cbCentralRoutingActionPerformed
 
     private void i18n() {
         this.setTitle("Settings");
@@ -461,7 +474,7 @@ public class SettingsUI extends javax.swing.JFrame {
         CommPortIdentifier serialPortId;
         Enumeration enumComm;
         comboSelectSerialPort.removeAllItems();
-        
+
         if (serialIF.isConnected() && (!serialIF.getPortName().isEmpty())) {
             comboSelectSerialPort.addItem(serialIF.getPortName());
         }
@@ -497,9 +510,9 @@ public class SettingsUI extends javax.swing.JFrame {
     private javax.swing.JButton btnChangeConfigFile;
     private javax.swing.JButton btnSave;
     private javax.swing.JComboBox cbBaudrate;
+    private javax.swing.JCheckBox cbCentralRouting;
     private javax.swing.JComboBox cbClearRoutesDelay;
     private javax.swing.JCheckBox cbDebug;
-    private javax.swing.JCheckBox cbDebug1;
     private javax.swing.JCheckBox cbSimulation;
     private javax.swing.JComboBox<String> comboSelectSerialPort;
     private javax.swing.JComboBox comboSelectType;

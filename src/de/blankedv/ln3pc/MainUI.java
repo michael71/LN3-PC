@@ -784,6 +784,8 @@ public class MainUI extends javax.swing.JFrame {
         // do GUI update only every second
         //System.out.println("do update called.");
         updatePowerBtnAndIcon();
+        CompRoute.auto();
+        Route.auto();   // reset all routes after some time
 
         if (lbmon != null) {
             lbmon.update();

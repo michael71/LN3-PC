@@ -76,10 +76,10 @@ public class LNUtil {
                 disp.append("-> switch adr=").append(adr);
                 if (dir == 0) {
                     disp.append(" thrown/red");
-                    lanbahnData.put(adr, new LbData(1));  // LOGIC REVERSED !!!
+                    Utils.updateLanbahnData(adr, 1);  // LOGIC REVERSED !!!
                 } else {
                     disp.append(" closed/green");
-                    lanbahnData.put(adr, new LbData(0));  // LOGIC REVERSED !!!
+                    Utils.updateLanbahnData(adr, 0);  // LOGIC REVERSED !!!
                 }
                 if (state == 0) {
                     disp.append(" OFF");
@@ -101,12 +101,21 @@ Report/status bits and 4 MS adr bits.
                 adr = getSensorAddress(buf);
                 state = getOnOffState(buf);
                 disp.append("-> sensor adr=").append(adr);
-                if (state == 0) {
-                    disp.append(" free");
-                    lanbahnData.put(adr, new LbData(0, TYPE_SENSOR));
-                } else {
-                    disp.append(" occupied");
-                    lanbahnData.put(adr, new LbData(1, TYPE_SENSOR));
+                SensorElement se = SensorElement.getByAddress(adr);
+                if (se != null) {
+                    if (state == 0) {
+                        disp.append(" free");
+                        int st = se.setState(SENSOR_FREE);   // lanbahn sensors have 4 different states
+                        Utils.updateLanbahnData(adr, st);
+                        disp.append(" st=");
+                        disp.append(st);
+                    } else {
+                        disp.append(" occupied");
+                        int st = se.setState(SENSOR_OCCUPIED);  // lanbahn sensors have 4 different states
+                        Utils.updateLanbahnData(adr, st);
+                        disp.append(" st=");
+                        disp.append(st);
+                    }
                 }
 
                 break;
@@ -124,7 +133,7 @@ Report/status bits and 4 MS adr bits.
                     disp.append("-> lack, adr=").append(adr);
                     String s = String.format("%02X", buf[2]);
                     disp.append(" ACK1=").append(s).append(" dir=").append(dir);
-                    lanbahnData.put(adr, new LbData((1 - dir), TYPE_ACCESSORY));
+                    Utils.updateLanbahnData(adr, (1 - dir));
                 } else {
                     // reset LACK 
                     awaitingLack = 0;
@@ -201,12 +210,12 @@ Report/status bits and 4 MS adr bits.
                         } else {
                             disp.append(" stealing, aquire finished");
                             requestSlotState = STATE_HAVE_SLOT;
-                            initLoco(slotAquired, aquiringLoco, (byte)(0x07 & buf[3]), buf[5], buf[6], buf[7]);
+                            initLoco(slotAquired, aquiringLoco, (byte) (0x07 & buf[3]), buf[5], buf[6], buf[7]);
                         }
                     } else if (requestSlotState == STATE_NULLMOVE) {
                         disp.append(" aquire finished");
                         requestSlotState = STATE_HAVE_SLOT;
-                        initLoco(slotAquired, aquiringLoco, (byte)(0x07 & buf[3]), buf[5], buf[6], buf[7]);
+                        initLoco(slotAquired, aquiringLoco, (byte) (0x07 & buf[3]), buf[5], buf[6], buf[7]);
                     }
                 }
                 break;
@@ -236,9 +245,10 @@ Report/status bits and 4 MS adr bits.
 
     static private void initLoco(int slotAquired, Loco lo, byte sp, byte dectype, byte dirf, byte trk) {
 
-        
         setGlobalPower(trk);
-        if (DEBUG) printTRKinfo(trk);
+        if (DEBUG) {
+            printTRKinfo(trk);
+        }
         LocoSlot ls = new LocoSlot(slotAquired, lo, is128SpeedSteps(dectype));
         locoSlots.add(ls);   // TODO check if it exists already
         lo.setDirf(dirf);
@@ -271,7 +281,7 @@ Report/status bits and 4 MS adr bits.
                 break;
             case 0:
             case 0b01:
-                
+
                 step128 = false;
                 break;
             default:
@@ -287,7 +297,7 @@ Report/status bits and 4 MS adr bits.
     }
 
     static public void printTRKinfo(byte t) {
-                // TRK byte: D7-D4 Reserved, D3 = prog.track.is.busy
+        // TRK byte: D7-D4 Reserved, D3 = prog.track.is.busy
         // D2 = Loconet 1.1 cap.
         // D1 = Track is NOT paused (no emergency stop)
         // D0 = Global Power ON
@@ -300,21 +310,21 @@ Report/status bits and 4 MS adr bits.
         if ((t & 0x20) != 0) {
             System.out.println("no emergency stop");
         } else {
-            System.out.println("EMERGENCY stop"); 
+            System.out.println("EMERGENCY stop");
         }
-       
-        
+
     }
-    
+
     static private void setGlobalPower(byte t) {
-         if ((t & 0x10) != 0) {
+        if ((t & 0x10) != 0) {
             System.out.println("globalPower is ON");
             globalPower = POWER_ON;
         } else {
-            System.out.println("globalPower is OFF"); 
+            System.out.println("globalPower is OFF");
             globalPower = POWER_OFF;
         }
     }
+
     static private int getDirection(byte[] buf) {
         int dir = (int) buf[2] & 0x20;  // GREEN/RED
         if (dir != 0) {
@@ -365,18 +375,13 @@ Report/status bits and 4 MS adr bits.
         return sb.toString();
     }
 
-   /** static public byte[] test() {
-        //A0 01 00 5e
-        byte[] buf = new byte[4];
-        buf[0] = (byte) 0xa0;
-        buf[1] = (byte) 0x01;
-        buf[2] = (byte) 0x00;
-        buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
-        if (buf[3] != (byte) 0x5e) {
-            System.out.println(String.format("ERROR, chk=%02X", buf[3]));
-        }
-        return buf;
-    } */
+    /**
+     * static public byte[] test() { //A0 01 00 5e byte[] buf = new byte[4];
+     * buf[0] = (byte) 0xa0; buf[1] = (byte) 0x01; buf[2] = (byte) 0x00; buf[3]
+     * = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]); if (buf[3] != (byte)
+     * 0x5e) { System.out.println(String.format("ERROR, chk=%02X", buf[3])); }
+     * return buf; }
+     */
 
     /* NOT USED
      static public byte[] makePOWER_ON_OFF(int onoff) {
@@ -478,7 +483,7 @@ Report/status bits and 4 MS adr bits.
         buf[0] = (byte) 0xa0;
         buf[1] = (byte) (ls.slot);
         buf[2] = (byte) (ls.loco.getSpeed() * DCC_SPEED_FACTOR);
-        if (buf[2] == (byte)0x01) {
+        if (buf[2] == (byte) 0x01) {
             buf[2] = (byte) 0x02;
         }  // 0x01 is emergency stop !!
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
@@ -496,14 +501,51 @@ Report/status bits and 4 MS adr bits.
 
         buf[0] = (byte) 0xa1;
         buf[1] = (byte) (ls.slot);
-        buf[2] = (byte) (0x00);  
-        
-        if (ls.loco.isForward()) buf[2] += (byte) 0x20;
-        if (ls.loco.isLight()) buf[2] += (byte) 0x10;
-        if (ls.loco.isF1()) buf[2] += (byte) 0x01;
-        
+        buf[2] = (byte) (0x00);
+
+        if (ls.loco.isForward()) {
+            buf[2] += (byte) 0x20;
+        }
+        if (ls.loco.isLight()) {
+            buf[2] += (byte) 0x10;
+        }
+        if (ls.loco.isF1()) {
+            buf[2] += (byte) 0x01;
+        }
+
         buf[3] = (byte) ((byte) 0xff ^ buf[0] ^ buf[1] ^ buf[2]);
 
         return buf;
+    }
+
+    public static void sendLanbahnToLocoNet(int addr, int data) {
+        LbData lb = lanbahnData.get(addr);
+        if (lb == null) {
+            lb = new LbData(data, TYPE_ACCESSORY);
+        }
+        switch (lb.getType()) {
+            case TYPE_ACCESSORY:
+            case TYPE_SIGNAL_1BIT:
+                data &= 0x01;  // only last bit is used for LocoNet/DCC
+                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data), 1));   // TODO test
+                break;
+            case TYPE_SENSOR:
+                int data0 = data & 0x01;  // only last bit is used for LocoNet/DCC sensor reporting
+                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test             
+                SensorElement se = SensorElement.getByAddress(addr);
+                if ((se != null) && (se.secondaryAdr != INVALID_INT)) {
+                    int data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
+                    serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, (1 - data1), 1));   // TODO test
+                }
+                break;
+            default:
+                // cannot set other types
+                if (DEBUG) {
+                    System.out.println("ERROR, cannot set data for type=" + lb.getType());
+                }
+                break;
+        }
     }
 }
