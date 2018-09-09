@@ -1,7 +1,7 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ *  sensor state
+ *     bit0, mapped to occupied ( cleared = free)
+ *     bit1, mapped to "ausleuchtung" (cleared = not in a route)
  */
 package de.blankedv.ln3pc;
 
@@ -25,15 +25,37 @@ public class SensorElement extends ActivePanelElement {
         state = 0;
     }
     
+    public int setOccupied(boolean occ) {
+        lastUpdateTime = System.currentTimeMillis();
+        if (occ) {
+            // set bit 0
+            state |= 0x01;
+        } else {
+            state &= ~(0x01);
+        }
+        return state;
+    }
+    
+    public int setInRoute(boolean occ) {
+        lastUpdateTime = System.currentTimeMillis();
+        if (occ) {
+            // set bit 0
+            state |= 0x02;
+        } else {
+            state &= ~(0x02);
+        }
+        return state;
+    }
+     
     public boolean isOccupied() {
-        if ((state &= 0x01) == STATE_OCCUPIED) {
+        if ((state & 0x01) != 0) {
             return true;
         } else {
             return false;
         }
     }
      public boolean isInRoute() {
-        if ((state &= 0x02) == STATE_INROUTE) {
+        if ((state & 0x02) != 0) {
             return true;
         } else {
             return false;
@@ -45,25 +67,8 @@ public class SensorElement extends ActivePanelElement {
     // 2. pair (bit1) NOT_INROUTE or INROUTE
     @Override
     public int setState(int state) {
-        switch (state) {
-            case SENSOR_FREE:
-                state &= ~0x01;   // clear bit0
-                break;
-            case SENSOR_OCCUPIED:
-                state |= 0x01;   // set bit0
-                break;
-            case SENSOR_NOT_INROUTE:
-                state &= ~0x02;   // clear bit1
-                break;
-            case SENSOR_INROUTE:
-                state |= 0x02;   // set bit1
-                break;
-            default:
-                return INVALID_INT;
-
-        }
-        System.out.println("setState sensor=" + adr + " val=" + state);
-        lastUpdateTime = System.currentTimeMillis();
+        //do nothing
+        System.out.println("ERROR: setState() cannot be used for sensors");
         return state;
 
     }

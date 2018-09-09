@@ -357,7 +357,7 @@ public class SXnetSession implements Runnable {
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
                 } else {
-                    return "ERROR: ROUTE";
+                    return "ROUTE_INVALID";
                 }
             }
         }
@@ -369,7 +369,7 @@ public class SXnetSession implements Runnable {
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
                 } else {
-                    return "ERROR: ROUTE";
+                    return "ROUTE_INVALID";
                 }
             }
         }

@@ -41,7 +41,7 @@ public class Variables {
     /**
      * {@value #DCCMAX} =maximum DCC address used
      */
-    public static final int DCCMAX = 1200;
+    public static final int DCCMAX = 1199;
     /**
      * {@value #LBDATAMIN} =minimum lanbahn data value
      */
@@ -114,11 +114,8 @@ public class Variables {
     static final int TYPE_SENSOR = 10;     // sensor for occupation (and route-lighting with 'adr2')
     static final int TYPE_ROUTE = 20;   // this is a route.
 
-    // sensor values
-    static final int SENSOR_FREE = 0;         // bit0, mapped to occupation
-    static final int SENSOR_OCCUPIED = 1;     // bit0, mapped to occupation
-    static final int SENSOR_NOT_INROUTE = 2;  // bit1, mapped to "ausleuchtung"
-    static final int SENSOR_INROUTE = 3;      // bit1, mapped to "ausleuchtung"
+    
+
 
     // signals
     static final int STATE_RED = 0;

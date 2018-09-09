@@ -105,13 +105,13 @@ Report/status bits and 4 MS adr bits.
                 if (se != null) {
                     if (state == 0) {
                         disp.append(" free");
-                        int st = se.setState(SENSOR_FREE);   // lanbahn sensors have 4 different states
+                        int st = se.setOccupied(false);   // lanbahn sensors have 4 different states
                         Utils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);
                     } else {
                         disp.append(" occupied");
-                        int st = se.setState(SENSOR_OCCUPIED);  // lanbahn sensors have 4 different states
+                        int st = se.setOccupied(true);    // lanbahn sensors have 4 different states
                         Utils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);

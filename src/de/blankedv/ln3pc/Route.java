@@ -40,16 +40,12 @@ public class Route {
     // offending allRoutes
     private ArrayList<Route> rtOffending = new ArrayList<>();
 
-    int btn1, btn2;
-
     /**
      * constructs a route
      *
      * @param id unique identifier (int)
      * @param route string for route setting like "770,1;720,2"
      * @param allSensors string for sensors like "2000,2001,2002"
-     * @param btn1 address of first route button
-     * @param btn2 address of second route button
      * @param offending string with offending allRoutes, separated by comma
      */
     public Route(int id, String route, String allSensors,
@@ -139,13 +135,18 @@ public class Route {
 
         // deactivate sensors
         for (SensorElement se : rtSensors) {
-            se.setState(SENSOR_NOT_INROUTE);
-           Utils.updateLanbahnData(se.adr, se.getState());
+           int st= se.setInRoute(false);
+           if (se.secondaryAdr != INVALID_INT) {
+                // for track-control "route lighting"
+               serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 1, 1));
+            }
+           Utils.updateLanbahnData(se.adr, st);
         }
 
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
             rs.signal.setState(STATE_RED);
+            serialIF.send(LNUtil.makeOPC_SW_REQ(rs.signal.adr - 1, 0, 1));
             Utils.updateLanbahnData(rs.signal.adr, rs.signal.getState());
         }
 
@@ -223,16 +224,28 @@ public class Route {
 
         // activate sensors
         for (SensorElement se : rtSensors) {
-            se.setState(SENSOR_INROUTE);
-            Utils.updateLanbahnData(se.adr, se.getState());
+            int st = se.setInRoute(true);
+            if (se.secondaryAdr != INVALID_INT) {
+                // for track-control "route lighting"
+               serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 0, 1));
+            }
+            Utils.updateLanbahnData(se.adr, st);
         }
 
         // set signals
         for (RouteSignal rs : rtSignals) {
-            Utils.updateLanbahnData(rs.signal.adr, rs.dynamicValueToSetForRoute());
+            int d = rs.dynamicValueToSetForRoute();
+            if (d == 0) {   // TODO multi-aspect - only red and green are used at the moment
+                serialIF.send(LNUtil.makeOPC_SW_REQ(rs.signal.adr - 1, 1, 1));
+            } else {
+                serialIF.send(LNUtil.makeOPC_SW_REQ(rs.signal.adr - 1, 0, 1));
+            }
+            Utils.updateLanbahnData(rs.signal.adr, d);
         }
         // set and // TODO lock turnouts
         for (RouteTurnout rtt : rtTurnouts) {
+            int d = rtt.valueToSetForRoute;   // can be only 1 or 0
+            serialIF.send(LNUtil.makeOPC_SW_REQ(rtt.turnout.adr - 1, (1 - d), 1));  
             Utils.updateLanbahnData(rtt.turnout.adr, rtt.valueToSetForRoute);
         }   
          

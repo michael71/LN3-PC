@@ -18,7 +18,6 @@ package de.blankedv.ln3pc;
 
 import static de.blankedv.ln3pc.MainUI.DEBUG;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.SENSOR_OCCUPIED;
 import static de.blankedv.ln3pc.Variables.allCompRoutes;
 import static de.blankedv.ln3pc.Variables.allRoutes;
 import static de.blankedv.ln3pc.Variables.allTrips;
