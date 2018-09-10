@@ -18,12 +18,11 @@ public class PanelElement {
     protected int state = 0;
     protected int adr = INVALID_INT;
     protected int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
-                           // with 2 addresses (adr1=occ/free, 2=in-route)
+    // with 2 addresses (adr1=occ/free, 2=in-route)
     protected String route = "";
 
     public PanelElement() {
     }
-
 
     public void toggle() {
         // do nothing for non changing element
@@ -32,7 +31,7 @@ public class PanelElement {
     public int getAdr() {
         return INVALID_INT;
     }
-    
+
     public int getSecondaryAdr() {
         return INVALID_INT;
     }
@@ -40,7 +39,7 @@ public class PanelElement {
     public void setAdr(int a) {
 
     }
-    
+
     public void setSecondaryAdr(int a) {
 
     }
@@ -49,27 +48,28 @@ public class PanelElement {
         return false;
     }
 
-    /** search for a panel element when only the address is known
-     * 
+    /**
+     * search for a panel element when only the address is known
+     *
      * @param address
-     * @return 
+     * @return
      */
-    public static PanelElement getPeByAddress(int address) {
-		for (PanelElement pe : panelElements) {
-			if (pe.getAdr() == address) {
-				return pe;
-			}
-		}
-		return null;
-	}
+    public static PanelElement getByAddress(int address) {
+        for (PanelElement pe : panelElements) {
+            if (pe.getAdr() == address) {
+                return pe;
+            }
+        }
+        return null;
+    }
 
     public int getState() {
         return state;
     }
-    
+
     public int setState(int val) {
         state = val;
         return state;
     }
- 
+
 }

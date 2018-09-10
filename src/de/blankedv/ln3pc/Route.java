@@ -67,7 +67,7 @@ public class Route {
         for (int i = 0; i < routeElements.length; i++) {
             String reInfo[] = routeElements[i].split(",");
 
-            PanelElement pe = PanelElement.getPeByAddress(Integer.parseInt(reInfo[0]));
+            PanelElement pe = PanelElement.getByAddress(Integer.parseInt(reInfo[0]));
 
             // if this is a signal, then add to my signal list "rtSignals"
             if (pe != null) {
@@ -281,7 +281,7 @@ public class Route {
             } else {
                 // if standard-value == GREEN then check the other signal, which
                 // this signal state depends on
-                PanelElement depPe = PanelElement.getPeByAddress(depFrom);
+                PanelElement depPe = PanelElement.getByAddress(depFrom);
                 if (depPe.getState() == STATE_RED) {
                     // if other signal red, then set to yellow
                     return STATE_YELLOW;

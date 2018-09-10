@@ -14,9 +14,16 @@ public class SignalElement extends ActivePanelElement {
         adr = a;
         state = STATE_UNKNOWN;
     }
+    
+    public SignalElement(int a, int a2) {
+        adr = a;
+        secondaryAdr = a2;
+        state = STATE_UNKNOWN;
+    }
      
     public SignalElement() {
         adr = INVALID_INT;
+        secondaryAdr = INVALID_INT;
         state = STATE_UNKNOWN;
     }
 

@@ -118,11 +118,16 @@ public class ReadDCCConfig {
         }
 
         for (int i = 0; i < items.getLength(); i++) {
-            Signal maSig = parseMultiAspectAddress(items.item(i));
-            if ((maSig != null) && (maSig.addr != INVALID_INT)) {
-                System.out.println("signal a/t = " + maSig.toString());
-                lanbahnData.put(maSig.addr, new LbData(0, maSig.sigType));
-                panelElements.add(new SignalElement(maSig.addr));
+            SignalElement se = parseSignal(items.item(i));
+            if ((se != null) && (se.adr != INVALID_INT)) {
+                if (se.secondaryAdr != INVALID_INT) {
+                    System.out.println("signal a=" + se.adr + " a2=" + se.secondaryAdr);
+                    lanbahnData.put(se.adr, new LbData(0, TYPE_SIGNAL_2BIT));
+                } else {
+                    System.out.println("signal a=" + se.adr);
+                    lanbahnData.put(se.adr, new LbData(0, TYPE_SIGNAL_1BIT));
+                }
+                panelElements.add(se);
             }
         }
 
@@ -170,9 +175,8 @@ public class ReadDCCConfig {
     }
     // code template from lanbahnPanel
 
-    private static Signal parseMultiAspectAddress(Node item) {
+    private static SignalElement parseSignal(Node item) {
 
-        Signal dccmap = new Signal(INVALID_INT, 0);
         int addr = INVALID_INT;
         int nBit = INVALID_INT;
 
@@ -192,11 +196,11 @@ public class ReadDCCConfig {
             switch (nBit) {
                 case 1:
                 case INVALID_INT:  // == nBit defaults to 1
-                    return new Signal(addr, TYPE_SIGNAL_1BIT);
+                    return new SignalElement(addr);
                 case 2:
-                    return new Signal(addr, TYPE_SIGNAL_2BIT);
-                case 3:
-                    return new Signal(addr, TYPE_SIGNAL_3BIT);
+                    return new SignalElement(addr, addr + 1);
+                case 3:  // not used yet
+                    return new SignalElement(addr, addr + 1);
                 default:
                     return null;
             }

@@ -13,12 +13,14 @@ package de.blankedv.ln3pc;
 import java.util.prefs.Preferences;
 import java.util.List;
 import java.util.ArrayList;
-import static de.blankedv.ln3pc.MainUI.*;   // DAS SX interface.
+import static de.blankedv.ln3pc.MainUI.*;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.TYPE_ACCESSORY;
 import static de.blankedv.ln3pc.Variables.TYPE_SENSOR;
 import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_1BIT;
+import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_2BIT;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
+import javax.swing.JCheckBox;
 
 /**
  *
@@ -28,25 +30,27 @@ public class AccessoryUI extends javax.swing.JFrame {
 
     private static final long serialVersionUID = 534251256456411L;
     private int w_adr;      // weichen adresse
-    private int data;       // daten (8 bit) dieser adresse
+    private int[] data = new int[10];
 
     // Bilden einer Liste, damit wir später an alle Fenster dieses Typs die
     // Updates verschicken können
-    static List<AccessoryUI> wl = new ArrayList<AccessoryUI>();
+    static List<AccessoryUI> accUIList = new ArrayList<AccessoryUI>();
 
     private int myInstance;
     Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-    static int WeichenUIInstance = 0;
+    static int AccessoryUIInstance = 0;
+
+    private JCheckBox[][] cb = new JCheckBox[10][2];
 
     public static void updateAll() {
-        for (AccessoryUI w : wl) {
-            w.update();
+        for (AccessoryUI aui : accUIList) {
+            aui.updateAllCheckboxes();
         }
     }
 
     public static void saveAllPrefs() {
-        for (AccessoryUI w : wl) {
-            w.savePrefs();
+        for (AccessoryUI aui : accUIList) {
+            aui.savePrefs();
         }
     }
 
@@ -55,16 +59,17 @@ public class AccessoryUI extends javax.swing.JFrame {
      */
     public AccessoryUI() {
         initComponents();
-        myInstance = WeichenUIInstance++;
+        initCBArray();
+        myInstance = AccessoryUIInstance++;
         loadPrefs(); //myInstance is used here.
         if (DEBUG) {
             System.out.println("turnout row start adr=" + w_adr);
         }
         jComboBox1.setSelectedIndex(0);  // index starts from 0, addresses start also at 0
-        wl.add(this);
-        this.setTitle("Turnouts/Signals A:" + w_adr + "ff");
+        accUIList.add(this);
+        this.setTitle("Turnouts/Signals/Sensors A:" + w_adr + "ff");
 
-        update(); // from lanbahnData
+        updateAllCheckboxes(); // from lanbahnData
         this.setVisible(true);
     }
 
@@ -90,6 +95,16 @@ public class AccessoryUI extends javax.swing.JFrame {
         jCheckBox8 = new javax.swing.JCheckBox();
         jCheckBox9 = new javax.swing.JCheckBox();
         jCheckBox10 = new javax.swing.JCheckBox();
+        jCheckBox11 = new javax.swing.JCheckBox();
+        jCheckBox12 = new javax.swing.JCheckBox();
+        jCheckBox13 = new javax.swing.JCheckBox();
+        jCheckBox14 = new javax.swing.JCheckBox();
+        jCheckBox15 = new javax.swing.JCheckBox();
+        jCheckBox16 = new javax.swing.JCheckBox();
+        jCheckBox17 = new javax.swing.JCheckBox();
+        jCheckBox18 = new javax.swing.JCheckBox();
+        jCheckBox19 = new javax.swing.JCheckBox();
+        jCheckBox20 = new javax.swing.JCheckBox();
         jLabel14 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
@@ -101,8 +116,10 @@ public class AccessoryUI extends javax.swing.JFrame {
         jLabel21 = new javax.swing.JLabel();
         jLabel22 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
+        lblAddress1 = new javax.swing.JLabel();
+        lblAddress2 = new javax.swing.JLabel();
 
-        setTitle("Accessories, Sensors, Sig1bit");
+        setTitle("Turnouts,Signals,Sensors (1/2bit)");
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -119,7 +136,7 @@ public class AccessoryUI extends javax.swing.JFrame {
             }
         });
 
-        jPanel1.setLayout(new java.awt.GridLayout(2, 10, 1, 0));
+        jPanel1.setLayout(new java.awt.GridLayout(3, 10, 1, 0));
 
         jCheckBox1.setBorder(null);
         jCheckBox1.setBorderPainted(true);
@@ -211,6 +228,96 @@ public class AccessoryUI extends javax.swing.JFrame {
         });
         jPanel1.add(jCheckBox10);
 
+        jCheckBox11.setBorder(null);
+        jCheckBox11.setBorderPainted(true);
+        jCheckBox11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox11ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox11);
+
+        jCheckBox12.setBorder(null);
+        jCheckBox12.setBorderPainted(true);
+        jCheckBox12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox12ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox12);
+
+        jCheckBox13.setBorder(null);
+        jCheckBox13.setBorderPainted(true);
+        jCheckBox13.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox13ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox13);
+
+        jCheckBox14.setBorder(null);
+        jCheckBox14.setBorderPainted(true);
+        jCheckBox14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox14ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox14);
+
+        jCheckBox15.setBorder(null);
+        jCheckBox15.setBorderPainted(true);
+        jCheckBox15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox15ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox15);
+
+        jCheckBox16.setBorder(null);
+        jCheckBox16.setBorderPainted(true);
+        jCheckBox16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox16ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox16);
+
+        jCheckBox17.setBorder(null);
+        jCheckBox17.setBorderPainted(true);
+        jCheckBox17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox17ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox17);
+
+        jCheckBox18.setBorder(null);
+        jCheckBox18.setBorderPainted(true);
+        jCheckBox18.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox18ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox18);
+
+        jCheckBox19.setBorder(null);
+        jCheckBox19.setBorderPainted(true);
+        jCheckBox19.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox19ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox19);
+
+        jCheckBox20.setBorder(null);
+        jCheckBox20.setBorderPainted(true);
+        jCheckBox20.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBox20ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jCheckBox20);
+
         jLabel14.setText("  0 ");
         jPanel1.add(jLabel14);
 
@@ -243,6 +350,10 @@ public class AccessoryUI extends javax.swing.JFrame {
 
         jLabel13.setText("Basis");
 
+        lblAddress1.setText("b1");
+
+        lblAddress2.setText("b0");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -250,11 +361,17 @@ public class AccessoryUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblAddress)
-                    .addComponent(jLabel13))
-                .addGap(3, 3, 3)
-                .addComponent(jComboBox1, 0, 97, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel13)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblAddress2))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblAddress)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lblAddress1)))
+                .addGap(6, 6, 6)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 363, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -263,14 +380,19 @@ public class AccessoryUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel13)
                                 .addGap(9, 9, 9)
                                 .addComponent(lblAddress))
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(lblAddress2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblAddress1)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -284,110 +406,113 @@ public class AccessoryUI extends javax.swing.JFrame {
         if (DEBUG) {
             System.out.println("w adr=" + w_adr);
         }
-        this.setTitle("Turnouts/Signals A:" + w_adr + "ff");
-        update();
+        this.setTitle("Turnouts/Signals/Sensors A:" + w_adr + "ff");
+        updateAllCheckboxes();
 }//GEN-LAST:event_jComboBox1ActionPerformed
 
     private void jCheckBox3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox3ActionPerformed
-        if (jCheckBox3.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 2, data);
+        handleAction(2, 0);
     }//GEN-LAST:event_jCheckBox3ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         if (w_adr == 0) {
             return;   // "0" is no valid address
         }
-        if (jCheckBox1.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr, data);
+        handleAction(0, 0);
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        if (jCheckBox2.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 1, data);
+        handleAction(1, 0);
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jCheckBox4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox4ActionPerformed
-        if (jCheckBox4.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 3, data);
+        handleAction(3, 0);
     }//GEN-LAST:event_jCheckBox4ActionPerformed
 
     private void jCheckBox5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox5ActionPerformed
-        if (jCheckBox5.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 4, data);
+        handleAction(4, 0);
     }//GEN-LAST:event_jCheckBox5ActionPerformed
 
     private void jCheckBox6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox6ActionPerformed
-        if (jCheckBox6.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 5, data);
+        handleAction(5, 0);
     }//GEN-LAST:event_jCheckBox6ActionPerformed
 
     private void jCheckBox7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox7ActionPerformed
-        if (jCheckBox7.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 6, data);
+        handleAction(6, 0);
     }//GEN-LAST:event_jCheckBox7ActionPerformed
 
     private void jCheckBox8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox8ActionPerformed
-        if (jCheckBox8.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 7, data);
+        handleAction(7, 0);
     }//GEN-LAST:event_jCheckBox8ActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         savePrefs();
-        WeichenUIInstance--;
-        wl.remove(this);
+        AccessoryUIInstance--;
+        accUIList.remove(this);
     }//GEN-LAST:event_formWindowClosing
 
     private void jCheckBox9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox9ActionPerformed
-        if (jCheckBox9.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 8, data);
+        handleAction(8, 0);
     }//GEN-LAST:event_jCheckBox9ActionPerformed
 
     private void jCheckBox10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox10ActionPerformed
-        if (jCheckBox8.getModel().isSelected()) {
-            data = 1;
-        } else {
-            data = 0;
-        }
-        sendAccessoryToLocoNet(w_adr + 9, data);
+        handleAction(9, 0);
     }//GEN-LAST:event_jCheckBox10ActionPerformed
 
+    private void jCheckBox11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox11ActionPerformed
+        if (w_adr != 0) {
+            handleAction(0, 1);
+        }
+    }//GEN-LAST:event_jCheckBox11ActionPerformed
+
+    private void jCheckBox12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox12ActionPerformed
+        handleAction(1, 1);
+    }//GEN-LAST:event_jCheckBox12ActionPerformed
+
+    private void jCheckBox13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox13ActionPerformed
+        handleAction(2, 1);
+    }//GEN-LAST:event_jCheckBox13ActionPerformed
+
+    private void jCheckBox14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox14ActionPerformed
+        handleAction(3, 1);
+    }//GEN-LAST:event_jCheckBox14ActionPerformed
+
+    private void jCheckBox15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox15ActionPerformed
+        handleAction(4, 1);
+    }//GEN-LAST:event_jCheckBox15ActionPerformed
+
+    private void jCheckBox16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox16ActionPerformed
+        handleAction(5, 1);
+    }//GEN-LAST:event_jCheckBox16ActionPerformed
+
+    private void jCheckBox17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox17ActionPerformed
+        handleAction(6, 1);
+    }//GEN-LAST:event_jCheckBox17ActionPerformed
+
+    private void jCheckBox18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox18ActionPerformed
+        handleAction(7, 1);
+    }//GEN-LAST:event_jCheckBox18ActionPerformed
+
+    private void jCheckBox19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox19ActionPerformed
+        handleAction(8, 1);
+    }//GEN-LAST:event_jCheckBox19ActionPerformed
+
+    private void jCheckBox20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox20ActionPerformed
+        handleAction(9, 1);
+    }//GEN-LAST:event_jCheckBox20ActionPerformed
+
+    private void handleAction(int i, int bit) {
+        int bitVal = (0x01 << bit);
+        if (cb[i][bit].getModel().isSelected()) {
+            data[i] |= bitVal;
+        } else {
+            data[i] &= ~(bitVal);
+        }
+        sendAccessoryToLocoNet(w_adr + i, data[i]);
+    }
+
     private void sendAccessoryToLocoNet(int addr, int data) {
+        int data0, data1;
         LbData lb = lanbahnData.get(addr);
         if (lb == null) {
             lb = new LbData(data, TYPE_ACCESSORY);
@@ -395,18 +520,22 @@ public class AccessoryUI extends javax.swing.JFrame {
         switch (lb.getType()) {
             case TYPE_ACCESSORY:
             case TYPE_SIGNAL_1BIT:
-                data &= 0x01;  // only last bit is used for LocoNet/DCC
-                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
-                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, data, 1));   // TODO test
+                // ignore bit1, only use bit0
+                data0 = data & 0x01;  // only last bit is used for LocoNet/DCC
+                Utils.updateLanbahnData(addr, data0);   // don't change type, only change data              
+               // serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));    // TODO test
                 break;
             case TYPE_SENSOR:
-                int data0 = data & 0x01;  // only last bit is used for LocoNet/DCC sensor reporting
-                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
-                serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, data0, 1));   // TODO test             
-                SensorElement se = SensorElement.getByAddress(addr);
-                if ((se != null) && (se.secondaryAdr != INVALID_INT)) {
-                    int data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
-                    serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, data1, 1));   // TODO test
+            case TYPE_SIGNAL_2BIT:
+                // 2 bit values, use 2 loconet addresses and store 2bit value for lanbahn
+                Utils.updateLanbahnData(addr, data);   // don't change type, only change data  
+
+                data0 = data & 0x01;  // bit0 => ln-first address                           
+              //  serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test  
+                PanelElement pe = PanelElement.getByAddress(addr);
+                if ((pe != null) && (pe.secondaryAdr != INVALID_INT)) {
+                    data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
+                 //   serialIF.send(LNUtil.makeOPC_SW_REQ(pe.secondaryAdr - 1, (1 - data1), 1));   // TODO test
                 }
                 break;
             default:
@@ -421,7 +550,17 @@ public class AccessoryUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox10;
+    private javax.swing.JCheckBox jCheckBox11;
+    private javax.swing.JCheckBox jCheckBox12;
+    private javax.swing.JCheckBox jCheckBox13;
+    private javax.swing.JCheckBox jCheckBox14;
+    private javax.swing.JCheckBox jCheckBox15;
+    private javax.swing.JCheckBox jCheckBox16;
+    private javax.swing.JCheckBox jCheckBox17;
+    private javax.swing.JCheckBox jCheckBox18;
+    private javax.swing.JCheckBox jCheckBox19;
     private javax.swing.JCheckBox jCheckBox2;
+    private javax.swing.JCheckBox jCheckBox20;
     private javax.swing.JCheckBox jCheckBox3;
     private javax.swing.JCheckBox jCheckBox4;
     private javax.swing.JCheckBox jCheckBox5;
@@ -443,74 +582,86 @@ public class AccessoryUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel22;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblAddress;
+    private javax.swing.JLabel lblAddress1;
+    private javax.swing.JLabel lblAddress2;
     // End of variables declaration//GEN-END:variables
 
-    private boolean update(int i) {
+    // array used to be able to use indexes for checkboxes
+    private void initCBArray() {
+        cb[0][0] = jCheckBox1;
+        cb[0][1] = jCheckBox11;
+        cb[1][0] = jCheckBox2;
+        cb[1][1] = jCheckBox12;
+        cb[2][0] = jCheckBox3;
+        cb[2][1] = jCheckBox13;
+        cb[3][0] = jCheckBox4;
+        cb[3][1] = jCheckBox14;
+        cb[4][0] = jCheckBox5;
+        cb[4][1] = jCheckBox15;
+        cb[5][0] = jCheckBox6;
+        cb[5][1] = jCheckBox16;
+        cb[6][0] = jCheckBox7;
+        cb[6][1] = jCheckBox17;
+        cb[7][0] = jCheckBox8;
+        cb[7][1] = jCheckBox18;
+        cb[8][0] = jCheckBox9;
+        cb[8][1] = jCheckBox19;
+        cb[9][0] = jCheckBox10;
+        cb[9][1] = jCheckBox20;
+    }
+
+    private boolean updateFromLanbahnData(int i, int bit) {
         LbData lb = lanbahnData.get(w_adr + i);
         if (lb == null) {
             return false;
         } else {
-            return (lb.getData() != 0);
+            if (bit == 0) {
+                return ((lb.getData() & 0x01) != 0);
+            } else {
+                return ((lb.getData() & 0x02) != 0);
+            }
         }
     }
 
-    private void update() {
-        if (w_adr == 0) {
-            // "0" is no valid lanbahn address
-            jCheckBox1.setEnabled(false);
-        } else {
-            jCheckBox1.setEnabled(true);
-            if (update(0)) {
-                jCheckBox1.setSelected(true);
+    private boolean is2bitType(int i) {
+        LbData lb = lanbahnData.get(w_adr + i);
+        if (lb == null) {
+            return false;
+        }
+        switch (lb.getType()) {
+            case TYPE_ACCESSORY:
+            case TYPE_SIGNAL_1BIT:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    private void updateAllCheckboxes() {
+        for (int i = 0; i < 10; i++) {
+            cb[i][0].setEnabled(true);
+            if (updateFromLanbahnData(i, 0)) {
+                cb[i][0].setSelected(true);
             } else {
-                jCheckBox1.setSelected(false);
+                cb[i][0].setSelected(false);
+            }
+            if (is2bitType(i)) {
+                cb[i][1].setEnabled(true);
+                if (updateFromLanbahnData(i, 1)) {
+                    cb[i][1].setSelected(true);
+                } else {
+                    cb[i][1].setSelected(false);
+                }
+            } else {
+                cb[i][1].setEnabled(false);
             }
         }
 
-        if (update(1)) {
-            jCheckBox2.setSelected(true);
-        } else {
-            jCheckBox2.setSelected(false);
-        }
-        if (update(2)) {
-            jCheckBox3.setSelected(true);
-        } else {
-            jCheckBox3.setSelected(false);
-        }
-        if (update(3)) {
-            jCheckBox4.setSelected(true);
-        } else {
-            jCheckBox4.setSelected(false);
-        }
-        if (update(4)) {
-            jCheckBox5.setSelected(true);
-        } else {
-            jCheckBox5.setSelected(false);
-        }
-        if (update(5)) {
-            jCheckBox6.setSelected(true);
-        } else {
-            jCheckBox6.setSelected(false);
-        }
-        if (update(6)) {
-            jCheckBox7.setSelected(true);
-        } else {
-            jCheckBox7.setSelected(false);
-        }
-        if (update(7)) {
-            jCheckBox8.setSelected(true);
-        } else {
-            jCheckBox8.setSelected(false);
-        }
-        if (update(8)) {
-            jCheckBox9.setSelected(true);
-        } else {
-            jCheckBox9.setSelected(false);
-        }
-        if (update(9)) {
-            jCheckBox10.setSelected(true);
-        } else {
-            jCheckBox10.setSelected(false);
+        // special handling if w_adr == 0  
+        if (w_adr == 0) {
+            // "0" is no valid lanbahn address
+            cb[0][0].setEnabled(false);
+            cb[0][1].setEnabled(false);
         }
     }
 
@@ -536,4 +687,5 @@ public class AccessoryUI extends javax.swing.JFrame {
         w_adr = prefs.getInt(myInst + "adr", 80);
 
     }
+
 }
