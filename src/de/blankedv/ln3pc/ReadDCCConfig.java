@@ -104,12 +104,7 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " turnouts");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            int aTurnout = parseAddress(items.item(i));
-            if (aTurnout != INVALID_INT) {
-                System.out.println("turnout a=" + aTurnout);
-                lanbahnData.put(aTurnout, new LbData(0, TYPE_ACCESSORY));
-                panelElements.add(new TurnoutElement(aTurnout));
-            }
+            addPanelElement("T", items.item(i));
         }
 
         items = root.getElementsByTagName("signal");
@@ -118,17 +113,7 @@ public class ReadDCCConfig {
         }
 
         for (int i = 0; i < items.getLength(); i++) {
-            SignalElement se = parseSignal(items.item(i));
-            if ((se != null) && (se.adr != INVALID_INT)) {
-                if (se.secondaryAdr != INVALID_INT) {
-                    System.out.println("signal a=" + se.adr + " a2=" + se.secondaryAdr);
-                    lanbahnData.put(se.adr, new LbData(0, TYPE_SIGNAL_2BIT));
-                } else {
-                    System.out.println("signal a=" + se.adr);
-                    lanbahnData.put(se.adr, new LbData(0, TYPE_SIGNAL_1BIT));
-                }
-                panelElements.add(se);
-            }
+            addPanelElement("Si", items.item(i));
         }
 
         items = root.getElementsByTagName("sensor");
@@ -136,22 +121,15 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " sensors");
         }
         for (int i = 0; i < items.getLength(); i++) {
+            addPanelElement("BM", items.item(i));
+        }
 
-            ArrayList<Integer> sensAddresses = parseAddressArray(items.item(i));
-            if (sensAddresses != null) {
-                if ((sensAddresses.size() >= 1) && (sensAddresses.get(0) != INVALID_INT)) {
-                    lanbahnData.put(sensAddresses.get(0), new LbData(0, TYPE_SENSOR));
-                    if ((sensAddresses.size() >= 2) && (sensAddresses.get(1) != INVALID_INT)) {
-                        // check if we have 2 sensor addresses
-                        System.out.println("sensor adr=" + sensAddresses.get(0) + " sec-adr=" + sensAddresses.get(1));
-                        panelElements.add(new SensorElement(sensAddresses.get(0), sensAddresses.get(1)));  // all sensor data stored in this SensorElement
-                    } else {
-                        System.out.println("sensor adr=" + sensAddresses.get(0) + " no sec-adr.");
-                        panelElements.add(new SensorElement(sensAddresses.get(0)));  // all sensor data stored in this SensorElement
-                    }
-
-                }
-            }
+        items = root.getElementsByTagName("doubleslip");
+        if (CFG_DEBUG) {
+            System.out.println("config: " + items.getLength() + " doubleslips");
+        }
+        for (int i = 0; i < items.getLength(); i++) {
+            addPanelElement("DS", items.item(i));
         }
 
         items = root.getElementsByTagName("trip");
@@ -172,40 +150,6 @@ public class ReadDCCConfig {
             }
         }
 
-    }
-    // code template from lanbahnPanel
-
-    private static SignalElement parseSignal(Node item) {
-
-        int addr = INVALID_INT;
-        int nBit = INVALID_INT;
-
-        NamedNodeMap attributes = item.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node theAttribute = attributes.item(i);
-            // if (CFG_DEBUG_PARSING) Log.d(TAG,theAttribute.getNodeName() + "=" +
-            // theAttribute.getNodeValue());
-            if (theAttribute.getNodeName().equals("adr")) {
-                addr = getIntValueOfNode(theAttribute);
-            } else if (theAttribute.getNodeName().equals("nbit")) {
-                nBit = getIntValueOfNode(theAttribute);
-            }
-        }
-
-        if (addr != INVALID_INT) {
-            switch (nBit) {
-                case 1:
-                case INVALID_INT:  // == nBit defaults to 1
-                    return new SignalElement(addr);
-                case 2:
-                    return new SignalElement(addr, addr + 1);
-                case 3:  // not used yet
-                    return new SignalElement(addr, addr + 1);
-                default:
-                    return null;
-            }
-        }
-        return null;
     }
 
     // code from lanbahnPanel
@@ -259,33 +203,7 @@ public class ReadDCCConfig {
         return "";
     }
 
-    /**
-     * read an address 'adr' from XML node
-     *
-     * @param item
-     * @return
-     */
-    private static int parseAddress(Node item) {
-        int sensA = INVALID_INT;
-
-        NamedNodeMap attributes = item.getAttributes();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node theAttribute = attributes.item(i);
-            if (theAttribute.getNodeName().equals("adr")) {
-                try {
-                    int a = Integer.parseInt(theAttribute.getNodeValue());
-                    // this is the FIRST address, the attribute can be of 
-                    // type adr="1,2" with two addresses 1 (for occupation) and
-                    // 2 for "in-route"
-                    return a;
-                } catch (NumberFormatException e) {
-                    return INVALID_INT;
-                }
-            }
-        }
-        return INVALID_INT;
-
-    }
+   
 
     private static Trip parseTrip(Node item) {
 
@@ -480,6 +398,26 @@ public class ReadDCCConfig {
             return new CompRoute(id, routes);
         }
 
+    }
+
+    private static void addPanelElement(String type, Node a) {
+        ArrayList<Integer> addressArr = parseAddressArray(a);
+        if (addressArr != null) {
+            if ((addressArr.size() >= 1) && (addressArr.get(0) != INVALID_INT)) {
+
+                if ((addressArr.size() >= 2) && (addressArr.get(1) != INVALID_INT)) {
+                    // check if we have 2 doubleslip addresses
+                    System.out.println(type + " adr=" + addressArr.get(0) + " sec-adr=" + addressArr.get(1));
+                    lanbahnData.put(addressArr.get(0), new LbData(0, 2, type));
+                    panelElements.add(new PanelElement(type, addressArr.get(0), addressArr.get(1)));  // 
+                } else {
+                    System.out.println(type + " adr=" + addressArr.get(0) + " no sec-adr.");
+                    lanbahnData.put(addressArr.get(0), new LbData(0, 1, type));
+                    panelElements.add(new PanelElement(type, addressArr.get(0)));
+                }
+
+            }
+        }
     }
 
 }

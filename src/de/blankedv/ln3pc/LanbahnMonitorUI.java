@@ -52,15 +52,15 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
         oldLbCopy = new HashMap<>();
         update(); // from Lanbahn data
         this.setVisible(true);
-        
+
         DefaultTableCellRenderer tableRenderer = new DefaultTableCellRenderer();
         tableRenderer.setHorizontalAlignment(JLabel.CENTER); //Aligning the table data centrally.
         jTable1.setDefaultRenderer(Object.class, tableRenderer);
-        
-         JTableHeader Theader = jTable1.getTableHeader();
-          ((DefaultTableCellRenderer)Theader.getDefaultRenderer())
+
+        JTableHeader Theader = jTable1.getTableHeader();
+        ((DefaultTableCellRenderer) Theader.getDefaultRenderer())
                 .setHorizontalAlignment(JLabel.CENTER); // center header text
-         
+
     }
 
     /**
@@ -165,44 +165,27 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
         for (int i = 0; i < COLS - 1; i = i + 2) {
             for (int j = 0; j < ROWS; j++) {
                 if (it.hasNext()) {
-                    
+
                     // KEY
                     Integer key = (Integer) it.next();
-                    //System.out.println("LBMon: "+key + " "+lbCopy.get(key));
-                    // it.remove(); // avoids a ConcurrentModificationException
-                    // mark sensors yellow and multi-aspect signals grey
-                    StringBuffer sb;
-                    switch (lbCopy.get(key).getType()) {  // background color depending on type
-                        case TYPE_SENSOR:
-                            sb = new StringBuffer("<html><p bgcolor='#FFFF00'>BM-");                           
-                            break;
-                        case TYPE_SIGNAL_1BIT:
-                            sb = new StringBuffer("<html><p bgcolor='#DDDDDD'>Sig1-");
-                            break;
-                        case TYPE_SIGNAL_2BIT:
-                            sb = new StringBuffer("<html><p bgcolor='#DDDDDD'>Sig2-");
-                            break;
-                        case TYPE_SIGNAL_3BIT: 
-                            sb = new StringBuffer("<html><p bgcolor='#DDDDDD'>Sig3-");
-                            break;
-                        default:
-                            sb = new StringBuffer("<html><p>");
-                            break;
-                    }
-                    sb.append(key).append("</p></html>");
-                    jTable1.setValueAt(sb.toString(), j, i);
-                    
+
+                    StringBuffer sb = new StringBuffer();
+  
+                    PanelElement pe = PanelElement.getByAddress(key);
+
+                    jTable1.setValueAt(pe.toHTML(), j, i);
+
                     // VALUE
                     StringBuffer s;
                     int value = lbCopy.get(key).getData();
-                    
+
                     // display in different color (Red) when value has changed
                     // after the last call of update()
                     int valueOld = INVALID_INT;
                     if (oldLbCopy.containsKey(key)) {
                         valueOld = oldLbCopy.get(key).getData();
                     }
-                    if (value != valueOld ) {  // type is NOT compared !
+                    if (value != valueOld) {  // type is NOT compared !
                         s = new StringBuffer("<html><p bgcolor='#FF8800'>" + value + "</p></html>");
                     } else {
                         s = new StringBuffer("<html><p>" + value + "</p></html>");

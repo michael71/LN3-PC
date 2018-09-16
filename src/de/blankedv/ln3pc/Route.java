@@ -29,7 +29,7 @@ public class Route {
     // allRoutes
 
     // sensors turnout activate for the display of this route
-    private ArrayList<SensorElement> rtSensors = new ArrayList<>();
+    private ArrayList<PanelElement> rtSensors = new ArrayList<>();
 
     // signals of this route
     private ArrayList<RouteSignal> rtSignals = new ArrayList<>();
@@ -71,18 +71,18 @@ public class Route {
 
             // if this is a signal, then add to my signal list "rtSignals"
             if (pe != null) {
-                if (pe instanceof SignalElement) {
+                if (pe.isSignal()) {
                     if (reInfo.length == 3) {  // route signal with dependency
-                        rtSignals.add(new RouteSignal((SignalElement) pe,
+                        rtSignals.add(new RouteSignal(pe,
                                 Integer.parseInt(reInfo[1]),
                                 Integer.parseInt(reInfo[2])));
                     } else {
-                        rtSignals.add(new RouteSignal((SignalElement) pe, Integer
+                        rtSignals.add(new RouteSignal( pe, Integer
                                 .parseInt(reInfo[1])));
                     }
 
-                } else if (pe instanceof TurnoutElement) {
-                    rtTurnouts.add(new RouteTurnout((TurnoutElement) pe,
+                } else if (pe.isTurnout()) {
+                    rtTurnouts.add(new RouteTurnout(pe,
                             Integer.parseInt(reInfo[1])));
                 }
             }
@@ -99,9 +99,9 @@ public class Route {
         for (int i = 0; i < sensorAddresses.length; i++) {
             // add the matching elements turnout sensors list
             for (PanelElement pe : panelElements) {
-                if (pe instanceof SensorElement) {
+                if (pe.isSensor()) {
                     if (pe.getAdr() == Integer.parseInt(sensorAddresses[i])) {
-                        rtSensors.add((SensorElement) pe);
+                        rtSensors.add(pe);
                     }
                 }
             }
@@ -134,8 +134,8 @@ public class Route {
         }
 
         // deactivate sensors
-        for (SensorElement se : rtSensors) {
-           int st= se.setInRoute(false);
+        for (PanelElement se : rtSensors) {
+           int st= se.setBit1(false);
            if (se.secondaryAdr != INVALID_INT) {
                 // for track-control "route lighting"
                serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 1, 1));
@@ -159,7 +159,7 @@ public class Route {
          */
         active = false;
         // notify that route was cleared
-        lanbahnData.put(id, new LbData(0, TYPE_ROUTE));  // route has only 0 or 1 as value
+        lanbahnData.put(id, new LbData(0, 1, "RT"));  // route has only 0 or 1 as value
     }
 
     public void clearOffendingRoutes() {
@@ -219,12 +219,12 @@ public class Route {
         clearOffendingRoutes();
         
         // notify that route is set
-        lanbahnData.put(id, new LbData(1, TYPE_ROUTE));
+        lanbahnData.put(id, new LbData(1, 1, "RT"));
         active = true;
 
         // activate sensors
-        for (SensorElement se : rtSensors) {
-            int st = se.setInRoute(true);
+        for (PanelElement se : rtSensors) {
+            int st = se.setBit1(true);
             if (se.secondaryAdr != INVALID_INT) {
                 // for track-control "route lighting"
                serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 0, 1));
@@ -258,17 +258,17 @@ public class Route {
 
     protected class RouteSignal {
 
-        SignalElement signal;
+        PanelElement signal;
         private int valueToSetForRoute;
         private int depFrom;
 
-        RouteSignal(SignalElement se, int value) {
+        RouteSignal(PanelElement se, int value) {
             signal = se;
             valueToSetForRoute = value;
             depFrom = INVALID_INT;
         }
 
-        RouteSignal(SignalElement se, int value, int dependentFrom) {
+        RouteSignal(PanelElement se, int value, int dependentFrom) {
             signal = se;
             valueToSetForRoute = value;
             depFrom = dependentFrom;
@@ -309,10 +309,10 @@ public class Route {
 
     protected class RouteTurnout {
 
-        TurnoutElement turnout;
+        PanelElement turnout;
         int valueToSetForRoute;
 
-        RouteTurnout(TurnoutElement te, int value) {
+        RouteTurnout(PanelElement te, int value) {
             turnout = te;
             valueToSetForRoute = value;
         }

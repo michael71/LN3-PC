@@ -15,12 +15,13 @@ import java.util.List;
 import java.util.ArrayList;
 import static de.blankedv.ln3pc.MainUI.*;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.TYPE_ACCESSORY;
 import static de.blankedv.ln3pc.Variables.TYPE_SENSOR;
 import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_1BIT;
 import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_2BIT;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 import javax.swing.JCheckBox;
+import static de.blankedv.ln3pc.Variables.TYPE_ACC_1BIT;
+import static de.blankedv.ln3pc.Variables.TYPE_2BIT;
 
 /**
  *
@@ -515,33 +516,31 @@ public class AccessoryUI extends javax.swing.JFrame {
         int data0, data1;
         LbData lb = lanbahnData.get(addr);
         if (lb == null) {
-            lb = new LbData(data, TYPE_ACCESSORY);
+            lb = new LbData(data, 1, "AC");
         }
-        switch (lb.getType()) {
-            case TYPE_ACCESSORY:
-            case TYPE_SIGNAL_1BIT:
+        switch (lb.getNBit()) {
+            case 1:
                 // ignore bit1, only use bit0
                 data0 = data & 0x01;  // only last bit is used for LocoNet/DCC
                 Utils.updateLanbahnData(addr, data0);   // don't change type, only change data              
-               // serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));    // TODO test
+                // serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));    // TODO test
                 break;
-            case TYPE_SENSOR:
-            case TYPE_SIGNAL_2BIT:
+            case 2:
                 // 2 bit values, use 2 loconet addresses and store 2bit value for lanbahn
                 Utils.updateLanbahnData(addr, data);   // don't change type, only change data  
 
                 data0 = data & 0x01;  // bit0 => ln-first address                           
-              //  serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test  
+                //  serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test  
                 PanelElement pe = PanelElement.getByAddress(addr);
                 if ((pe != null) && (pe.secondaryAdr != INVALID_INT)) {
                     data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
-                 //   serialIF.send(LNUtil.makeOPC_SW_REQ(pe.secondaryAdr - 1, (1 - data1), 1));   // TODO test
+                    //   serialIF.send(LNUtil.makeOPC_SW_REQ(pe.secondaryAdr - 1, (1 - data1), 1));   // TODO test
                 }
                 break;
             default:
                 // cannot set other types
                 if (DEBUG) {
-                    System.out.println("ERROR, cannot set data for type=" + lb.getType());
+                    System.out.println("ERROR, cannot set data for nbit=" + lb.getNBit());
                 }
                 break;
         }
@@ -628,12 +627,13 @@ public class AccessoryUI extends javax.swing.JFrame {
         if (lb == null) {
             return false;
         }
-        switch (lb.getType()) {
-            case TYPE_ACCESSORY:
-            case TYPE_SIGNAL_1BIT:
+        switch (lb.getNBit()) {
+            case 1:
                 return false;
-            default:
+            case 2:
                 return true;
+            default:
+                return false;
         }
     }
 

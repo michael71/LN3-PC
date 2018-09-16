@@ -107,15 +107,15 @@ public class Variables {
     static final int POWER_UNKNOWN = INVALID_INT;
 
     // type of lanbahn data
-    static final int TYPE_ACCESSORY = 0;   // values 0 or 1
+    static final int TYPE_ACC_1BIT = 0;   // values 0 or 1
     static final int TYPE_SIGNAL_1BIT = 1; // values 0 or 1
     static final int TYPE_SIGNAL_2BIT = 2; // values 0 .. 3
     static final int TYPE_SIGNAL_3BIT = 3;
     static final int TYPE_SENSOR = 10;     // sensor for occupation (and route-lighting with 'adr2')
+    static final int TYPE_2BIT = 11;     // doubleslip with 2 addresses
     static final int TYPE_ROUTE = 20;   // this is a route.
 
     
-
 
     // signals
     static final int STATE_RED = 0;

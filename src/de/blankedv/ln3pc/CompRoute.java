@@ -113,7 +113,7 @@ public class CompRoute {
             if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
                     && (rt.active)) {
                 rt.active = false;
-                lanbahnData.put(rt.id, new LbData(0, TYPE_ROUTE));  // reset lanbahn value
+                lanbahnData.put(rt.id, new LbData(0, 1, "CR"));  // reset lanbahn value
             }
 
         }

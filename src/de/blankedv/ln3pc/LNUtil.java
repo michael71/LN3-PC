@@ -101,17 +101,17 @@ Report/status bits and 4 MS adr bits.
                 adr = getSensorAddress(buf);
                 state = getOnOffState(buf);
                 disp.append("-> sensor adr=").append(adr);
-                SensorElement se = SensorElement.getByAddress(adr);
+                PanelElement se = PanelElement.getByAddress(adr);
                 if (se != null) {
                     if (state == 0) {
                         disp.append(" free");
-                        int st = se.setOccupied(false);   // lanbahn sensors have 4 different states
+                        int st = se.setBit0(false);   // lanbahn sensors have 4 different states
                         Utils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);
                     } else {
                         disp.append(" occupied");
-                        int st = se.setOccupied(true);    // lanbahn sensors have 4 different states
+                        int st = se.setBit0(true);    // lanbahn sensors have 4 different states
                         Utils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);
@@ -521,20 +521,19 @@ Report/status bits and 4 MS adr bits.
     public static void sendLanbahnToLocoNet(int addr, int data) {
         LbData lb = lanbahnData.get(addr);
         if (lb == null) {
-            lb = new LbData(data, TYPE_ACCESSORY);
+            lb = new LbData(data, 1, "T");
         }
-        switch (lb.getType()) {
-            case TYPE_ACCESSORY:
-            case TYPE_SIGNAL_1BIT:
+        switch (lb.getNBit()) {
+            case 1:
                 data &= 0x01;  // only last bit is used for LocoNet/DCC
                 Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
                 serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data), 1));   // TODO test
                 break;
-            case TYPE_SENSOR:
+            case 2:
                 int data0 = data & 0x01;  // only last bit is used for LocoNet/DCC sensor reporting
                 Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
                 serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test             
-                SensorElement se = SensorElement.getByAddress(addr);
+                PanelElement se = PanelElement.getByAddress(addr);
                 if ((se != null) && (se.secondaryAdr != INVALID_INT)) {
                     int data1 = (data >> 1) & 0x01;  // for route-lighting bit1 and se.secondaryAdr are used
                     serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, (1 - data1), 1));   // TODO test
@@ -543,7 +542,7 @@ Report/status bits and 4 MS adr bits.
             default:
                 // cannot set other types
                 if (DEBUG) {
-                    System.out.println("ERROR, cannot set data for type=" + lb.getType());
+                    System.out.println("ERROR, cannot set data for nbit=" + lb.getNBit());
                 }
                 break;
         }

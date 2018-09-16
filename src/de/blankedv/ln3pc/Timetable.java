@@ -78,19 +78,19 @@ public class Timetable {
         // TODO check if complete route is free and set route
         
         // set route(s)
-        SensorElement seStart = SensorElement.getByAddress(t.sens1);
-        SensorElement seEnd = SensorElement.getByAddress(t.sens2);
+        PanelElement seStart = PanelElement.getByAddress(t.sens1);
+        PanelElement seEnd = PanelElement.getByAddress(t.sens2);
         if ((seStart == null) || (seEnd == null)) return false;
-        if (seStart.isOccupied() && (!seEnd.isOccupied()) ) {
+        if (seStart.isBit0() && (!seEnd.isBit0()) ) {
             System.out.println("start sensor occ and end sensor free, we can start the trip");
             t.start();
             return true;
 
         } else {
-            if (!(seStart.isOccupied())) {
+            if (!(seStart.isBit0())) {
                 System.out.println("start sensor free, we CANNOT start the trip");
             }
-            if (seEnd.isOccupied()) {
+            if (seEnd.isBit0()) {
                 System.out.println("stop sensor is not free, we CANNOT start the trip");
             }
             return false;

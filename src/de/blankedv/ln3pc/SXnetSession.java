@@ -24,7 +24,7 @@ import java.util.prefs.Preferences;
  * hanles one session (=1 mobile device)
  */
 public class SXnetSession implements Runnable {
-    
+
     private static int session_counter = 0;  // class variable !
 
     private int sn; // session number
@@ -35,12 +35,12 @@ public class SXnetSession implements Runnable {
     private final HashMap<Integer, LbData> lanbahnDataCopy = new HashMap<>(N_LANBAHN);
     private int globalPowerCopy = INVALID_INT;
     private int centralRoutingCopy = INVALID_INT;
-    
+
     private byte[] lastDirFunc = {0x00, 0x00, 0x00, 0x00};
-    
+
     private byte[] lastA0Msg = {0x00, 0x00, 0x00, 0x00};
     private byte[] lastA1Msg = {0x00, 0x00, 0x00, 0x00};
-    
+
     private long lastLocoRefreshTime = 0;
     private final long LOCO_REFRESH_INTERVAL = 5000;
 
@@ -53,17 +53,17 @@ public class SXnetSession implements Runnable {
         incoming = sock;
         sn = session_counter++;
     }
-    
+
     public void run() {
         try {
             OutputStream outStream = incoming.getOutputStream();
             out = new PrintWriter(outStream, true /* autoFlush */);
             InputStream inStream = incoming.getInputStream();
             Scanner in = new Scanner(inStream);
-            
+
             Timer timer = new Timer();
             timer.schedule(new Task(), 200, 50);
-            
+
             sendMessage("SXnet-Server 3.0 - " + sn);  // welcome string
 
             while (in.hasNextLine() && running) {
@@ -76,7 +76,7 @@ public class SXnetSession implements Runnable {
                     for (String cmd : cmds) {
                         sendMessage(handleCommand(cmd.trim()));  // handleCommand returns "OK" or error msg or nothing (empty String)
                     }
-                    
+
                 } else {
                     // ignore empty lines
                     if (DEBUG) {
@@ -84,7 +84,7 @@ public class SXnetSession implements Runnable {
                     }
                 }
                 mySleep(100);
-                
+
             }
             sendMessage("QUIT");   // TODO does not work as expected
             mySleep(100);
@@ -97,7 +97,7 @@ public class SXnetSession implements Runnable {
         } catch (IOException ex) {
             System.out.println("SXnetServerHandler" + sn + " Error: " + ex);
         }
-        
+
         System.out.println("Closing SXnetserverHandler" + sn + "\n");
     }
 
@@ -105,7 +105,7 @@ public class SXnetSession implements Runnable {
     // feedback both for low (<256) addresses == SX-only (+ Lanbahn if mapping exists)
     // and for high "lanbahn" type addresses
     class Task extends TimerTask {
-        
+
         public void run() {
             while (running) {
                 checkForChangesAndSendUpdates();
@@ -134,12 +134,12 @@ public class SXnetSession implements Runnable {
             case "READPOWER":
                 return createPowerFeedbackMessage();
         }
-        
+
         if (param.length < 2) {
             System.out.println("not enough params in msg: " + m);
             return "ERROR";
         }
-        
+
         switch (param[0]) {
             case "SETPOWER":
                 return setPowerMessage(param);
@@ -156,11 +156,11 @@ public class SXnetSession implements Runnable {
                 return readLocoMessage(param);
             default:
                 return "";
-            
+
         }
-        
+
     }
-    
+
     private String setLocoMessage(String[] par) {
         if (par.length < 3) {
             return "ERROR";
@@ -181,7 +181,7 @@ public class SXnetSession implements Runnable {
                 break;
             }
         }
-        
+
         if (locoS == null) {
             if (DEBUG) {
                 System.out.println("loco has no slot - aquire one");
@@ -209,9 +209,9 @@ public class SXnetSession implements Runnable {
             }
             return "";
         }
-        
+
     }
-    
+
     private String readLocoMessage(String[] par) {
         if (par.length < 2) {
             return "ERROR";
@@ -231,7 +231,7 @@ public class SXnetSession implements Runnable {
                 break;
             }
         }
-        
+
         if (locoS == null) {
             if (DEBUG) {
                 System.out.println("read loco has no slot - aquire one");
@@ -249,22 +249,22 @@ public class SXnetSession implements Runnable {
             int sxData = locoS.loco.getSX();
             return "XLOCO " + adr + " " + sxData;
         }
-        
+
     }
-    
+
     private String createPowerFeedbackMessage() {
         StringBuilder msg = new StringBuilder();
-        
+
         msg.append("XPOWER ");
         msg.append(globalPower);
-        
+
         return msg.toString();
     }
-    
+
     private String setPowerMessage(String[] par) {
         StringBuilder msg = new StringBuilder();
         int data = getLanbahnDataFromString(par[1]);
-        
+
         if (data == 0) {
             serialIF.switchPowerOff();
         } else if (data == 1) {
@@ -272,7 +272,7 @@ public class SXnetSession implements Runnable {
         }
         return createPowerFeedbackMessage();
     }
-    
+
     private String createLanbahnFeedbackMessage(String[] par) {
         /* if (DEBUG) {
             System.out.println("createLanbahnFeedbackMessage");
@@ -281,13 +281,13 @@ public class SXnetSession implements Runnable {
         if (lbAddr == INVALID_INT) {
             return "ERROR";
         }
-        
+
         if (isSimulationAddressRange(lbAddr)) {
             if (!lanbahnData.containsKey(lbAddr)) {
                 // this should never happen if a proper laýout-config file is read
                 // initialize to "0" (=start simulation and init to "0")
                 // if not already exists
-                lanbahnData.put(lbAddr, new LbData(0, TYPE_ACCESSORY));
+                lanbahnData.put(lbAddr, new LbData(0, 1, "T"));
             }
         }
         if (lanbahnData.containsKey(lbAddr)) {
@@ -296,22 +296,22 @@ public class SXnetSession implements Runnable {
         } else {
             System.out.println("ERROR: uninitialized address");
             return "ERROR";
-            
+
         }
     }
-    
+
     private boolean isSimulationAddressRange(int a) {
         if ((a == INVALID_INT) || (a < 0)) {
             return false;
         }
-        
+
         if ((a > DCCMAX) && (a <= LBMAX)) {
             return true;
         } else {
             return false;
         }
     }
-    
+
     private String setLanbahnMessage(String[] par) {
         if (DEBUG) {
             System.out.println("setLanbahnMessage");
@@ -326,14 +326,20 @@ public class SXnetSession implements Runnable {
         if ((lbAddr == INVALID_INT) || (lbdata == INVALID_INT)) {
             return "ERROR";
         }
-        Utils.updateLanbahnData(lbAddr, lbdata);  // update (or create) data  
-        // check whether we are in an DCC address range, then update loconet
-        if (lbAddr <= DCCMAX) {
-            LNUtil.sendLanbahnToLocoNet(lbAddr, lbdata);    
+        // set is only allowed for simulation addresses or for addresses we have
+        // in our config database (xml-config file)
+        if (isSimulationAddressRange(lbAddr) || lanbahnData.containsKey(lbAddr)) {
+            Utils.updateLanbahnData(lbAddr, lbdata);  // update (or create) data  
+            // check whether we are in an DCC address range, then update loconet
+            if (lbAddr <= DCCMAX) {
+                LNUtil.sendLanbahnToLocoNet(lbAddr, lbdata);
+            }
+            return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
+        } else {
+            return "ERROR";
         }
-        return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
     }
-    
+
     private String requestRouteMessage(String[] par) {
         if (DEBUG) {
             System.out.println("requestRouteMessage");
@@ -352,7 +358,7 @@ public class SXnetSession implements Runnable {
         // check whether there is a route with this address(=id)
         for (Route r : allRoutes) {
             if (r.id == lbAddr) {
-                lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ROUTE));
+                lanbahnData.put(lbAddr, new LbData(lbdata, 1, "RT"));
                 boolean res = r.set();
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
@@ -364,7 +370,7 @@ public class SXnetSession implements Runnable {
         // check whether there is a compund route with this address(=id)
         for (CompRoute cr : allCompRoutes) {
             if (cr.id == lbAddr) {
-                lanbahnData.put(lbAddr, new LbData(lbdata, TYPE_ROUTE));
+                lanbahnData.put(lbAddr, new LbData(lbdata, 1, "CR"));
                 boolean res = cr.set();
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
@@ -373,18 +379,18 @@ public class SXnetSession implements Runnable {
                 }
             }
         }
-        
+
         return "ERROR";
-        
+
     }
-    
+
     int nBits(int lbaddr) {
         // TODO implement
         // if a single lanbahnchannel has more than 0/1 values for example
         // for multi-aspect signals
         return 1;
     }
-    
+
     private int getByteFromString(String s) {
         // converts String to integer between 0 and 255 
         //    (= range of DCC Data and of Lanbahn data values)
@@ -399,7 +405,7 @@ public class SXnetSession implements Runnable {
         }
         return INVALID_INT;
     }
-    
+
     private int getLanbahnDataFromString(String s) {
         // converts String to integer between 0 and 15
         //    (= range Lanbahn data values)
@@ -434,7 +440,7 @@ public class SXnetSession implements Runnable {
             } else {
                 return ERROR;
             }
-            
+
         } catch (Exception e) {
             System.out.println("ERROR: number conversion error input=" + s);
             return ERROR;
@@ -448,12 +454,12 @@ public class SXnetSession implements Runnable {
      * @return true or false
      */
     private boolean isValidDCCAddress(int a) {
-        
+
         if (((a >= 0) && (a <= DCCMAX))) {
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -480,7 +486,7 @@ public class SXnetSession implements Runnable {
             return ERROR;
         }
     }
-    
+
     private void sendMessage(String res) {
         out.println(res);
         out.flush();
@@ -488,7 +494,7 @@ public class SXnetSession implements Runnable {
             System.out.println("sxnet" + sn + " send: " + res);
         }
     }
-    
+
     private void mySleep(int millis) {
         try {
             Thread.sleep(millis);
@@ -498,67 +504,20 @@ public class SXnetSession implements Runnable {
     }
 
     /**
-     * if channel data changed, send update to clients
-     *
-     * @param bus (0 or 1)
-     * @param dccAddr (valid dccAddr)
-     */
-    private void sendDCCUpdates(int bus, int dccAddr) {
-
-        /* TODO  sxDataCopy[dccAddr][bus] = sxData[dccAddr][bus];
-        int chan = dccAddr + (bus * 128);
-        String msg = "X " + chan + " " + sxDataCopy[dccAddr][bus];  // SX Feedback Message
-        if (DEBUG) {
-            System.out.println("sent: " + msg + " (bus=" + bus +")");
-        }
-        // check for dependent "lanbahn" feedback
-        if (bus == 0) {  // only for control bus, BUS=0, i.e. sxadr <= 127
-            for (int i = 1; i <= 8; i++) {
-                // convert SX data to lanbahn
-                int lbaddr = dccAddr * 10 + i;
-                int sxvalue = sxDataCopy[dccAddr][0];
-                int lbvalue = 0;
-                switch (nBits(lbaddr)) {
-                    case 1:
-                        lbvalue = sxvalue >> (i - 1) & 0x01;   // check if bit 'i' is set
-                        break;
-                    case 2:
-                        lbvalue = sxvalue >> (i - 1) & 0x03;   // 2 bits                   
-                        break;
-                    case 3:
-                        lbvalue = sxvalue >> (i - 1) & 0x07;   // 3 bits                    
-                        break;
-                    case 4:
-                        lbvalue = sxvalue >> (i - 1) & 0x0f;   // 4 bits                    
-                        break;
-                    default:
-                        break;
-                }
-                msg += ";XL " + lbaddr + " " + lbvalue;  // Lanbahn Message
-            }
-        }
-        if (DEBUG) {
-            System.out.println("TL:" + msg);
-        }
-        sendMessage(msg);  // send all messages, separated with ";"
-         */
-    }
-
-    /**
      * check for changed (exclusiv) lanbahn data and send update in case of
      * change
      *
      */
     private void checkForChangesAndSendUpdates() {
         StringBuilder msg = new StringBuilder();
-        
+
         if ((globalPowerCopy != globalPower) && (globalPower != INVALID_INT)) {
             // power state has changed
             globalPowerCopy = globalPower;
             msg.append("XPOWER ");
             msg.append(globalPower);
         }
-        
+
         Preferences prefs = Preferences.userNodeForPackage(this.getClass());
         int centralR = 0;
         if (prefs.getBoolean("centralRouting", false)) {
@@ -573,7 +532,7 @@ public class SXnetSession implements Runnable {
             msg.append("ROUTING ");
             msg.append(centralRoutingCopy);
         }
-        
+
         for (Map.Entry<Integer, LbData> e : lanbahnData.entrySet()) {
             Integer key = e.getKey();
             LbData lbd = e.getValue();
@@ -595,10 +554,10 @@ public class SXnetSession implements Runnable {
             sendMessage(msg.toString());
         }
     }
-    
+
     private void refreshLoco() {
         if ((System.currentTimeMillis() - lastLocoRefreshTime) < LOCO_REFRESH_INTERVAL) {
-            
+
             return;
         }
         lastLocoRefreshTime = System.currentTimeMillis();
@@ -608,6 +567,6 @@ public class SXnetSession implements Runnable {
         if (lastA1Msg[0] != (byte) 0x00) {
             serialIF.send(lastA1Msg);
         }
-        
+
     }
 }

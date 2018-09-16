@@ -5,8 +5,8 @@
  */
 package de.blankedv.ln3pc;
 
-import static de.blankedv.ln3pc.Variables.TYPE_ACCESSORY;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
+import static de.blankedv.ln3pc.Variables.TYPE_ACC_1BIT;
 
 /**
  *
@@ -72,20 +72,20 @@ public class Utils {
         }
     }
     
-    /** put a new value to a lanbahn address, and keep the type unchanged
-     * or (if the address does not exist so far, create it new with type ACCESSORY
+    /** put addr new value to addr lanbahn address, and keep the type unchanged
+ or (if the address does not exist so far, create it new with type ACCESSORY
      * 
-     * @param a
-     * @param v 
+     * @param addr
+     * @param value 
      */
-    static void updateLanbahnData(int a, int v) {
-         LbData lb = lanbahnData.get(a);
+    static void updateLanbahnData(int addr, int value) {
+         LbData lb = lanbahnData.get(addr);
          if (lb == null) {
-            lb = new LbData(v, TYPE_ACCESSORY);
+            lb = new LbData(value, 1, "T");
          }
-         lanbahnData.put(a, new LbData(v, lb.getType()));
-         if (lanbahnData.get(a).getData() != v) {
-             System.out.println("ERROR setting addr="+a+" to val="+v+" not successful");
+         lanbahnData.put(addr, new LbData(value, lb.getNBit(), lb.getTypeString()));
+         if (lanbahnData.get(addr).getData() != value) {
+             System.out.println("ERROR setting addr="+addr+" to val="+value+" not successful");
          }
     }
 

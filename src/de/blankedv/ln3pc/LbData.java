@@ -24,76 +24,34 @@ import static de.blankedv.ln3pc.Variables.*;
  */
 public class LbData {
     private int data;  
-    private int type;
+    private int nbit;
+    private String tn; 
     
-    LbData(int d, int t) {
+    LbData(int d, int nb, String name) {
         data = d;
-        type = t;
+        nbit = nb;
+        tn = name;
     }
     
     LbData(int d) {
         data = d;
-        type = TYPE_ACCESSORY;
+        nbit = 1;
+        tn = "A";
     }
     
     public int getData() {
         return data;
     }
     
-    public int getType() {
-        return type;
+    public int getNBit() {
+        return nbit;
     }
     
-    public String toString() {
+    public String getTypeString() {
         StringBuilder sb = new StringBuilder();
-        if (data == INVALID_INT) return ("invalid");
-        sb.append("d=").append(data);
-        switch(type) {
-            case TYPE_ACCESSORY:
-                sb.append (" acc");
-                break;
-            case TYPE_SIGNAL_1BIT:
-                sb.append (" sig1bit");
-                break;
-            case TYPE_SIGNAL_2BIT:
-                sb.append (" sig2bit");
-                break;
-            case TYPE_SIGNAL_3BIT:
-                sb.append (" sig3bit - not supported.");
-                break;
-            case TYPE_SENSOR:
-                sb.append (" sensor");
-                break;
-            default:
-                sb.append(" unknown type");
-                break;
-        }
-        return sb.toString();
-    }
-    static boolean is2BitSignal(int a) {
-        LbData d = lanbahnData.get(a);
-        if (d != null) {
-            return (d.type == TYPE_SIGNAL_2BIT);
-        } else {
-            return false;
-        }        
+        if (data == INVALID_INT) return ("");
+        
+        return tn;
     }
     
-    static boolean isSensor(int a) {
-        LbData d = lanbahnData.get(a);
-        if (d != null) {
-            return (d.type == TYPE_SENSOR);
-        } else {
-            return false;
-        }        
-    }
-    
-    static boolean isAccessory(int a) {  // 1bit signals are accessories
-        LbData d = lanbahnData.get(a);
-        if (d != null) {
-            return ((d.type == TYPE_ACCESSORY) || (d.type == TYPE_SIGNAL_1BIT));
-        } else {
-            return false;
-        }        
-    }
 }
