@@ -130,8 +130,6 @@ public class PanelElement {
         this.secondaryAdr = adr;
     }
 
-    
-
     public int setBit0(boolean occ) {
         lastUpdateTime = System.currentTimeMillis();
         if (occ) {
@@ -181,14 +179,13 @@ public class PanelElement {
     public boolean isTurnout() {
         return (typeString.equals("T"));
     }
-    
+
     public boolean isSensor() {
         return (typeString.equals("BM"));
     }
 
     public String toHTML() {
         StringBuilder sb = new StringBuilder();
-        boolean special = true;
         switch (typeString) {  // background color depending on type
             case "DS":
                 sb.append("<html><p bgcolor='#FFFF00'>DS");
@@ -203,22 +200,19 @@ public class PanelElement {
             default:
                 sb.append("<html><p>");
                 sb.append(typeString);
-                special = false;
                 break;
         }
         if (secondaryAdr != INVALID_INT) {
             sb.append("(");
             sb.append(secondaryAdr);
             sb.append(")");
-        } else if (special) {
-            sb.append("-");
         }
-        sb.append(adr).append("</p></html>");
+        sb.append(" <strong>");
+        sb.append(adr).append("</strong></p></html>");
         return sb.toString();
     }
 
     // STATIC METHODS
-    
     /**
      * search for a panel element when only the address is known
      *

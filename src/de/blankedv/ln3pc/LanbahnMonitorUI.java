@@ -170,11 +170,14 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     Integer key = (Integer) it.next();
 
                     StringBuffer sb = new StringBuffer();
-  
+
                     PanelElement pe = PanelElement.getByAddress(key);
-
-                    jTable1.setValueAt(pe.toHTML(), j, i);
-
+                    if (pe != null) {
+                        // special formatting for PanelElements
+                        jTable1.setValueAt(pe.toHTML(), j, i);
+                    } else {
+                        jTable1.setValueAt(key, j, i);
+                    }
                     // VALUE
                     StringBuffer s;
                     int value = lbCopy.get(key).getData();
@@ -185,10 +188,10 @@ public class LanbahnMonitorUI extends javax.swing.JFrame {
                     if (oldLbCopy.containsKey(key)) {
                         valueOld = oldLbCopy.get(key).getData();
                     }
-                    if (value != valueOld) {  // type is NOT compared !
-                        s = new StringBuffer("<html><p bgcolor='#FF8800'>" + value + "</p></html>");
+                    if (value != valueOld) {  // mark the changed values with orange color
+                        s = new StringBuffer("<html><p bgcolor='#FF8800'><strong>" + value + "</strong></p></html>");
                     } else {
-                        s = new StringBuffer("<html><p>" + value + "</p></html>");
+                        s = new StringBuffer("<html><p><strong>" + value + "</strong></p></html>");
                     }
                     jTable1.setValueAt(s.toString(), j, i + 1);
                 }
