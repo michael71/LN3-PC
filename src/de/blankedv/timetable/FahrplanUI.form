@@ -29,7 +29,7 @@
                   <Component id="jScrollPane1" max="32767" attributes="0"/>
                   <Group type="102" attributes="0">
                       <Component id="tbtnStartStop" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="310" max="32767" attributes="0"/>
+                      <EmptySpace pref="318" max="32767" attributes="0"/>
                       <Component id="btnPowerOff" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -55,7 +55,7 @@
   <SubComponents>
     <Component class="javax.swing.JToggleButton" name="tbtnStartStop">
       <Properties>
-        <Property name="text" type="java.lang.String" value="jToggleButton1"/>
+        <Property name="text" type="java.lang.String" value="tbtnStartStop"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tbtnStartStopActionPerformed"/>

@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
+import de.blankedv.ln3pc.Utils;
 import static de.blankedv.ln3pc.MainUI.serialIF;
 import static de.blankedv.ln3pc.MainUI.running;
 import static de.blankedv.ln3pc.Variables.allTimetables;
@@ -66,10 +67,12 @@ public class FahrplanUI extends javax.swing.JFrame {
                 timetable0 = allTimetables.get(0);
             } catch (IndexOutOfBoundsException e) {
                 JOptionPane.showMessageDialog(this, "ERROR: could not start a timetable - allTimetables EMPTY.");
+                tbtnStartStop.setSelected(false);
                 return;
             }
             if (timetable0 == null) {
                 JOptionPane.showMessageDialog(this, "ERROR: could not start a timetable - timetable0 EMPTY.");
+                tbtnStartStop.setSelected(false);
                 return;
             }
 
@@ -82,6 +85,7 @@ public class FahrplanUI extends javax.swing.JFrame {
             if (res == false) {
                 stop();
                 JOptionPane.showMessageDialog(this, "ERROR: could not start the trip - NO TRAIN (on start-sensor track).");
+                tbtnStartStop.setSelected(false);
                 return;
             }
             timetableRunning = true;
@@ -183,7 +187,7 @@ public class FahrplanUI extends javax.swing.JFrame {
 
         setTitle("Fahrplan Steuerung");
 
-        tbtnStartStop.setText("jToggleButton1");
+        tbtnStartStop.setText("tbtnStartStop");
         tbtnStartStop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tbtnStartStopActionPerformed(evt);
@@ -253,7 +257,7 @@ public class FahrplanUI extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(tbtnStartStop)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 310, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 318, Short.MAX_VALUE)
                         .addComponent(btnPowerOff)))
                 .addContainerGap())
         );

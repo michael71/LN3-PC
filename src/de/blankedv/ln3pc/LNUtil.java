@@ -16,6 +16,7 @@
  */
 package de.blankedv.ln3pc;
 
+import de.blankedv.timetable.PanelElement;
 import static de.blankedv.ln3pc.Variables.*;
 import static de.blankedv.ln3pc.MainUI.*;
 

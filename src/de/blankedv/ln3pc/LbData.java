@@ -27,18 +27,19 @@ public class LbData {
     private int nbit;
     private String tn; 
     
-    LbData(int d, int nb, String name) {
+    public LbData(int d, int nb, String name) {
         data = d;
         nbit = nb;
         tn = name;
     }
     
-    LbData(int d) {
+    public LbData(int d) {
         data = d;
         nbit = 1;
         tn = "A";
     }
-    
+
+  
     public int getData() {
         return data;
     }

@@ -1,22 +1,21 @@
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
 import static de.blankedv.ln3pc.MainUI.DEBUG;
+import de.blankedv.ln3pc.Utils;
 import static de.blankedv.ln3pc.Variables.*;
+import static de.blankedv.timetable.Vars.*;
 import java.util.ArrayList;
 
 /**
- * composite route, i.e. a list of allRoutes which build a new route, is only a
- * helper for ease of use, no more functionality than the "simple" Route which
- * it is comprised of
- *
+ * composite route, i.e. a list of allRoutes which build a new "compound" route
+ * is only a helper for ease of use, no more functionality than the "simple" 
+ * Route (i.e. a CompRoute contains a "list of Routes")
+ * 
  * @author mblank
  *
  */
-public class CompRoute {
+public class CompRoute extends PanelElement {
 
-    int id; // must be unique
-    
-        boolean active = false;
     private long timeSet;
     
     String routesString = ""; // identical to config string
@@ -29,15 +28,14 @@ public class CompRoute {
      *
      *
      */
-    public CompRoute(int id, String sRoutes) {
-        //
-        this.id = id;
-
+    public CompRoute(int routeAddr, String sRoutes) {
+        super("CR",routeAddr);
+        state = RT_INACTIVE;
         // this string written back to config file.
         this.routesString = sRoutes;
 
         if (DEBUG) {
-            System.out.println("creating comproute id=" + id);
+            System.out.println("creating comproute id=" + routeAddr);
         }
 
         // allRoutes = "12,13": these allRoutes need to be activated.
@@ -47,7 +45,7 @@ public class CompRoute {
             int routeID = Integer.parseInt(iID[i]);
             for (Route rt : allRoutes) {
                 try {
-                    if (rt.id == routeID) {
+                    if (rt.adr == routeID) {
                         myroutes.add(rt);
                     }
                 } catch (NumberFormatException e) {
@@ -60,19 +58,6 @@ public class CompRoute {
 
     }
 
-    /*	public void clear() {
-
-		if (DEBUG)
-			Log.d(TAG, "clearing comproute id=" + id);
-
-		for (Route rt : myroutes) {
-			if (rt.active == true) {
-				rt.clear();
-			}
-
-		}
-
-	} */
     public void clearOffendingRoutes() {
         if (DEBUG) {
             System.out.println(" clearing (active) offending Routes");
@@ -86,17 +71,17 @@ public class CompRoute {
     public boolean set() {
 
         if (DEBUG) {
-            System.out.println(" setting comproute id=" + id);
+            System.out.println(" setting comproute id=" + adr);
         }
         timeSet = System.currentTimeMillis();
-        active = true;
+        Utils.updateLanbahnData(adr, 1);   // state = active
         // check if all routes can be set successfully
         boolean res = true;
         for (Route rt : myroutes) {
             res = rt.set();
             if (res == false) {
                 if (DEBUG) {
-                    System.out.println("ERROR cannot set comproute id=" + id + " because route=" + rt.id + " cannot be set.");
+                    System.out.println("ERROR cannot set comproute id=" + adr + " because route=" + rt.adr + " cannot be set.");
                 }
                 return false;  // cannot set comproute.
             }
@@ -111,9 +96,8 @@ public class CompRoute {
         // which are set by a compound route, are autocleared by the "Route.auto()" function
         for (CompRoute rt : allCompRoutes) {
             if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
-                    && (rt.active)) {
-                rt.active = false;
-                lanbahnData.put(rt.id, new LbData(0, 1, "CR"));  // reset lanbahn value
+                    && (rt.state == RT_ACTIVE)) {
+                Utils.updateLanbahnData(rt.adr, RT_INACTIVE);  // reset lanbahn value and set state to 0
             }
 
         }

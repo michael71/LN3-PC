@@ -1,5 +1,7 @@
 package de.blankedv.ln3pc;
 
+import de.blankedv.timetable.CompRoute;
+import de.blankedv.timetable.Route;
 import static de.blankedv.ln3pc.MainUI.*;
 import static de.blankedv.ln3pc.Variables.*;
 
@@ -287,7 +289,7 @@ public class SXnetSession implements Runnable {
                 // this should never happen if a proper laýout-config file is read
                 // initialize to "0" (=start simulation and init to "0")
                 // if not already exists
-                lanbahnData.put(lbAddr, new LbData(0, 1, "T"));
+                Utils.updateLanbahnData(lbAddr, 0);
             }
         }
         if (lanbahnData.containsKey(lbAddr)) {
@@ -355,10 +357,10 @@ public class SXnetSession implements Runnable {
             return "ERROR";
         }
 
-        // check whether there is a route with this address(=id)
+        // check whether there is a route with this address(=adr)
         for (Route r : allRoutes) {
-            if (r.id == lbAddr) {
-                lanbahnData.put(lbAddr, new LbData(lbdata, 1, "RT"));
+            if (r.adr == lbAddr) {
+                Utils.updateLanbahnData(lbAddr, 1);
                 boolean res = r.set();
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
@@ -367,10 +369,10 @@ public class SXnetSession implements Runnable {
                 }
             }
         }
-        // check whether there is a compund route with this address(=id)
+        // check whether there is a compund route with this address(=adr)
         for (CompRoute cr : allCompRoutes) {
-            if (cr.id == lbAddr) {
-                lanbahnData.put(lbAddr, new LbData(lbdata, 1, "CR"));
+            if (cr.adr == lbAddr) {
+                Utils.updateLanbahnData(lbAddr, 1);
                 boolean res = cr.set();
                 if (res) {
                     return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success

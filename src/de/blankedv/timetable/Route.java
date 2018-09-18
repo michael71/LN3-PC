@@ -1,7 +1,11 @@
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
+import de.blankedv.ln3pc.LNUtil;
+import de.blankedv.ln3pc.LbData;
+import de.blankedv.ln3pc.Utils;
 import static de.blankedv.ln3pc.Variables.*;
 import static de.blankedv.ln3pc.MainUI.*;
+import static de.blankedv.timetable.Vars.*;
 import java.util.ArrayList;
 
 /**
@@ -16,16 +20,13 @@ import java.util.ArrayList;
  * @author mblank
  *
  */
-public class Route {
+public class Route extends PanelElement {
 
-    public int id; // must be unique
-
-    boolean active = false;
     private long timeSet;
 
     String routeString = "";
     String sensorsString = "";
-    String offendingString = ""; // comma separated list of id's of offending
+    String offendingString = ""; // comma separated list of adr's of offending
     // allRoutes
 
     // sensors turnout activate for the display of this route
@@ -48,18 +49,18 @@ public class Route {
      * @param allSensors string for sensors like "2000,2001,2002"
      * @param offending string with offending allRoutes, separated by comma
      */
-    public Route(int id, String route, String allSensors,
+    public Route(int routeAddr, String route, String allSensors,
             String offending) {
  
-        this.id = id;
-
+        super("RT", routeAddr);
+        state = RT_INACTIVE;
         // these strings are written back to config file.
         this.routeString = route;
         this.sensorsString = allSensors;
         this.offendingString = offending;
 
         if (DEBUG) {
-            System.out.println(" creating route id=" + id);
+            System.out.println(" creating route id/adr=" + adr);
         }
 
         // route = "750,1;751,2" => set 750 turnout 1 and 751 turnout value 2
@@ -115,7 +116,7 @@ public class Route {
             for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
-                    if ((rt.id == offID) && (rt.active)) {
+                    if ((rt.adr == offID) && (rt.state == RT_ACTIVE)) {
                         rtOffending.add(rt);
                     }
                 } catch (NumberFormatException e) {
@@ -130,7 +131,7 @@ public class Route {
         timeSet = System.currentTimeMillis(); // store for resetting
         // automatically
         if (DEBUG) {
-            System.out.println(" clearing route id=" + id);
+            System.out.println(" clearing route id=" + adr);
         }
 
         // deactivate sensors
@@ -157,9 +158,10 @@ public class Route {
 		 *     sendQ.add(cmd); 
 		 * }
          */
-        active = false;
+
         // notify that route was cleared
-        lanbahnData.put(id, new LbData(0, 1, "RT"));  // route has only 0 or 1 as value
+        Utils.updateLanbahnData(adr, RT_ACTIVE);
+
     }
 
     public void clearOffendingRoutes() {
@@ -171,7 +173,7 @@ public class Route {
             for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
-                    if ((rt.id == offID) && (rt.active)) {
+                    if ((rt.adr == offID) && (rt.state == RT_ACTIVE)) {
                         rt.clear();
                     }
                 } catch (NumberFormatException e) {
@@ -189,7 +191,7 @@ public class Route {
             for (Route rt : allRoutes) {
                 try {
                     int offID = Integer.parseInt(offRoutes[i]);
-                    if ((rt.id == offID) && (rt.active)) {
+                    if ((rt.adr == offID) && (rt.state == RT_ACTIVE)) {
                         return true;
                     }
                 } catch (NumberFormatException e) {
@@ -204,7 +206,7 @@ public class Route {
         // automatically
 
         if (DEBUG) {
-            System.out.println(" setting route id=" + id);
+            System.out.println(" setting route id=" + adr);
         }
 
         if (offendingRouteActive()) {
@@ -219,8 +221,7 @@ public class Route {
         clearOffendingRoutes();
         
         // notify that route is set
-        lanbahnData.put(id, new LbData(1, 1, "RT"));
-        active = true;
+        Utils.updateLanbahnData(adr, RT_ACTIVE);
 
         // activate sensors
         for (PanelElement se : rtSensors) {
@@ -253,7 +254,7 @@ public class Route {
     }
 
     public boolean isActive() {
-        return active;
+        return (state == RT_ACTIVE);
     }
 
     protected class RouteSignal {
@@ -322,32 +323,18 @@ public class Route {
         // check for auto reset of allRoutes
         for (Route rt : allRoutes) {
             if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
-                    && (rt.active)) {
+                    && (rt.state == RT_ACTIVE)) {
                 rt.clear();
             }
             // update dependencies
-            if (rt.active) {
+            if (rt.state == RT_ACTIVE) {
                 rt.updateDependencies();
             }
         }
 
     }
 
-    /**
-     * this route was activated or deactivated by a different device we need the
-     * status of this route, but we are not actively managing it.
-     *
-     * @param data
-     */
-    public void updateData(int data) {
-        if (data == 0) {
-            active = false;
-            timeSet = System.currentTimeMillis();
-        } else if (data == 1) {
-            active = true;
-            timeSet = System.currentTimeMillis();
-        }
-    }
+    
 
     public void addOffending(Route rt2) {
         // check if not already contained in offending string
@@ -361,16 +348,16 @@ public class Route {
         StringBuilder sb = new StringBuilder("");
         for (Route r : rtOffending) {
             if (sb.length() == 0) {
-                sb.append(r.id);
+                sb.append(r.adr);
             } else {
                 sb.append(",");
-                sb.append(r.id);
+                sb.append(r.adr);
             }
         }
         /*		if (sb.length() == 0)
-			Log.d(TAG, "route id=" + id + " has no offending allRoutes.");
+			Log.d(TAG, "route adr=" + adr + " has no offending allRoutes.");
 		else
-			Log.d(TAG, "route id=" + id + " has offending allRoutes with ids="
+			Log.d(TAG, "route adr=" + adr + " has offending allRoutes with ids="
 					+ sb.toString()); */
         return sb.toString();
 
@@ -382,7 +369,7 @@ public class Route {
                 // iterate over all turnouts of rt and check, if another route
                 // activates the same turnout to a different position 
                 for (Route rt2 : allRoutes) {
-                    if (rt.id != rt2.id) {
+                    if (rt.adr != rt2.adr) {
                         for (RouteTurnout t2 : rt2.rtTurnouts) {
                             if ((t.turnout.adr == t2.turnout.adr)
                                     && (t.valueToSetForRoute != t2.valueToSetForRoute)) {

@@ -1,6 +1,11 @@
 package de.blankedv.ln3pc;
 
 //import java.io.InputStream;
+import de.blankedv.timetable.ConfigWebserver;
+import de.blankedv.timetable.ReadDCCConfig;
+import de.blankedv.timetable.CompRoute;
+import de.blankedv.timetable.FahrplanUI;
+import de.blankedv.timetable.Route;
 import static de.blankedv.ln3pc.Variables.*;
 import java.awt.Cursor;
 import java.awt.Image;

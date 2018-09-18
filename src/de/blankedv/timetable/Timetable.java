@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
+import de.blankedv.ln3pc.LbData;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 import java.util.ArrayList;
@@ -78,19 +79,29 @@ public class Timetable {
         // TODO check if complete route is free and set route
         
         // set route(s)
-        PanelElement seStart = PanelElement.getByAddress(t.sens1);
-        PanelElement seEnd = PanelElement.getByAddress(t.sens2);
-        if ((seStart == null) || (seEnd == null)) return false;
-        if (seStart.isBit0() && (!seEnd.isBit0()) ) {
+        LbData dStart = lanbahnData.get(t.sens1);
+        LbData dEnd = lanbahnData.get(t.sens2);
+        if (dStart == null) {
+            System.out.println("dStart not defined");
+            return false;
+        }
+        if (dEnd == null) {
+            System.out.println("dEnd not defined");
+            return false;
+        }
+        int start =  dStart.getData() & 0x01;   // get "occupied" bit
+        int end = dEnd.getData() & 0x01;   // get "occupied" bit
+
+        if ( (start != 0) && (end == 0) ) {
             System.out.println("start sensor occ and end sensor free, we can start the trip");
             t.start();
             return true;
 
         } else {
-            if (!(seStart.isBit0())) {
+            if (start == 0) {
                 System.out.println("start sensor free, we CANNOT start the trip");
             }
-            if (seEnd.isBit0()) {
+            if (end != 0) {
                 System.out.println("stop sensor is not free, we CANNOT start the trip");
             }
             return false;

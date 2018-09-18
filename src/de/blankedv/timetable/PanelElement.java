@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
 import static de.blankedv.ln3pc.MainUI.*;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.panelElements;
+import java.util.ArrayList;
 
 /**
  * all active panel elements, like turnouts, signals, trackindicators (=sensors)
@@ -22,11 +23,11 @@ import static de.blankedv.ln3pc.Variables.panelElements;
  */
 public class PanelElement {
 
-    protected int state = 0;
-    protected int adr = INVALID_INT;
-    protected int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
-    protected int nbit = 1;  // number of significant bits
-    protected String typeString = "AC";
+    public int state = 0;
+    public int adr = INVALID_INT;
+    public int secondaryAdr = INVALID_INT;  // needed for DCC sensors/signals 
+    public int nbit = 1;  // number of significant bits
+    public String typeString = "AC";
     // with 2 addresses (adr1=occ/free, 2=in-route)
     protected String route = "";
 
@@ -236,4 +237,14 @@ public class PanelElement {
         }
         return INVALID_INT;
     }
+    
+    /*
+    public static ArrayList<Route> getRoutes() {
+        ArrayList<Route> routes = new ArrayList<>();
+        for (PanelElement pe : panelElements) {
+            if (pe instanceof Route) {
+                routes.add((Route)pe);
+            }
+        }
+    } */
 }

@@ -5,8 +5,11 @@
  */
 package de.blankedv.ln3pc;
 
+import static de.blankedv.ln3pc.MainUI.DEBUG;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 import static de.blankedv.ln3pc.Variables.TYPE_ACC_1BIT;
+import static de.blankedv.ln3pc.Variables.panelElements;
+import de.blankedv.timetable.PanelElement;
 
 /**
  *
@@ -64,7 +67,7 @@ public class Utils {
         }
     }
 
-    static void mySleep(int millis) {
+    static public void mySleep(int millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException ex) {
@@ -78,12 +81,19 @@ public class Utils {
      * @param addr
      * @param value 
      */
-    static void updateLanbahnData(int addr, int value) {
+    static public void updateLanbahnData(int addr, int value) {
          LbData lb = lanbahnData.get(addr);
          if (lb == null) {
+             // should not happen
+             if (DEBUG) System.out.println("ERROR: unknown addr="+addr);
             lb = new LbData(value, 1, "T");
          }
          lanbahnData.put(addr, new LbData(value, lb.getNBit(), lb.getTypeString()));
+         for (PanelElement pe : panelElements) {
+             if (pe.adr == addr) {
+                 pe.state = value;
+             }
+         }
          if (lanbahnData.get(addr).getData() != value) {
              System.out.println("ERROR setting addr="+addr+" to val="+value+" not successful");
          }

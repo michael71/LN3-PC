@@ -10,18 +10,14 @@
  */
 package de.blankedv.ln3pc;
 
+import de.blankedv.timetable.PanelElement;
 import java.util.prefs.Preferences;
 import java.util.List;
 import java.util.ArrayList;
 import static de.blankedv.ln3pc.MainUI.*;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.TYPE_SENSOR;
-import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_1BIT;
-import static de.blankedv.ln3pc.Variables.TYPE_SIGNAL_2BIT;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
 import javax.swing.JCheckBox;
-import static de.blankedv.ln3pc.Variables.TYPE_ACC_1BIT;
-import static de.blankedv.ln3pc.Variables.TYPE_2BIT;
 
 /**
  *
@@ -37,11 +33,11 @@ public class AccessoryUI extends javax.swing.JFrame {
     // Updates verschicken können
     static List<AccessoryUI> accUIList = new ArrayList<AccessoryUI>();
 
-    private int myInstance;
+    private final int myInstance;
     Preferences prefs = Preferences.userNodeForPackage(this.getClass());
     static int AccessoryUIInstance = 0;
 
-    private JCheckBox[][] cb = new JCheckBox[10][2];
+    private final JCheckBox[][] cb = new JCheckBox[10][2];
 
     public static void updateAll() {
         for (AccessoryUI aui : accUIList) {
@@ -513,6 +509,9 @@ public class AccessoryUI extends javax.swing.JFrame {
     }
 
     private void sendAccessoryToLocoNet(int addr, int data) {
+        if (DEBUG) {
+            System.out.println("sendAcc... a="+addr+" d="+data);
+        }
         int data0, data1;
         LbData lb = lanbahnData.get(addr);
         if (lb == null) {
@@ -520,15 +519,17 @@ public class AccessoryUI extends javax.swing.JFrame {
         }
         switch (lb.getNBit()) {
             case 1:
+                
                 // ignore bit1, only use bit0
                 data0 = data & 0x01;  // only last bit is used for LocoNet/DCC
+                if (DEBUG) System.out.println("1bit d0="+data0);
                 Utils.updateLanbahnData(addr, data0);   // don't change type, only change data              
                 // serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));    // TODO test
                 break;
             case 2:
                 // 2 bit values, use 2 loconet addresses and store 2bit value for lanbahn
                 Utils.updateLanbahnData(addr, data);   // don't change type, only change data  
-
+                if (DEBUG) System.out.println("2bit d="+data);
                 data0 = data & 0x01;  // bit0 => ln-first address                           
                 //  serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test  
                 PanelElement pe = PanelElement.getByAddress(addr);

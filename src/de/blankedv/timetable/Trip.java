@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
+import de.blankedv.ln3pc.LNUtil;
+import de.blankedv.ln3pc.Loco;
 import static de.blankedv.ln3pc.MainUI.DEBUG;
 import static de.blankedv.ln3pc.Variables.INVALID_INT;
 import static de.blankedv.ln3pc.Variables.allCompRoutes;
@@ -92,12 +94,12 @@ public class Trip implements Comparable<Trip> {
         for (String sRouteId : routeIds) {
             Integer rid = Integer.parseInt(sRouteId);
             for (Route r : allRoutes) {
-                if (r.id == rid) {
+                if (r.adr == rid) {
                     r.set();
                 }
             }
             for (CompRoute cr : allCompRoutes) {
-                if (cr.id == rid) {
+                if (cr.adr == rid) {
                     cr.set();
                 }
             }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
 
 /*
@@ -11,6 +11,7 @@ package de.blankedv.ln3pc;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import de.blankedv.ln3pc.LbData;
 import static de.blankedv.ln3pc.MainUI.DEBUG;
 import static de.blankedv.ln3pc.Variables.*;
 
@@ -56,10 +57,12 @@ public class ReadDCCConfig {
             // sort the trips by ID
             Collections.sort(allTrips, (a, b) -> b.compareTo(a));
 
-            allRoutes = parseRoutes(doc); // can be done only after all panel
+            parseRoutes(doc); // can be done only after all turnouts, signals etc have been read
+
             // elements have been read
-            Route.calcOffendingRoutes(); // calculate offending allRoutes
-            allCompRoutes = parseCompRoutes(doc); // can be done only after allRoutes
+            Route.calcOffendingRoutes(); // calculate offending routes
+            parseCompRoutes(doc); // can be done only after all routes have been read
+
         } catch (SAXException e) {
             System.out.println("SAX Exception - " + e.getMessage());
             return "SAX Exception - " + e.getMessage();
@@ -203,8 +206,6 @@ public class ReadDCCConfig {
         return "";
     }
 
-   
-
     private static Trip parseTrip(Node item) {
 
         Trip t = new Trip();
@@ -279,9 +280,8 @@ public class ReadDCCConfig {
         }
     }
 
-    private static ArrayList<Route> parseRoutes(Document doc) {
-        // assemble new ArrayList of tickets.
-        ArrayList<Route> myroutes = new ArrayList<>();
+    private static void parseRoutes(Document doc) {
+
         NodeList items;
         Element root = doc.getDocumentElement();
 
@@ -292,20 +292,13 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " routes");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            Route rt = parseRoute(items.item(i));
-            if (rt != null) {
-                myroutes.add(rt);
-            }
+            parseRoute(items.item(i));
         }
 
-        return myroutes;
     }
 
-    private static Route parseRoute(Node item) {
-        // ticket node can be Incident oder UserRequest
+    private static void parseRoute(Node item) {
         int id = INVALID_INT;
-        int btn1 = INVALID_INT;
-        int btn2 = INVALID_INT;
         String route = null, sensors = null;
         String offending = ""; // not mandatory
 
@@ -329,24 +322,25 @@ public class ReadDCCConfig {
         if (id == INVALID_INT) {
             // missing info, log error
             System.out.println("missing id= info in route definition");
-            return null;
+            return;
         } else if (route == null) {
             System.out.println("missing route= info in route definition");
-            return null;
+            return;
         } else if (sensors == null) {
             System.out.println("missing sensors= info in route definition");
-            return null;
+            return;
         } else {
             // everything is o.k.
-
-            return new Route(id, route, sensors, offending);
+            Route rt = new Route(id, route, sensors, offending);
+            lanbahnData.put(id, new LbData(0, 1, "RT"));
+            panelElements.add(rt);
+            allRoutes.add(rt);
         }
 
     }
 
-    private static ArrayList<CompRoute> parseCompRoutes(Document doc) {
+    private static void parseCompRoutes(Document doc) {
         // assemble new ArrayList of tickets.
-        ArrayList<CompRoute> myroutes = new ArrayList<>();
         NodeList items;
         Element root = doc.getDocumentElement();
 
@@ -356,16 +350,11 @@ public class ReadDCCConfig {
             System.out.println("config: " + items.getLength() + " comproutes");
         }
         for (int i = 0; i < items.getLength(); i++) {
-            CompRoute rt = parseCompRoute(items.item(i));
-            if (rt != null) {
-                myroutes.add(rt);
-            }
+            parseCompRoute(items.item(i));
         }
-
-        return myroutes;
     }
 
-    private static CompRoute parseCompRoute(Node item) {
+    private static void parseCompRoute(Node item) {
         //
         int id = INVALID_INT;
         int btn1 = INVALID_INT;
@@ -388,14 +377,16 @@ public class ReadDCCConfig {
         if (id == INVALID_INT) {
             // missing info, log error
             System.out.println("missing id= info in route definition");
-            return null;
+            return;
         } else if (routes == null) {
             System.out.println("missing routes= info in route definition");
-            return null;
+            return;
         } else {
             // everything is o.k.
-
-            return new CompRoute(id, routes);
+            CompRoute cr = new CompRoute(id, routes);
+            lanbahnData.put(id, new LbData(0, 1, "CR"));
+            panelElements.add(cr);
+            allCompRoutes.add(cr);
         }
 
     }
