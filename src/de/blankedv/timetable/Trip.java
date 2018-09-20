@@ -18,12 +18,7 @@ package de.blankedv.timetable;
 
 import de.blankedv.ln3pc.LNUtil;
 import de.blankedv.ln3pc.Loco;
-import static de.blankedv.ln3pc.MainUI.DEBUG;
-import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.allCompRoutes;
-import static de.blankedv.ln3pc.Variables.allRoutes;
-import static de.blankedv.ln3pc.Variables.allTrips;
-import static de.blankedv.ln3pc.Variables.lanbahnData;
+import static de.blankedv.timetable.Vars.*;
 
 /**
  *

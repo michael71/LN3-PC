@@ -6,7 +6,7 @@ import de.blankedv.timetable.ReadDCCConfig;
 import de.blankedv.timetable.CompRoute;
 import de.blankedv.timetable.FahrplanUI;
 import de.blankedv.timetable.Route;
-import static de.blankedv.ln3pc.Variables.*;
+
 import java.awt.Cursor;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -28,6 +28,8 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import static de.blankedv.ln3pc.Variables.*;
+import static de.blankedv.timetable.Vars.*;
 /**
  * This class is the LN3-PC MAIN class and starts all other UI-windows.
  *
@@ -67,7 +69,7 @@ public class MainUI extends javax.swing.JFrame {
     public static SettingsUI settingsWindow;
     public static FahrplanUI fahrplanWindow;
     public static boolean timetableRunning = false;
-    public static int globalPower = INVALID_INT;
+   
 
     /**
      * hashmap for storing numerical (key,value) pairs of lanbahnData lanbahn
@@ -229,7 +231,9 @@ public class MainUI extends javax.swing.JFrame {
         lanbahnData = new ConcurrentHashMap<>(N_LANBAHN);
         locoSlots = new ArrayList<>();   // slot to Loco mapping
         allLocos = new ArrayList<>();   // all Locos we have heard of (via sxnet)
-        allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+        
+        
+        allTrips = new ArrayList<>();  
         allTimetables = new ArrayList<>();
         panelElements = new ArrayList<>();
         allRoutes = new ArrayList<>();

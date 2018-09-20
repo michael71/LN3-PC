@@ -1,10 +1,7 @@
 package de.blankedv.timetable;
 
 import de.blankedv.ln3pc.LNUtil;
-import de.blankedv.ln3pc.LbData;
-import de.blankedv.ln3pc.Utils;
-import static de.blankedv.ln3pc.Variables.*;
-import static de.blankedv.ln3pc.MainUI.*;
+import static de.blankedv.ln3pc.MainUI.serialIF;
 import static de.blankedv.timetable.Vars.*;
 import java.util.ArrayList;
 
@@ -21,8 +18,6 @@ import java.util.ArrayList;
  *
  */
 public class Route extends PanelElement {
-
-    private long timeSet;
 
     String routeString = "";
     String sensorsString = "";
@@ -59,6 +54,8 @@ public class Route extends PanelElement {
         this.sensorsString = allSensors;
         this.offendingString = offending;
 
+        lastUpdateTime = System.currentTimeMillis(); // store for resetting
+        
         if (DEBUG) {
             System.out.println(" creating route id/adr=" + adr);
         }
@@ -128,7 +125,7 @@ public class Route extends PanelElement {
     }
 
     public void clear() {
-        timeSet = System.currentTimeMillis(); // store for resetting
+        lastUpdateTime = System.currentTimeMillis(); // store for resetting
         // automatically
         if (DEBUG) {
             System.out.println(" clearing route id=" + adr);
@@ -202,7 +199,7 @@ public class Route extends PanelElement {
     }
 
     public boolean set() {
-        timeSet = System.currentTimeMillis(); // store for resetting
+        lastUpdateTime = System.currentTimeMillis(); // store for resetting
         // automatically
 
         if (DEBUG) {
@@ -322,7 +319,7 @@ public class Route extends PanelElement {
     public static void auto() {
         // check for auto reset of allRoutes
         for (Route rt : allRoutes) {
-            if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
+            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
                     && (rt.state == RT_ACTIVE)) {
                 rt.clear();
             }
@@ -384,5 +381,12 @@ public class Route extends PanelElement {
             rt.offendingString = rt.getOffendingString();
         }
 
+    }
+    
+    public static Route getFromAddress(int a) {
+        for (Route r : allRoutes) {
+            if (r.adr == a) return r;
+        }
+        return null;
     }
 }

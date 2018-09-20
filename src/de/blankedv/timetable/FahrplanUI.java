@@ -16,11 +16,9 @@
  */
 package de.blankedv.timetable;
 
-import de.blankedv.ln3pc.Utils;
 import static de.blankedv.ln3pc.MainUI.serialIF;
 import static de.blankedv.ln3pc.MainUI.running;
-import static de.blankedv.ln3pc.Variables.allTimetables;
-import static de.blankedv.ln3pc.Variables.allTrips;
+import static de.blankedv.timetable.Vars.*;
 import java.awt.Color;
 import java.awt.Component;
 import java.util.Timer;

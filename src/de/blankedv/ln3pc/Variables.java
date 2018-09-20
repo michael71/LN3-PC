@@ -61,6 +61,9 @@ public class Variables {
     public static final int INVALID_INT = -1;
     public static final int STATUS_CONNECTED = 1;
     public static final int STATUS_NOT_CONNECTED = 0;
+    
+    public static int globalPower = INVALID_INT;
+
 
     static boolean shutdownFlag = false;
     static int speed = 0;   // =DCC speed
@@ -68,7 +71,8 @@ public class Variables {
     static int lissySpeed = 0;   // speed measured by lissy
     static int direction = 0;
     static int slot = -1, slotAquired;
-
+    
+    
     static final int SPEED_STEP = 20;   // increase speed by .
     static final int MAX_SPEED = 28;  // TODO !!!!
 
@@ -79,11 +83,7 @@ public class Variables {
 
     public static ArrayList<LocoSlot> locoSlots = new ArrayList<>();   // slot to Loco mapping
     public static ArrayList<Loco> allLocos = new ArrayList<>();   // all Locos we have heard of (via sxnet)
-    public static ArrayList<Trip> allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
-    public static ArrayList<Timetable> allTimetables = new ArrayList<>();
-    public static ArrayList<PanelElement> panelElements = new ArrayList<>();
-    public static ArrayList<Route> allRoutes = new ArrayList<>();   // TODO eleminate
-    public static ArrayList<CompRoute> allCompRoutes = new ArrayList<>();  // TODO eleminate
+
 
     static int progState = STOP;
 

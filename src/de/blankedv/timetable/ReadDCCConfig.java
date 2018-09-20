@@ -12,8 +12,8 @@ package de.blankedv.timetable;
  * and open the template in the editor.
  */
 import de.blankedv.ln3pc.LbData;
-import static de.blankedv.ln3pc.MainUI.DEBUG;
-import static de.blankedv.ln3pc.Variables.*;
+
+import static de.blankedv.timetable.Vars.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -332,7 +332,7 @@ public class ReadDCCConfig {
         } else {
             // everything is o.k.
             Route rt = new Route(id, route, sensors, offending);
-            lanbahnData.put(id, new LbData(0, 1, "RT"));
+            Utils.createLanbahnData(id, 1, "RT");   // 1 bit , route
             panelElements.add(rt);
             allRoutes.add(rt);
         }
@@ -384,7 +384,7 @@ public class ReadDCCConfig {
         } else {
             // everything is o.k.
             CompRoute cr = new CompRoute(id, routes);
-            lanbahnData.put(id, new LbData(0, 1, "CR"));
+            Utils.createLanbahnData(id, 1, "CR");
             panelElements.add(cr);
             allCompRoutes.add(cr);
         }
@@ -399,11 +399,11 @@ public class ReadDCCConfig {
                 if ((addressArr.size() >= 2) && (addressArr.get(1) != INVALID_INT)) {
                     // check if we have 2 doubleslip addresses
                     System.out.println(type + " adr=" + addressArr.get(0) + " sec-adr=" + addressArr.get(1));
-                    lanbahnData.put(addressArr.get(0), new LbData(0, 2, type));
+                    Utils.createLanbahnData(addressArr.get(0), 2, "DS");
                     panelElements.add(new PanelElement(type, addressArr.get(0), addressArr.get(1)));  // 
                 } else {
                     System.out.println(type + " adr=" + addressArr.get(0) + " no sec-adr.");
-                    lanbahnData.put(addressArr.get(0), new LbData(0, 1, type));
+                    Utils.createLanbahnData(addressArr.get(0), 1, "DS");
                     panelElements.add(new PanelElement(type, addressArr.get(0)));
                 }
 

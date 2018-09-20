@@ -5,8 +5,12 @@
  */
 package de.blankedv.timetable;
 
+import java.util.ArrayList;
+
 public class Vars {
     
+    public static final int INVALID_INT = -1;
+    public static final boolean DEBUG = true;
     
     // signals
     static final int STATE_RED = 0;
@@ -20,4 +24,11 @@ public class Vars {
     
     static final int RT_INACTIVE = 0;
     static final int RT_ACTIVE = 1;
+    
+        public static ArrayList<Trip> allTrips = new ArrayList<>();   // all Locos we have heard of (via sxnet)
+    public static ArrayList<Timetable> allTimetables = new ArrayList<>();
+    public static ArrayList<PanelElement> panelElements = new ArrayList<>();
+    public static ArrayList<Route> allRoutes = new ArrayList<>();   // TODO eleminate
+    public static ArrayList<CompRoute> allCompRoutes = new ArrayList<>();  // TODO eleminate
+    
 }

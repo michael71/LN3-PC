@@ -5,10 +5,8 @@
  */
 package de.blankedv.timetable;
 
-import static de.blankedv.ln3pc.MainUI.*;
-import static de.blankedv.ln3pc.Variables.INVALID_INT;
-import static de.blankedv.ln3pc.Variables.panelElements;
-import java.util.ArrayList;
+import static de.blankedv.timetable.Vars.*;
+
 
 /**
  * all active panel elements, like turnouts, signals, trackindicators (=sensors)

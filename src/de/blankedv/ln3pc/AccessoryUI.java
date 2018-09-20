@@ -10,6 +10,7 @@
  */
 package de.blankedv.ln3pc;
 
+import de.blankedv.timetable.Utils;
 import de.blankedv.timetable.PanelElement;
 import java.util.prefs.Preferences;
 import java.util.List;

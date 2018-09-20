@@ -1,8 +1,7 @@
 package de.blankedv.timetable;
 
 import static de.blankedv.ln3pc.MainUI.DEBUG;
-import de.blankedv.ln3pc.Utils;
-import static de.blankedv.ln3pc.Variables.*;
+//import static de.blankedv.ln3pc.Variables.*;
 import static de.blankedv.timetable.Vars.*;
 import java.util.ArrayList;
 
@@ -15,8 +14,6 @@ import java.util.ArrayList;
  *
  */
 public class CompRoute extends PanelElement {
-
-    private long timeSet;
     
     String routesString = ""; // identical to config string
 
@@ -33,7 +30,7 @@ public class CompRoute extends PanelElement {
         state = RT_INACTIVE;
         // this string written back to config file.
         this.routesString = sRoutes;
-
+        lastUpdateTime = System.currentTimeMillis(); // store for resetting 
         if (DEBUG) {
             System.out.println("creating comproute id=" + routeAddr);
         }
@@ -73,7 +70,7 @@ public class CompRoute extends PanelElement {
         if (DEBUG) {
             System.out.println(" setting comproute id=" + adr);
         }
-        timeSet = System.currentTimeMillis();
+        lastUpdateTime = System.currentTimeMillis();
         Utils.updateLanbahnData(adr, 1);   // state = active
         // check if all routes can be set successfully
         boolean res = true;
@@ -95,12 +92,19 @@ public class CompRoute extends PanelElement {
         // this function is only needed for the lanbahn-value display, because the individual single routes,
         // which are set by a compound route, are autocleared by the "Route.auto()" function
         for (CompRoute rt : allCompRoutes) {
-            if (((System.currentTimeMillis() - rt.timeSet) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
+            if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
                     && (rt.state == RT_ACTIVE)) {
                 Utils.updateLanbahnData(rt.adr, RT_INACTIVE);  // reset lanbahn value and set state to 0
             }
 
         }
 
+    }
+     
+     public static CompRoute getFromAddress(int a) {
+        for (CompRoute cr : allCompRoutes) {
+            if (cr.adr == a) return cr;
+        }
+        return null;
     }
 }

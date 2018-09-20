@@ -1,5 +1,6 @@
 package de.blankedv.ln3pc;
 
+import de.blankedv.timetable.Utils;
 import de.blankedv.timetable.CompRoute;
 import de.blankedv.timetable.Route;
 import static de.blankedv.ln3pc.MainUI.*;
@@ -358,27 +359,26 @@ public class SXnetSession implements Runnable {
         }
 
         // check whether there is a route with this address(=adr)
-        for (Route r : allRoutes) {
-            if (r.adr == lbAddr) {
-                Utils.updateLanbahnData(lbAddr, 1);
-                boolean res = r.set();
-                if (res) {
-                    return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
-                } else {
-                    return "ROUTE_INVALID";
-                }
+        Route r = Route.getFromAddress(lbAddr);
+        if (r != null) {
+            Utils.updateLanbahnData(lbAddr, 1);
+            boolean res = r.set();
+            if (res) {
+                return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
+            } else {
+                return "ROUTE_INVALID";
             }
+
         }
         // check whether there is a compund route with this address(=adr)
-        for (CompRoute cr : allCompRoutes) {
-            if (cr.adr == lbAddr) {
-                Utils.updateLanbahnData(lbAddr, 1);
-                boolean res = cr.set();
-                if (res) {
-                    return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
-                } else {
-                    return "ROUTE_INVALID";
-                }
+        CompRoute cr = CompRoute.getFromAddress(lbAddr);
+        if (cr != null) {
+            Utils.updateLanbahnData(lbAddr, 1);
+            boolean res = cr.set();
+            if (res) {
+                return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
+            } else {
+                return "ROUTE_INVALID";
             }
         }
 

@@ -3,13 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.blankedv.ln3pc;
+package de.blankedv.timetable;
 
-import static de.blankedv.ln3pc.MainUI.DEBUG;
+import de.blankedv.ln3pc.LbData;
 import static de.blankedv.ln3pc.Variables.lanbahnData;
-import static de.blankedv.ln3pc.Variables.TYPE_ACC_1BIT;
-import static de.blankedv.ln3pc.Variables.panelElements;
-import de.blankedv.timetable.PanelElement;
+import static de.blankedv.timetable.Vars.*;
 
 /**
  *
@@ -97,6 +95,10 @@ public class Utils {
          if (lanbahnData.get(addr).getData() != value) {
              System.out.println("ERROR setting addr="+addr+" to val="+value+" not successful");
          }
+    }
+    
+    static public void createLanbahnData(int addr, int nbit, String type) {
+        lanbahnData.put(addr, new LbData(0, nbit, type));
     }
 
 }
