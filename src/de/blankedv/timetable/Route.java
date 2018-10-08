@@ -138,14 +138,14 @@ public class Route extends PanelElement {
                 // for track-control "route lighting"
                serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 1, 1));
             }
-           Utils.updateLanbahnData(se.adr, st);
+           LbUtils.updateLanbahnData(se.adr, st);
         }
 
         // set signals turnout red
         for (RouteSignal rs : rtSignals) {
             rs.signal.setState(STATE_RED);
             serialIF.send(LNUtil.makeOPC_SW_REQ(rs.signal.adr - 1, 0, 1));
-            Utils.updateLanbahnData(rs.signal.adr, rs.signal.getState());
+            LbUtils.updateLanbahnData(rs.signal.adr, rs.signal.getState());
         }
 
         // TODO unlock turnouts
@@ -157,7 +157,7 @@ public class Route extends PanelElement {
          */
 
         // notify that route was cleared
-        Utils.updateLanbahnData(adr, RT_ACTIVE);
+        LbUtils.updateLanbahnData(adr, RT_INACTIVE);
 
     }
 
@@ -199,8 +199,7 @@ public class Route extends PanelElement {
     }
 
     public boolean set() {
-        lastUpdateTime = System.currentTimeMillis(); // store for resetting
-        // automatically
+
 
         if (DEBUG) {
             System.out.println(" setting route id=" + adr);
@@ -213,12 +212,13 @@ public class Route extends PanelElement {
             return false;
         }
 
-        
+        lastUpdateTime = System.currentTimeMillis(); // store for resetting
+        // automatically
 
         clearOffendingRoutes();
         
         // notify that route is set
-        Utils.updateLanbahnData(adr, RT_ACTIVE);
+        LbUtils.updateLanbahnData(adr, RT_ACTIVE);
 
         // activate sensors
         for (PanelElement se : rtSensors) {
@@ -227,7 +227,7 @@ public class Route extends PanelElement {
                 // for track-control "route lighting"
                serialIF.send(LNUtil.makeOPC_SW_REQ(se.secondaryAdr - 1, 0, 1));
             }
-            Utils.updateLanbahnData(se.adr, st);
+            LbUtils.updateLanbahnData(se.adr, st);
         }
 
         // set signals
@@ -238,13 +238,13 @@ public class Route extends PanelElement {
             } else {
                 serialIF.send(LNUtil.makeOPC_SW_REQ(rs.signal.adr - 1, 0, 1));
             }
-            Utils.updateLanbahnData(rs.signal.adr, d);
+            LbUtils.updateLanbahnData(rs.signal.adr, d);
         }
         // set and // TODO lock turnouts
         for (RouteTurnout rtt : rtTurnouts) {
             int d = rtt.valueToSetForRoute;   // can be only 1 or 0
             serialIF.send(LNUtil.makeOPC_SW_REQ(rtt.turnout.adr - 1, (1 - d), 1));  
-            Utils.updateLanbahnData(rtt.turnout.adr, rtt.valueToSetForRoute);
+            LbUtils.updateLanbahnData(rtt.turnout.adr, rtt.valueToSetForRoute);
         }   
          
         return true;
@@ -298,7 +298,7 @@ public class Route extends PanelElement {
             if (rs.depFrom != INVALID_INT) {
                 if (rs.signal.getState() != rs.dynamicValueToSetForRoute()) {
                     rs.signal.state = rs.dynamicValueToSetForRoute();
-                    Utils.updateLanbahnData(rs.signal.adr, rs.signal.state);
+                    LbUtils.updateLanbahnData(rs.signal.adr, rs.signal.state);
                 }
             }
         }

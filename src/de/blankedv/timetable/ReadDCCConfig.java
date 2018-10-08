@@ -332,7 +332,7 @@ public class ReadDCCConfig {
         } else {
             // everything is o.k.
             Route rt = new Route(id, route, sensors, offending);
-            Utils.createLanbahnData(id, 1, "RT");   // 1 bit , route
+            LbUtils.createLanbahnData(id, 1, "RT");   // 1 bit , route
             panelElements.add(rt);
             allRoutes.add(rt);
         }
@@ -384,7 +384,7 @@ public class ReadDCCConfig {
         } else {
             // everything is o.k.
             CompRoute cr = new CompRoute(id, routes);
-            Utils.createLanbahnData(id, 1, "CR");
+            LbUtils.createLanbahnData(id, 1, "CR");
             panelElements.add(cr);
             allCompRoutes.add(cr);
         }
@@ -399,11 +399,11 @@ public class ReadDCCConfig {
                 if ((addressArr.size() >= 2) && (addressArr.get(1) != INVALID_INT)) {
                     // check if we have 2 doubleslip addresses
                     System.out.println(type + " adr=" + addressArr.get(0) + " sec-adr=" + addressArr.get(1));
-                    Utils.createLanbahnData(addressArr.get(0), 2, "DS");
+                    LbUtils.createLanbahnData(addressArr.get(0), 2, "DS");
                     panelElements.add(new PanelElement(type, addressArr.get(0), addressArr.get(1)));  // 
                 } else {
                     System.out.println(type + " adr=" + addressArr.get(0) + " no sec-adr.");
-                    Utils.createLanbahnData(addressArr.get(0), 1, "DS");
+                    LbUtils.createLanbahnData(addressArr.get(0), 1, "DS");
                     panelElements.add(new PanelElement(type, addressArr.get(0)));
                 }
 

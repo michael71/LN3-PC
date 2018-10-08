@@ -16,7 +16,7 @@
  */
 package de.blankedv.ln3pc;
 
-import de.blankedv.timetable.Utils;
+import de.blankedv.timetable.LbUtils;
 import de.blankedv.timetable.PanelElement;
 import static de.blankedv.ln3pc.Variables.*;
 import static de.blankedv.ln3pc.MainUI.*;
@@ -78,10 +78,10 @@ public class LNUtil {
                 disp.append("-> switch adr=").append(adr);
                 if (dir == 0) {
                     disp.append(" thrown/red");
-                    Utils.updateLanbahnData(adr, 1);  // LOGIC REVERSED !!!
+                    LbUtils.updateLanbahnData(adr, 1);  // LOGIC REVERSED !!!
                 } else {
                     disp.append(" closed/green");
-                    Utils.updateLanbahnData(adr, 0);  // LOGIC REVERSED !!!
+                    LbUtils.updateLanbahnData(adr, 0);  // LOGIC REVERSED !!!
                 }
                 if (state == 0) {
                     disp.append(" OFF");
@@ -108,13 +108,13 @@ Report/status bits and 4 MS adr bits.
                     if (state == 0) {
                         disp.append(" free");
                         int st = se.setBit0(false);   // lanbahn sensors have 4 different states
-                        Utils.updateLanbahnData(adr, st);
+                        LbUtils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);
                     } else {
                         disp.append(" occupied");
                         int st = se.setBit0(true);    // lanbahn sensors have 4 different states
-                        Utils.updateLanbahnData(adr, st);
+                        LbUtils.updateLanbahnData(adr, st);
                         disp.append(" st=");
                         disp.append(st);
                     }
@@ -135,7 +135,7 @@ Report/status bits and 4 MS adr bits.
                     disp.append("-> lack, adr=").append(adr);
                     String s = String.format("%02X", buf[2]);
                     disp.append(" ACK1=").append(s).append(" dir=").append(dir);
-                    Utils.updateLanbahnData(adr, (1 - dir));
+                    LbUtils.updateLanbahnData(adr, (1 - dir));
                 } else {
                     // reset LACK 
                     awaitingLack = 0;
@@ -528,12 +528,12 @@ Report/status bits and 4 MS adr bits.
         switch (lb.getNBit()) {
             case 1:
                 data &= 0x01;  // only last bit is used for LocoNet/DCC
-                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                LbUtils.updateLanbahnData(addr, data);   // don't change type, only change data              
                 serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data), 1));   // TODO test
                 break;
             case 2:
                 int data0 = data & 0x01;  // only last bit is used for LocoNet/DCC sensor reporting
-                Utils.updateLanbahnData(addr, data);   // don't change type, only change data              
+                LbUtils.updateLanbahnData(addr, data);   // don't change type, only change data              
                 serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test             
                 PanelElement se = PanelElement.getByAddress(addr);
                 if ((se != null) && (se.secondaryAdr != INVALID_INT)) {

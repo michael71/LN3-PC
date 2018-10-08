@@ -112,7 +112,7 @@ public class FahrplanUI extends javax.swing.JFrame {
         for (Trip t : allTrips) {
             if (t.active == true) {
                 if (t.checkEndSensor()) {
-                    Utils.mySleep(3000);
+                    LbUtils.mySleep(3000);
                     activeRow++;
                     jTable1.repaint();
                     boolean res = timetable0.advanceToNextTrip();

@@ -1,6 +1,6 @@
 package de.blankedv.ln3pc;
 
-import de.blankedv.timetable.Utils;
+import de.blankedv.timetable.LbUtils;
 import de.blankedv.timetable.CompRoute;
 import de.blankedv.timetable.Route;
 import static de.blankedv.ln3pc.MainUI.*;
@@ -290,7 +290,7 @@ public class SXnetSession implements Runnable {
                 // this should never happen if a proper laýout-config file is read
                 // initialize to "0" (=start simulation and init to "0")
                 // if not already exists
-                Utils.updateLanbahnData(lbAddr, 0);
+                LbUtils.updateLanbahnData(lbAddr, 0);
             }
         }
         if (lanbahnData.containsKey(lbAddr)) {
@@ -332,7 +332,7 @@ public class SXnetSession implements Runnable {
         // set is only allowed for simulation addresses or for addresses we have
         // in our config database (xml-config file)
         if (isSimulationAddressRange(lbAddr) || lanbahnData.containsKey(lbAddr)) {
-            Utils.updateLanbahnData(lbAddr, lbdata);  // update (or create) data  
+            LbUtils.updateLanbahnData(lbAddr, lbdata);  // update (or create) data  
             // check whether we are in an DCC address range, then update loconet
             if (lbAddr <= DCCMAX) {
                 LNUtil.sendLanbahnToLocoNet(lbAddr, lbdata);
@@ -361,9 +361,10 @@ public class SXnetSession implements Runnable {
         // check whether there is a route with this address(=adr)
         Route r = Route.getFromAddress(lbAddr);
         if (r != null) {
-            Utils.updateLanbahnData(lbAddr, 1);
+            
             boolean res = r.set();
             if (res) {
+                LbUtils.updateLanbahnData(lbAddr, 1);  // do only after route is checked for validity
                 return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success
             } else {
                 return "ROUTE_INVALID";
@@ -373,7 +374,7 @@ public class SXnetSession implements Runnable {
         // check whether there is a compund route with this address(=adr)
         CompRoute cr = CompRoute.getFromAddress(lbAddr);
         if (cr != null) {
-            Utils.updateLanbahnData(lbAddr, 1);
+            LbUtils.updateLanbahnData(lbAddr, 1);
             boolean res = cr.set();
             if (res) {
                 return "XL " + lbAddr + " " + lanbahnData.get(lbAddr).getData();  // success

@@ -71,7 +71,7 @@ public class CompRoute extends PanelElement {
             System.out.println(" setting comproute id=" + adr);
         }
         lastUpdateTime = System.currentTimeMillis();
-        Utils.updateLanbahnData(adr, 1);   // state = active
+        LbUtils.updateLanbahnData(adr, 1);   // state = active
         // check if all routes can be set successfully
         boolean res = true;
         for (Route rt : myroutes) {
@@ -94,7 +94,7 @@ public class CompRoute extends PanelElement {
         for (CompRoute rt : allCompRoutes) {
             if (((System.currentTimeMillis() - rt.lastUpdateTime) > AUTO_CLEAR_ROUTE_TIME_SEC * 1000L)
                     && (rt.state == RT_ACTIVE)) {
-                Utils.updateLanbahnData(rt.adr, RT_INACTIVE);  // reset lanbahn value and set state to 0
+                LbUtils.updateLanbahnData(rt.adr, RT_INACTIVE);  // reset lanbahn value and set state to 0
             }
 
         }

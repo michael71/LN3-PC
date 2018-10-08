@@ -10,7 +10,7 @@
  */
 package de.blankedv.ln3pc;
 
-import de.blankedv.timetable.Utils;
+import de.blankedv.timetable.LbUtils;
 import de.blankedv.timetable.PanelElement;
 import java.util.prefs.Preferences;
 import java.util.List;
@@ -409,38 +409,38 @@ public class AccessoryUI extends javax.swing.JFrame {
 }//GEN-LAST:event_jComboBox1ActionPerformed
 
     private void jCheckBox3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox3ActionPerformed
-        handleAction(2, 0);
+        handleBit0(2);
     }//GEN-LAST:event_jCheckBox3ActionPerformed
 
     private void jCheckBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox1ActionPerformed
         if (w_adr == 0) {
             return;   // "0" is no valid address
         }
-        handleAction(0, 0);
+        handleBit0(0);
     }//GEN-LAST:event_jCheckBox1ActionPerformed
 
     private void jCheckBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox2ActionPerformed
-        handleAction(1, 0);
+        handleBit0(1);
     }//GEN-LAST:event_jCheckBox2ActionPerformed
 
     private void jCheckBox4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox4ActionPerformed
-        handleAction(3, 0);
+        handleBit0(3);
     }//GEN-LAST:event_jCheckBox4ActionPerformed
 
     private void jCheckBox5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox5ActionPerformed
-        handleAction(4, 0);
+        handleBit0(4);
     }//GEN-LAST:event_jCheckBox5ActionPerformed
 
     private void jCheckBox6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox6ActionPerformed
-        handleAction(5, 0);
+        handleBit0(5);
     }//GEN-LAST:event_jCheckBox6ActionPerformed
 
     private void jCheckBox7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox7ActionPerformed
-        handleAction(6, 0);
+        handleBit0(6);
     }//GEN-LAST:event_jCheckBox7ActionPerformed
 
     private void jCheckBox8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox8ActionPerformed
-        handleAction(7, 0);
+        handleBit0(7);
     }//GEN-LAST:event_jCheckBox8ActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -450,68 +450,89 @@ public class AccessoryUI extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     private void jCheckBox9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox9ActionPerformed
-        handleAction(8, 0);
+        handleBit0(8);
     }//GEN-LAST:event_jCheckBox9ActionPerformed
 
     private void jCheckBox10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox10ActionPerformed
-        handleAction(9, 0);
+        handleBit0(9);
     }//GEN-LAST:event_jCheckBox10ActionPerformed
 
     private void jCheckBox11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox11ActionPerformed
         if (w_adr != 0) {
-            handleAction(0, 1);
+            handleBit1(10);
         }
     }//GEN-LAST:event_jCheckBox11ActionPerformed
 
     private void jCheckBox12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox12ActionPerformed
-        handleAction(1, 1);
+        handleBit1(11);
     }//GEN-LAST:event_jCheckBox12ActionPerformed
 
     private void jCheckBox13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox13ActionPerformed
-        handleAction(2, 1);
+        handleBit1(12);
     }//GEN-LAST:event_jCheckBox13ActionPerformed
 
     private void jCheckBox14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox14ActionPerformed
-        handleAction(3, 1);
+        handleBit1(13);
     }//GEN-LAST:event_jCheckBox14ActionPerformed
 
     private void jCheckBox15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox15ActionPerformed
-        handleAction(4, 1);
+        handleBit1(14);
     }//GEN-LAST:event_jCheckBox15ActionPerformed
 
     private void jCheckBox16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox16ActionPerformed
-        handleAction(5, 1);
+        handleBit1(15);
     }//GEN-LAST:event_jCheckBox16ActionPerformed
 
     private void jCheckBox17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox17ActionPerformed
-        handleAction(6, 1);
+        handleBit1(16);
     }//GEN-LAST:event_jCheckBox17ActionPerformed
 
     private void jCheckBox18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox18ActionPerformed
-        handleAction(7, 1);
+        handleBit1(17);
     }//GEN-LAST:event_jCheckBox18ActionPerformed
 
     private void jCheckBox19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox19ActionPerformed
-        handleAction(8, 1);
+        handleBit1(18);
     }//GEN-LAST:event_jCheckBox19ActionPerformed
 
     private void jCheckBox20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox20ActionPerformed
-        handleAction(9, 1);
+        handleBit1(19);
     }//GEN-LAST:event_jCheckBox20ActionPerformed
 
-    private void handleAction(int i, int bit) {
-        int bitVal = (0x01 << bit);
-        if (cb[i][bit].getModel().isSelected()) {
-            data[i] |= bitVal;
+    private void handleBit0(int i) {
+        // range i: 0 ... 9 (=checkbox number)
+
+        // update from current lanbahndata
+        data[i]  = lanbahnData.get(w_adr + i).getData();
+
+
+        if (cb[i][0].getModel().isSelected()) {
+            data[i] |= 0x01;
         } else {
-            data[i] &= ~(bitVal);
+            data[i] &= ~(0x01);
+        }
+        sendAccessoryToLocoNet(w_adr + i, data[i]);
+    }
+
+    private void handleBit1(int ihigh) {
+        // range i: 10 ... 19 (=checkbox number)
+        int i = ihigh - 10;   // range 0 ..9
+
+        /// update from current lanbahndata
+        data[i]  = lanbahnData.get(w_adr + i).getData();
+
+
+        if (cb[i][1].getModel().isSelected()) {
+            data[i] |= 0x02;
+        } else {
+            data[i] &= ~(0x02);
         }
         sendAccessoryToLocoNet(w_adr + i, data[i]);
     }
 
     private void sendAccessoryToLocoNet(int addr, int data) {
         if (DEBUG) {
-            System.out.println("sendAcc... a="+addr+" d="+data);
+            System.out.println("sendAcc... a=" + addr + " d=" + data);
         }
         int data0, data1;
         LbData lb = lanbahnData.get(addr);
@@ -520,17 +541,21 @@ public class AccessoryUI extends javax.swing.JFrame {
         }
         switch (lb.getNBit()) {
             case 1:
-                
+
                 // ignore bit1, only use bit0
                 data0 = data & 0x01;  // only last bit is used for LocoNet/DCC
-                if (DEBUG) System.out.println("1bit d0="+data0);
-                Utils.updateLanbahnData(addr, data0);   // don't change type, only change data              
+                if (DEBUG) {
+                    System.out.println("1bit d0=" + data0);
+                }
+                LbUtils.updateLanbahnData(addr, data0);   // don't change type, only change data              
                 // serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));    // TODO test
                 break;
             case 2:
                 // 2 bit values, use 2 loconet addresses and store 2bit value for lanbahn
-                Utils.updateLanbahnData(addr, data);   // don't change type, only change data  
-                if (DEBUG) System.out.println("2bit d="+data);
+                LbUtils.updateLanbahnData(addr, data);   // don't change type, only change data  
+                if (DEBUG) {
+                    System.out.println("2bit d=" + data);
+                }
                 data0 = data & 0x01;  // bit0 => ln-first address                           
                 //  serialIF.send(LNUtil.makeOPC_SW_REQ(addr - 1, (1 - data0), 1));   // TODO test  
                 PanelElement pe = PanelElement.getByAddress(addr);
